@@ -1,0 +1,17 @@
+.svn/
+*.egg-info/
+__pycache__/
+data/
+dist/
+matlab/
+tests/
+
+*.zip
+*.egg
+*.so
+*.sh
+*~
+
+*.py
+!setup.py
+pppack*
