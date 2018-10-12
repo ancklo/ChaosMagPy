@@ -13,5 +13,6 @@ tests/
 *~
 
 *.py
+!chaosmagpy/*.py
 !setup.py
 pppack*
