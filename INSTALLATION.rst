@@ -16,9 +16,8 @@ Installation
 
     >>> pip install chaosmagpy
 
-    or, if you downloaded the package files, with:
+   or, if you downloaded the package files, with:
 
 	>>> pip install chaosmagpy-x.x.tar.gz
 
-    replacing `x` with the correct version.
-    
+   replacing `x` with the correct version.

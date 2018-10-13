@@ -8,7 +8,6 @@ ChaosMagPy documentation
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
 
    readme
    installation

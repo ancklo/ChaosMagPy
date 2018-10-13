@@ -45,6 +45,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
+    'sphinx.ext.viewcode',
     'numpydoc',
     'sphinx.ext.mathjax'
 ]
@@ -105,8 +106,8 @@ html_static_path = ['.static']
 # defined by theme itself.  Builtin themes are using these templates by
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
-#
-# html_sidebars = {}
+
+html_sidebars = {'**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html']}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
