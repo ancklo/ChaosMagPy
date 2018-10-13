@@ -12,6 +12,13 @@ Installation
 
     >>> pip install cdflib
 
-3. Finally install chaosmagpy-x.x (replace 'x' with version) from the archive:
+3. Finally install ChaosMagPy either with pip:
+
+    >>> pip install chaosmagpy
+
+    or, if you downloaded the package files, with:
 
 	>>> pip install chaosmagpy-x.x.tar.gz
+
+    replacing `x` with the correct version.
+    
