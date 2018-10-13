@@ -10,7 +10,7 @@ CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory:
 
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   radius = 0.53*6371.2  # km, here core-mantle boundary
+   radius = 3485.0  # km, here core-mantle boundary
    time = 0.0  # mjd2000, here Jan 1, 2000 0:00 UTC
 
    model.plot_tdep_map(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16

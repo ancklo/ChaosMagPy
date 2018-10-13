@@ -344,7 +344,7 @@ class CHAOS(object):
 
     .. code-block:: python
 
-      model.plot_tdep_map(time=1, radius=1)
+      model.plot_tdep_map(time=1, radius=6371.2)
 
     Save the Gauss coefficients of the time-dependent field in shc-format to
     the current working directory.
