@@ -1,11 +1,14 @@
 Overview
 ========
+
 ChaosMagPy is a simple Python package for evaluating the
 `CHAOS <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_ geomagnetic
-field model.
+field model. To get quickly started, download a complete working example
+including the latest model `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/chaosmagpy_package.zip>`_.
 
 References
 ----------
+
 *Finlay, C.C., Olsen, N., Kotsiaros, S., Gillet, N. and Toeffner-Clausen, L.
 (2016)*, Recent geomagnetic secular variation from Swarm and ground observatories
 as estimated in the CHAOS-6 geomagnetic field model Earth Planets Space,
