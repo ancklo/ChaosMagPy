@@ -1180,7 +1180,7 @@ class CHAOS(object):
                 f"# Spherical harmonic coefficients of the time-dependent"
                 f" internal field model (derivative = {deriv})"
                 f" from degree {nmin} to {nmax}.\n"
-                f"# Coefficients (nT/yr^deriv) are given at"
+                f"# Coefficients (nT/yr^{deriv}) are given at"
                 f" {(self.breaks.size-1) * (self.order-1) + 1} points in"
                 f" time and were extracted from order-{self.order}"
                 f" piecewise polynomial (i.e. break points are every"
