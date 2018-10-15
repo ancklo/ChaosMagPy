@@ -1,7 +1,19 @@
 Installation
 ============
 
-1. Install the following packages for example with conda:
+ChaosMagpy relies on the following packages:
+
+* numpy
+* scipy
+* pandas
+* cython
+* cartopy
+* matplotlib<3
+* cdflib
+
+Specific installation steps using the conda package manager are as follows:
+
+1. Install packages with conda:
 
    >>> conda install python numpy scipy pandas cython cartopy matplotlib=2
 
@@ -12,12 +24,17 @@ Installation
 
    >>> pip install cdflib
 
-3. Finally install ChaosMagPy either with pip:
+3. Finally install ChaosMagPy either with pip from PyPi:
 
    >>> pip install chaosmagpy
 
-   or, if you downloaded the package files, with:
+   or, if you downloaded the `package files <https://pypi.org/project/chaosmagpy/#files>`_
+   in the current working directory, with:
+
+   >>> pip install chaosmagpy-x.x-py3-none-any.whl
+
+   or, alternatively
 
    >>> pip install chaosmagpy-x.x.tar.gz
 
-   replacing `x` with the correct version.
+   replacing ``x.x`` with the correct version.
