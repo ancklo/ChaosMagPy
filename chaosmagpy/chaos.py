@@ -310,6 +310,8 @@ class CHAOS(object):
         angles alpha, beta and gamma as trailing dimension (keys are
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
         ``'swarm_c'``).
+    version : str
+        Version specifier (``None`` evaluates to '6.x7' by default).
 
     Examples
     --------
@@ -404,8 +406,8 @@ class CHAOS(object):
 
         # set version of CHAOS model
         if version is None:
-            print('Setting default CHAOS version to "6.x6".')
-            self.version = '6.x6'
+            print('Setting default CHAOS version to "6.x7".')
+            self.version = '6.x7'
         else:
             self.version = str(version)
 
