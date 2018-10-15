@@ -64,6 +64,7 @@ def load_CHAOS_matfile(filepath):
     coefs = pp['coefs']
     coeffs_static = np.ravel(mat_contents['g'])
 
+    # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     n_tdep = int(np.sqrt(dim+1)-1)
     coeffs_tdep = np.empty([order, pieces, n_tdep * (n_tdep + 2)])
     for k in range(order):
@@ -86,28 +87,29 @@ def load_CHAOS_matfile(filepath):
     breaks_delta['q11'] = np.ravel(model_ext['t_break_qs11'])
     breaks_delta['s11'] = np.ravel(model_ext['t_break_qs11'])
 
-    coeffs_delta = {}  # reshape to comply with scipy PPoly coefficients
+    # reshape to comply with scipy PPoly coefficients
+    coeffs_delta = {}
     coeffs_delta['q10'] = np.ravel(model_ext['q10']).reshape((1, -1))
     coeffs_delta['q11'] = np.ravel(model_ext['qs11'][:, 0]).reshape((1, -1))
     coeffs_delta['s11'] = np.ravel(model_ext['qs11'][:, 1]).reshape((1, -1))
 
+    # define satellite names
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
 
     # coefficients and breaks of euler angles
     breaks_euler = {}
-
     for num, satellite in enumerate(satellites):
         breaks_euler[satellite] = np.ravel(
             model_euler['t_break_Euler'][0, num])
 
-    coeffs_euler = {}
-
     # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
     # so first dimension: order, second: number of intervals, third: 3 angles
-    for num, satellite in enumerate(satellites):
-        coeffs_euler[satellite] = np.stack(
-            [model_euler[angle][0, num].reshape(
+    def compose_array(num):
+        return np.stack([model_euler[angle][0, num].reshape(
                 (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
+    coeffs_euler = {}
+    for num, satellite in enumerate(satellites):
+        coeffs_euler[satellite] = compose_array(num)
 
     return CHAOS(
         breaks=breaks,
@@ -178,7 +180,7 @@ def load_CHAOS_shcfile(filepath):
         nmin = params['nmin']
         nmax = params['nmax']
         coeffs_static = np.zeros((nmax*(nmax+2),))
-        coeffs_static[int(nmin**2-1):] = coeffs
+        coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
         model = CHAOS(coeffs_static=coeffs_static,
                       version=_guess_version(filepath))
 
@@ -189,17 +191,10 @@ def load_CHAOS_shcfile(filepath):
         step = params['step']
         breaks = time[::step]
 
-        def get_iter(time, step):
-            m = 0
-            left = 0
-            time = time[:-1]
-            for break_ in time[::step]:
-                yield (m, left, break_)
-                m += 1
-                left += step
-
+        # interpolate with piecewise polynomial of given order
         coeffs_pp = np.empty((order, time.size // step, coeffs.shape[-1]))
-        for m, left, left_break in get_iter(time, step):
+        for m, left_break in enumerate(breaks[:-1]):
+            left = m * step  # time index of left_break
             x = time[left:left+order] - left_break
             c = np.linalg.solve(np.vander(x, order), coeffs[left:left+order])
 
@@ -373,27 +368,31 @@ class CHAOS(object):
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
         self.order = None if order is None else int(order)
+
+        # helper for returning the degree of the provided coefficients
+        def dimension(coeffs):
+            if coeffs is None:
+                return coeffs
+            else:
+                return int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+
         self.coeffs_tdep = coeffs_tdep
-        self.n_tdep = (None if coeffs_tdep is None else
-                       int(np.sqrt(coeffs_tdep.shape[-1] + 1) - 1))
+        self.n_tdep = dimension(coeffs_tdep)
 
         # static field
         if coeffs_static is not None:
             assert coeffs_static.ndim == 1
 
         self.coeffs_static = coeffs_static
-        self.n_static = (None if coeffs_static is None else
-                         int(np.sqrt(coeffs_static.shape[-1] + 1) - 1))
+        self.n_static = dimension(coeffs_static)
 
         # external source in SM reference
         self.coeffs_sm = coeffs_sm
-        self.n_sm = (None if coeffs_sm is None
-                     else int(np.sqrt(coeffs_sm.shape[-1] + 1) - 1))
+        self.n_sm = dimension(coeffs_sm)
 
         # external source in GSM reference
         self.coeffs_gsm = coeffs_gsm
-        self.n_gsm = (None if coeffs_gsm is None
-                      else int(np.sqrt(coeffs_gsm.shape[-1] + 1) - 1))
+        self.n_gsm = dimension(coeffs_gsm)
 
         # external source in SM reference: RC offset
         self.breaks_delta = breaks_delta
@@ -552,8 +551,8 @@ class CHAOS(object):
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
-            Derivative in time (default is 0). For secular variation, choose
-            ``deriv=1``.
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
 
         Returns
         -------
