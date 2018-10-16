@@ -931,9 +931,9 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
                       inverse=False):
     """
-    Computes matrix to rotate vectors from USE (Up-South-East) frame at
-    spherical geographic coordinates (theta, phi) to USE frame at spherical
-    target reference coordinates.
+    Transforms vectors from USE (Up-South-East) frame at
+    spherical geographic coordinates (theta, phi) to USE frame of a roated
+    target reference system in spherical coordinates.
 
     Parameters
     ----------
