@@ -796,7 +796,7 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 def transform_points(theta, phi, time=None, *, reference=None, inverse=False):
     """
     Transforms spherical geographic coordinates into spherical coordinates of
-    a target reference system.
+    the target coordinate system.
 
     Parameters
     ----------
@@ -808,7 +808,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False):
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000). Ignored for ``reference='mag'``.
     reference : {'gsm', 'sm', 'mag'}
-        Target reference system for points provided in GEO
+        Target coordinate system for points provided in GEO
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
@@ -931,9 +931,9 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
                       inverse=False):
     """
-    Transforms vectors from USE (Up-South-East) frame at
-    spherical geographic coordinates (theta, phi) to USE frame of a roated
-    target reference system in spherical coordinates.
+    Transforms vectors with components in USE (Up-South-East) at
+    spherical geographic coordinates (theta, phi) to components in USE at the
+    sphercial coordinates of the rotated target coordinate system.
 
     Parameters
     ----------
@@ -949,7 +949,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000). Ignored for ``reference='mag'``.
     reference : {'gsm', 'sm', 'mag'}
-        Target reference system.
+        Target coordinate system.
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
