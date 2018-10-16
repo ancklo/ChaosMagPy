@@ -19,6 +19,8 @@ root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, root)
 sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
 
+from chaosmagpy import __version__
+
 # -- Project information -----------------------------------------------------
 
 project = 'ChaosMagPy'
@@ -26,9 +28,9 @@ copyright = '2018, Clemens Kloss'
 author = 'Clemens Kloss'
 
 # The short X.Y version
-version = '0.1'
+version = __version__
 # The full version, including alpha/beta/rc tags
-release = ''
+release = version
 
 
 # -- General configuration ---------------------------------------------------
