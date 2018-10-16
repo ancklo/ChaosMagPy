@@ -1,8 +1,9 @@
 Installation
 ============
 
-ChaosMagPy relies on the following packages:
+ChaosMagPy relies on the following:
 
+* python>=3.6
 * numpy
 * scipy
 * pandas
