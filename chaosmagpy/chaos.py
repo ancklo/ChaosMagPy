@@ -7,224 +7,10 @@ import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 from chaosmagpy.plot_utils import plot_timeseries, plot_maps
-from datetime import datetime, timedelta
+from datetime import datetime
 from timeit import default_timer as timer
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-
-
-def load_CHAOS_matfile(filepath):
-    """
-    Load CHAOS model from mat-file, e.g. ``CHAOS-6-x7.mat``.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to mat-file containing the CHAOS model.
-
-    Returns
-    -------
-    model : CHAOS
-        CHAOS class instance.
-
-    Examples
-    --------
-    Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
-    directory like this:
-
-    .. code-block:: python
-
-       import chaosmagpy as cp
-
-       model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
-       print(model)
-
-    See Also
-    --------
-    CHAOS
-
-    """
-
-    filepath = str(filepath)
-
-    version = _guess_version(filepath)
-
-    mat_contents = sio.loadmat(filepath)
-    pp = mat_contents['pp']
-    pp = pp[0, 0]
-    model_ext = mat_contents['model_ext']
-    model_ext = model_ext[0, 0]
-    model_euler = mat_contents['model_Euler']
-    model_euler = model_euler[0, 0]
-
-    order = int(pp['order'])
-    pieces = int(pp['pieces'])
-    dim = int(pp['dim'])
-    breaks = np.ravel(pp['breaks'])  # flatten 2-D array
-    coefs = pp['coefs']
-    coeffs_static = np.ravel(mat_contents['g'])
-
-    # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
-    n_tdep = int(np.sqrt(dim+1)-1)
-    coeffs_tdep = np.empty([order, pieces, n_tdep * (n_tdep + 2)])
-    for k in range(order):
-        for l in range(pieces):
-            for m in range(n_tdep * (n_tdep + 2)):
-                coeffs_tdep[k, l, m] = coefs[l * n_tdep * (n_tdep + 2) + m, k]
-
-    # external field (SM): n=1, 2
-    coeffs_sm = np.ravel(model_ext['m_sm'])  # degree 1 are time averages!
-    coeffs_sm[:3] = np.ravel(model_ext['m_Dst'])  # replace with m_Dst
-
-    # external field (GSM): n=1, 2
-    n_gsm = int(2)
-    coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
-    coeffs_gsm[[0, 3]] = np.ravel(model_ext['m_gsm'])  # only m=0 are non-zero
-
-    # coefficients and breaks of external SM field offsets for q10, q11, s11
-    breaks_delta = {}
-    breaks_delta['q10'] = np.ravel(model_ext['t_break_q10'])
-    breaks_delta['q11'] = np.ravel(model_ext['t_break_qs11'])
-    breaks_delta['s11'] = np.ravel(model_ext['t_break_qs11'])
-
-    # reshape to comply with scipy PPoly coefficients
-    coeffs_delta = {}
-    coeffs_delta['q10'] = np.ravel(model_ext['q10']).reshape((1, -1))
-    coeffs_delta['q11'] = np.ravel(model_ext['qs11'][:, 0]).reshape((1, -1))
-    coeffs_delta['s11'] = np.ravel(model_ext['qs11'][:, 1]).reshape((1, -1))
-
-    # define satellite names
-    satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
-
-    # coefficients and breaks of euler angles
-    breaks_euler = {}
-    for num, satellite in enumerate(satellites):
-        breaks_euler[satellite] = np.ravel(
-            model_euler['t_break_Euler'][0, num])
-
-    # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
-    # so first dimension: order, second: number of intervals, third: 3 angles
-    def compose_array(num):
-        return np.stack([model_euler[angle][0, num].reshape(
-                (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
-    coeffs_euler = {}
-    for num, satellite in enumerate(satellites):
-        coeffs_euler[satellite] = compose_array(num)
-
-    return CHAOS(
-        breaks=breaks,
-        order=order,
-        coeffs_tdep=coeffs_tdep,
-        coeffs_static=coeffs_static,
-        coeffs_sm=coeffs_sm,
-        coeffs_gsm=coeffs_gsm,
-        breaks_delta=breaks_delta,
-        coeffs_delta=coeffs_delta,
-        breaks_euler=breaks_euler,
-        coeffs_euler=coeffs_euler,
-        version=version)
-
-
-def load_CHAOS_shcfile(filepath):
-    """
-    Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
-    should contain the coefficients or the time-dependent or static internal
-    part of the CHAOS model. In case of the time-dependent part, a
-    reconstruction of the piecewise polynomial is performed (only accurate
-    to 0.01 nT).
-
-    Parameters
-    ----------
-    filepath : str
-        Path to shc-file.
-
-    Returns
-    -------
-    model : CHAOS
-        CHAOS class instance with the time-dependent or static internal part
-        initialized.
-
-    Examples
-    --------
-    Load for example the shc-file ``CHAOS-6-x7_tdep.shc`` in the current
-    working directory, containing the coefficients of time-dependent internal
-    part of the CHAOS-6-x7 model.
-
-    .. code-block:: python
-
-       import chaosmagpy as cp
-
-       model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
-       print(model)
-
-    Notes
-    -----
-    The piecewise polynomial of the time-dependent internal part of the CHAOS
-    model is contructed from the snapshots of the model, accurately handling
-    the break-points of the model. Note however that the original coefficients
-    can only be retrieved to an absolute error of around 0.01 nT, i.e.
-    small-scale field and higher derivates (>1) are not recommended if
-    accuracy is important. Use the ``load_CHAOS_matfile`` function instead.
-
-    See Also
-    --------
-    CHAOS, load_CHAOS_matfile
-
-    """
-
-    time, coeffs, params = du.load_shcfile(str(filepath))
-    time = (time - 2000.) * 365.25  # convert decimal years to mjd2000
-
-    if time.size == 1:  # static field
-
-        nmin = params['nmin']
-        nmax = params['nmax']
-        coeffs_static = np.zeros((nmax*(nmax+2),))
-        coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
-        model = CHAOS(coeffs_static=coeffs_static,
-                      version=_guess_version(filepath))
-
-    else:  # time-dependent field
-
-        coeffs = np.transpose(coeffs)
-        order = params['order']
-        step = params['step']
-        breaks = time[::step]
-
-        # interpolate with piecewise polynomial of given order
-        coeffs_pp = np.empty((order, time.size // step, coeffs.shape[-1]))
-        for m, left_break in enumerate(breaks[:-1]):
-            left = m * step  # time index of left_break
-            x = time[left:left+order] - left_break
-            c = np.linalg.solve(np.vander(x, order), coeffs[left:left+order])
-
-            for k in range(order):
-                coeffs_pp[k, m] = c[k]
-
-        model = CHAOS(breaks=breaks,
-                      order=order,
-                      coeffs_tdep=coeffs_pp,
-                      version=_guess_version(filepath))
-
-    return model
-
-
-def _guess_version(filepath):
-    """
-    Extract version from filename. For example from the file 'CHAOS-6-x7.mat',
-    it returns '6.x7'. If not successful, user input is required, otherwise
-    default '6.x7' is returned.
-    """
-
-    # quick fix, not very stable: consider ntpath, imho
-    tail = os.path.splitext(os.path.split(filepath)[1])[0]
-    version = '.'.join(tail.split('_')[0].split('-')[-2:])
-    while len(version) != 4 or version[1] != '.':
-        version = input('Type in version [6.x7]: ')
-        if not version:  # default behaviour
-            version = '6.x7'
-
-    return version
 
 
 class CHAOS(object):
@@ -580,6 +366,12 @@ class CHAOS(object):
         if deriv is None:
             deriv = 0
 
+        if np.amin(time) < self.breaks[0] or np.amax(time) > self.breaks[-1]:
+            warnings.warn("Requested time-dependent internal coefficients are "
+                          "outside of the modelled period from "
+                          f"{self.breaks[0]} to {self.breaks[-1]}. "
+                          "Returning nan's.")
+
         PP = sip.PPoly.construct_fast(
             self.coeffs_tdep[..., :nmax*(nmax+2)].astype(float),
             self.breaks.astype(float), extrapolate=False)
@@ -880,7 +672,19 @@ class CHAOS(object):
             nmax = self.n_sm
 
         if source is None:
-            source = 'all'
+            source = 'external'
+
+        # find smallest overlapping time period for breaks_delta
+        start = np.amax([self.breaks_delta['q10'][0],
+                         self.breaks_delta['q11'][0],
+                         self.breaks_delta['s11'][0]])
+        end = np.amin([self.breaks_delta['q10'][-1],
+                       self.breaks_delta['q11'][-1],
+                       self.breaks_delta['s11'][-1]])
+        if np.amin(time) < start or np.amax(time) > end:
+            warnings.warn("Requested external coefficients in SM are "
+                          "outside of the modelled period from "
+                          f"{start} to {end}. Returning nan's.")
 
         # ensure ndarray input
         time = np.array(time, dtype=np.float)
@@ -894,22 +698,18 @@ class CHAOS(object):
         df_RC = du.load_RC_datfile(filepath)
 
         # check RC index time and input times
-        if np.any(time < df_RC['mjd2000'].iloc[0]):
+        start = df_RC['mjd2000'].iloc[0]
+        end = df_RC['mjd2000'].iloc[-1]
+        if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                '{start} and {end}, but found {date}'.format(
-                    start=df_RC.index[0], end=df_RC.index[-1],
-                    date=timedelta(days=np.amin(time).item())
-                    + datetime(2000, 1, 1)))
+                f'{start} and {end}, but found {np.amin(time)}')
 
         # check RC index time and inputs time
-        if np.any(time > df_RC['mjd2000'].iloc[-1]):
+        if np.amax(time) > end:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                '{start} and {end}, but found {date}.'.format(
-                    start=df_RC.index[0], end=df_RC.index[-1],
-                    date=timedelta(days=np.amax(time).item())
-                    + datetime(2000, 1, 1)))
+                f'{start} and {end}, but found {np.amax(time)}.')
 
         # use piecewise polynomials to evaluate baseline correction in bins
         delta_q10 = sip.PPoly.construct_fast(
@@ -954,7 +754,7 @@ class CHAOS(object):
             # rotate external SM coefficients to GEO reference
             coeffs = np.sum(rotate_gauss*coeffs_sm, axis=-1)
 
-        if source == 'internal':
+        elif source == 'internal':
             # interpolate RC (linear) at input times: RC_int is callable
             RC_int = sip.interp1d(
                 df_RC['mjd2000'].values, df_RC['RC_i'].values, kind='linear')
@@ -993,6 +793,10 @@ class CHAOS(object):
             # rotate internal SM coefficients to GEO reference
             coeffs = np.sum(rotate_gauss_ind*coeffs_sm_ind, axis=-1)
             coeffs[..., :3] += np.sum(rotate_gauss*coeffs_sm, axis=-1)
+
+        else:
+            raise ValueError("Wrong source parameter, use "
+                             "'external' or 'internal'")
 
         return coeffs[..., :nmax*(nmax+2)]
 
@@ -1247,3 +1051,218 @@ class CHAOS(object):
 
         print('Coefficients saved to {}.'.format(
             os.path.join(os.getcwd(), filepath)))
+
+
+def load_CHAOS_matfile(filepath):
+    """
+    Load CHAOS model from mat-file, e.g. ``CHAOS-6-x7.mat``.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to mat-file containing the CHAOS model.
+
+    Returns
+    -------
+    model : :class:`CHAOS` instance
+        Fully initialized model.
+
+    Examples
+    --------
+    Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+    directory like this:
+
+    .. code-block:: python
+
+       import chaosmagpy as cp
+
+       model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+       print(model)
+
+    See Also
+    --------
+    CHAOS, load_CHAOS_shcfile
+
+    """
+
+    filepath = str(filepath)
+
+    version = _guess_version(filepath)
+
+    mat_contents = sio.loadmat(filepath)
+    pp = mat_contents['pp']
+    pp = pp[0, 0]
+    model_ext = mat_contents['model_ext']
+    model_ext = model_ext[0, 0]
+    model_euler = mat_contents['model_Euler']
+    model_euler = model_euler[0, 0]
+
+    order = int(pp['order'])
+    pieces = int(pp['pieces'])
+    dim = int(pp['dim'])
+    breaks = np.ravel(pp['breaks'])  # flatten 2-D array
+    coefs = pp['coefs']
+    coeffs_static = np.ravel(mat_contents['g'])
+
+    # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
+    n_tdep = int(np.sqrt(dim+1)-1)
+    coeffs_tdep = np.empty([order, pieces, n_tdep * (n_tdep + 2)])
+    for k in range(order):
+        for l in range(pieces):
+            for m in range(n_tdep * (n_tdep + 2)):
+                coeffs_tdep[k, l, m] = coefs[l * n_tdep * (n_tdep + 2) + m, k]
+
+    # external field (SM): n=1, 2
+    coeffs_sm = np.ravel(model_ext['m_sm'])  # degree 1 are time averages!
+    coeffs_sm[:3] = np.ravel(model_ext['m_Dst'])  # replace with m_Dst
+
+    # external field (GSM): n=1, 2
+    n_gsm = int(2)
+    coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
+    coeffs_gsm[[0, 3]] = np.ravel(model_ext['m_gsm'])  # only m=0 are non-zero
+
+    # coefficients and breaks of external SM field offsets for q10, q11, s11
+    breaks_delta = {}
+    breaks_delta['q10'] = np.ravel(model_ext['t_break_q10'])
+    breaks_delta['q11'] = np.ravel(model_ext['t_break_qs11'])
+    breaks_delta['s11'] = np.ravel(model_ext['t_break_qs11'])
+
+    # reshape to comply with scipy PPoly coefficients
+    coeffs_delta = {}
+    coeffs_delta['q10'] = np.ravel(model_ext['q10']).reshape((1, -1))
+    coeffs_delta['q11'] = np.ravel(model_ext['qs11'][:, 0]).reshape((1, -1))
+    coeffs_delta['s11'] = np.ravel(model_ext['qs11'][:, 1]).reshape((1, -1))
+
+    # define satellite names
+    satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
+
+    # coefficients and breaks of euler angles
+    breaks_euler = {}
+    for num, satellite in enumerate(satellites):
+        breaks_euler[satellite] = np.ravel(
+            model_euler['t_break_Euler'][0, num])
+
+    # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
+    # so first dimension: order, second: number of intervals, third: 3 angles
+    def compose_array(num):
+        return np.stack([model_euler[angle][0, num].reshape(
+                (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
+
+    coeffs_euler = {}
+    for num, satellite in enumerate(satellites):
+        coeffs_euler[satellite] = compose_array(num)
+
+    return CHAOS(
+        breaks=breaks,
+        order=order,
+        coeffs_tdep=coeffs_tdep,
+        coeffs_static=coeffs_static,
+        coeffs_sm=coeffs_sm,
+        coeffs_gsm=coeffs_gsm,
+        breaks_delta=breaks_delta,
+        coeffs_delta=coeffs_delta,
+        breaks_euler=breaks_euler,
+        coeffs_euler=coeffs_euler,
+        version=version)
+
+
+def load_CHAOS_shcfile(filepath):
+    """
+    Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
+    should contain the coefficients or the time-dependent or static internal
+    part of the CHAOS model. In case of the time-dependent part, a
+    reconstruction of the piecewise polynomial is performed (only accurate
+    to 0.01 nT).
+
+    Parameters
+    ----------
+    filepath : str
+        Path to shc-file.
+
+    Returns
+    -------
+    model : :class:`CHAOS` instance
+        Class instance with either the time-dependent or static internal part
+        initialized.
+
+    Examples
+    --------
+    Load for example the shc-file ``CHAOS-6-x7_tdep.shc`` in the current
+    working directory, containing the coefficients of time-dependent internal
+    part of the CHAOS-6-x7 model.
+
+    .. code-block:: python
+
+       import chaosmagpy as cp
+
+       model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
+       print(model)
+
+    Notes
+    -----
+    The piecewise polynomial of the time-dependent internal part of the CHAOS
+    model is contructed from the snapshots of the model, accurately handling
+    the break-points of the model. Note however that the original coefficients
+    can only be retrieved to an absolute error of around 0.01 nT, i.e.
+    small-scale field and higher derivates (>1) are not recommended if
+    accuracy is important. Use the ``load_CHAOS_matfile`` function instead.
+
+    See Also
+    --------
+    CHAOS, load_CHAOS_matfile
+
+    """
+
+    time, coeffs, params = du.load_shcfile(str(filepath))
+    time = (time - 2000.) * 365.25  # convert decimal years to mjd2000
+
+    if time.size == 1:  # static field
+
+        nmin = params['nmin']
+        nmax = params['nmax']
+        coeffs_static = np.zeros((nmax*(nmax+2),))
+        coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
+        model = CHAOS(coeffs_static=coeffs_static,
+                      version=_guess_version(filepath))
+
+    else:  # time-dependent field
+
+        coeffs = np.transpose(coeffs)
+        order = params['order']
+        step = params['step']
+        breaks = time[::step]
+
+        # interpolate with piecewise polynomial of given order
+        coeffs_pp = np.empty((order, time.size // step, coeffs.shape[-1]))
+        for m, left_break in enumerate(breaks[:-1]):
+            left = m * step  # time index of left_break
+            x = time[left:left+order] - left_break
+            c = np.linalg.solve(np.vander(x, order), coeffs[left:left+order])
+
+            for k in range(order):
+                coeffs_pp[k, m] = c[k]
+
+        model = CHAOS(breaks=breaks,
+                      order=order,
+                      coeffs_tdep=coeffs_pp,
+                      version=_guess_version(filepath))
+
+    return model
+
+
+def _guess_version(filepath):
+    """
+    Extract version from filename. For example from the file 'CHAOS-6-x7.mat',
+    it returns '6.x7'. If not successful, user input is required, otherwise
+    default '6.x7' is returned.
+    """
+
+    # quick fix, not very stable: consider ntpath, imho
+    tail = os.path.splitext(os.path.split(filepath)[1])[0]
+    version = '.'.join(tail.split('_')[0].split('-')[-2:])
+    while len(version) != 4 or version[1] != '.':
+        version = input('Type in version [6.x7]: ')
+        if not version:  # default behaviour
+            version = '6.x7'
+
+    return version
