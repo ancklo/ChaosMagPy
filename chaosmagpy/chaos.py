@@ -622,7 +622,7 @@ class CHAOS(object):
             # rotate external GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss, self.coeffs_gsm)
 
-        if source == 'internal':
+        elif source == 'internal':
             # unpack file: oscillations per day, complex spectrum
             frequency_ind = frequency_spectrum['frequency_ind']
             spectrum_ind = frequency_spectrum['spectrum_ind']
@@ -633,6 +633,10 @@ class CHAOS(object):
 
             # rotate internal GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss_ind, self.coeffs_gsm)
+
+        else:
+            raise ValueError("Wrong source parameter, use "
+                             "'external' or 'internal'")
 
         return coeffs[..., :nmax*(nmax+2)]
 

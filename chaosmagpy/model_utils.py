@@ -318,10 +318,11 @@ def synth_values(coeffs, radius, theta, phi, *,
     broadcasted accordingly (``grid=False``, default).
 
     (1) Single point: grid coordinates are single element arrays, ``coeffs``
-        must be a 1-D array.
-    (2) Several points: grid coordinates are N-D arrays, ``coeffs`` is either
-        an (grid_shape, 1)-D array (each point comes with own field expansion)
-        or a 1-D array (points have the same field expansion).
+        must be a 1-D array of shape (# of coeffs,).
+    (2) Several points: grid coordinates are N-D arrays of shape `grid_shape`,
+        ``coeffs`` is either an (`grid_shape`, # of coeffs)-D array (each point
+        comes with own field expansion) or a 1-D array (points have the same
+        field expansion).
 
     """
 
