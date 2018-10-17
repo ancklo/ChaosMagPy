@@ -287,19 +287,20 @@ def synth_values(coeffs, radius, theta, phi, *,
     Parameters
     ----------
 
-    coeffs : ndarray, shape (grid_shape, ...) or (...,)
+    coeffs : ndarray, shape (..., N)
         Coefficients of the spherical harmonic expansion. The last dimension is
-        equal to the number of coefficients at each grid point.
-    radius : float or ndarray, shape (grid_shape)
+        equal to the number of coefficients, `N` at the grid points.
+    radius : float or ndarray, shape (...)
         Array containing the radius in kilometers.
-    theta : float or ndarray, shape (grid_shape)
+    theta : float or ndarray, shape (...)
         Array containing the colatitude in degrees
         :math:`[0^\\circ,180^\\circ]`.
-    phi : float or ndarray, shape (grid_shape)
+    phi : float or ndarray, shape (...)
         Array containing the longitude in degrees.
     nmax : int, positive, optional
         Maximum degree up to which expansion is to be used (default is given by
-        the `coeffs`, but can also be smaller if specified)
+        the `coeffs`, but can also be smaller if specified
+        `N` \\geq ``nmax`` (``nmax`` + 2))
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -309,20 +310,22 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     Returns
     -------
-    B_radius, B_theta, B_phi : ndarray, shape (grid_shape)
+    B_radius, B_theta, B_phi : ndarray, shape (...)
         Radial, colatitude and azimuthal field components.
 
     Notes
     -----
-    The function can work with different grid shapes, the inputs are
-    broadcasted accordingly (``grid=False``, default).
+    The function can work with different grid shapes, but the inputs have to
+    satisfy NumPy's `broadcasting rules \
+    <https://docs.scipy.org/doc/numpy-1.15.0/user/basics.broadcasting.html>`_
+    (``grid=False``, default). This also applies to the dimension of the
+    coefficients ``coeffs`` excluding the last dimenion.
 
-    (1) Single point: grid coordinates are single element arrays, ``coeffs``
-        must be a 1-D array of shape (# of coeffs,).
-    (2) Several points: grid coordinates are N-D arrays of shape `grid_shape`,
-        ``coeffs`` is either an (`grid_shape`, # of coeffs)-D array (each point
-        comes with own field expansion) or a 1-D array (points have the same
-        field expansion).
+    The optional parameter ``grid`` is for convenience. If set to ``True``,
+    a singleton dimension is appended (prepended) to ``theta`` (``phi``)
+    for broadcasting to a regular grid. The other inputs ``radius`` and
+    ``coeffs`` must then be broadcastable as before but now with the resulting
+    regular grid.
 
     """
 
@@ -345,42 +348,19 @@ def synth_values(coeffs, radius, theta, phi, *,
     theta = np.array(theta, dtype=np.float)
     phi = np.array(phi, dtype=np.float)
 
+    assert np.amin(theta) >= 0 and np.amax(theta) <= degrees(pi)
+
     # handle grid option
     grid = False if grid is None else grid
 
-    # # check grid shape and compare to supplied coefficients
-    # if grid is True:
-    #     assert theta.size > 1 and phi.size > 1, 'At least two points.'
-    #     theta_shape = theta.shape + phi.shape
-    #     phi_shape = theta_shape
-    # else:
-    #     theta_shape = theta.shape
-    #     phi_shape = phi.shape
-    #
-    # grid_shape = max(radius.shape, theta_shape, phi_shape, coeffs.shape[:-1])
-    #
-    # assert (theta_shape == () or
-    #         theta_shape == (1,) or
-    #         theta_shape == grid_shape)
-    # assert (phi_shape == () or
-    #         phi_shape == (1,) or
-    #         phi_shape == grid_shape)
-    # assert (radius.shape == () or  # numpy float
-    #         radius.shape == (1,) or  # ndarray with one element
-    #         radius.shape == grid_shape)  # ndarray
-    # assert (coeffs.shape[:-1] == () or
-    #         coeffs.shape[:-1] == grid_shape)
+    # manually broadcast input grid on surface
+    if grid is True:
+        theta = theta[..., None]  # first dimension is theta
+        phi = phi[None, ...]  # second dimension is phi
 
-    grid_shape = sorted([radius.shape, theta.shape, phi.shape,
-                         coeffs.shape[:-1]], key=lambda x: (-len(x), x))
-    grid_shape = grid_shape[0]
-
-    #assert np.broadcast_to(radius, grid_shape)
-    #assert np.broadcast_to(theta, grid_shape)
-    #assert np.broadcast_to(phi, grid_shape)
-    #assert np.broadcast_to(np.squeeze(coeffs[..., 0], axis=-1), grid_shape)
-
-    assert np.amin(theta) >= 0 and np.amax(theta) <= degrees(pi)
+    # get shape of broadcasted result
+    b = np.broadcast(radius, theta, phi, np.broadcast_to(0, coeffs.shape[:-1]))
+    grid_shape = b.shape
 
     # initialize radial dependence given the source
     if source == 'internal':
@@ -392,11 +372,6 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     # compute associated Legendre polynomials as (n, m, theta-points)-array
     Pnm = legendre_poly(nmax, theta)
-
-    # if grid is True:
-    #     Pnm = Pnm[..., None]
-    #     theta = theta[..., None]
-    #     phi = phi[None, ...]
 
     # save sinth for fast access
     sinth = Pnm[1, 1]

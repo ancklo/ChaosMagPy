@@ -153,9 +153,11 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     Returns
     -------
-    frequency, frequency_ind : ndarray, shape (``filter``, ``nmax`` * (``nmax`` + 2), ``kmax`` * (``kmax`` + 2))
+    frequency, frequency_ind : ndarray, shape (``filter``, ``nmax`` \
+(``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         Unsorted vector of frequencies in 1/days. (positive, excluding aliases)
-    spectrum, spectrum_ind : ndarray, shape (``filter``, ``nmax`` * (``nmax`` + 2), ``kmax`` * (``kmax`` + 2))
+    spectrum, spectrum_ind : ndarray, shape (``filter``, ``nmax`` \
+(``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         Complex fourier spectrum of rotation matrices to transform spherical
         harmonic expansions. It also applies a conductivity model to derive the
         transform for the induced field.
@@ -284,7 +286,8 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
 
     Returns
     -------
-    matrix : ndarray, shape (..., ``nmax`` * (``nmax`` + 2), ``kmax`` * (``kmax`` + 2))
+    matrix : ndarray, shape (..., ``nmax`` (``nmax`` + 2), ``kmax`` \
+(``kmax`` + 2))
         Matrices reside in last two dimensions. They transform spherical
         harmonic coefficients of rotated reference (e.g. GSM) to standard
         geographic reference (GEO):
