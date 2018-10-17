@@ -348,28 +348,37 @@ def synth_values(coeffs, radius, theta, phi, *,
     # handle grid option
     grid = False if grid is None else grid
 
-    # check grid shape and compare to supplied coefficients
-    if grid is True:
-        assert theta.size > 1 and phi.size > 1, 'At least two points.'
-        theta_shape = theta.shape + phi.shape
-        phi_shape = theta_shape
-    else:
-        theta_shape = theta.shape
-        phi_shape = phi.shape
+    # # check grid shape and compare to supplied coefficients
+    # if grid is True:
+    #     assert theta.size > 1 and phi.size > 1, 'At least two points.'
+    #     theta_shape = theta.shape + phi.shape
+    #     phi_shape = theta_shape
+    # else:
+    #     theta_shape = theta.shape
+    #     phi_shape = phi.shape
+    #
+    # grid_shape = max(radius.shape, theta_shape, phi_shape, coeffs.shape[:-1])
+    #
+    # assert (theta_shape == () or
+    #         theta_shape == (1,) or
+    #         theta_shape == grid_shape)
+    # assert (phi_shape == () or
+    #         phi_shape == (1,) or
+    #         phi_shape == grid_shape)
+    # assert (radius.shape == () or  # numpy float
+    #         radius.shape == (1,) or  # ndarray with one element
+    #         radius.shape == grid_shape)  # ndarray
+    # assert (coeffs.shape[:-1] == () or
+    #         coeffs.shape[:-1] == grid_shape)
 
-    grid_shape = max(radius.shape, theta_shape, phi_shape, coeffs.shape[:-1])
+    grid_shape = sorted([radius.shape, theta.shape, phi.shape,
+                         coeffs.shape[:-1]], key=lambda x: (-len(x), x))
+    grid_shape = grid_shape[0]
 
-    assert (theta_shape == () or
-            theta_shape == (1,) or
-            theta_shape == grid_shape)
-    assert (phi_shape == () or
-            phi_shape == (1,) or
-            phi_shape == grid_shape)
-    assert (radius.shape == () or  # numpy float
-            radius.shape == (1,) or  # ndarray with one element
-            radius.shape == grid_shape)  # ndarray
-    assert (coeffs.shape[:-1] == () or
-            coeffs.shape[:-1] == grid_shape)
+    #assert np.broadcast_to(radius, grid_shape)
+    #assert np.broadcast_to(theta, grid_shape)
+    #assert np.broadcast_to(phi, grid_shape)
+    #assert np.broadcast_to(np.squeeze(coeffs[..., 0], axis=-1), grid_shape)
 
     assert np.amin(theta) >= 0 and np.amax(theta) <= degrees(pi)
 
@@ -384,10 +393,10 @@ def synth_values(coeffs, radius, theta, phi, *,
     # compute associated Legendre polynomials as (n, m, theta-points)-array
     Pnm = legendre_poly(nmax, theta)
 
-    if grid is True:
-        Pnm = Pnm[..., None]
-        theta = theta[..., None]
-        phi = phi[None, ...]
+    # if grid is True:
+    #     Pnm = Pnm[..., None]
+    #     theta = theta[..., None]
+    #     phi = phi[None, ...]
 
     # save sinth for fast access
     sinth = Pnm[1, 1]
