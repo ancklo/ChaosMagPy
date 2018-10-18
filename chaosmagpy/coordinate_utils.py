@@ -62,9 +62,11 @@ def igrf_dipole(epoch=None):
 
     elif epoch == '2010':
         # dipole as used in original chaos software (IGRF-11), epoch 2010
-        dipole = np.array([np.sin(11.32*pi/180)*np.cos(289.59*pi/180),
-                           np.sin(11.32*pi/180)*np.sin(289.59*pi/180),
-                           np.cos(11.32*pi/180)])
+        theta = radians(11.32)
+        phi = radians(289.59)
+        dipole = np.array([np.sin(theta)*np.cos(phi),
+                           np.sin(theta)*np.sin(phi),
+                           np.cos(theta)])
 
     else:
         raise ValueError('Only epoch "2010" (IGRF-11) and'
