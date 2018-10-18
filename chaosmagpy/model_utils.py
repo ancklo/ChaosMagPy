@@ -319,13 +319,66 @@ def synth_values(coeffs, radius, theta, phi, *,
     satisfy NumPy's `broadcasting rules \
     <https://docs.scipy.org/doc/numpy-1.15.0/user/basics.broadcasting.html>`_
     (``grid=False``, default). This also applies to the dimension of the
-    coefficients ``coeffs`` excluding the last dimenion.
+    coefficients ``coeffs`` excluding the last dimension.
 
     The optional parameter ``grid`` is for convenience. If set to ``True``,
     a singleton dimension is appended (prepended) to ``theta`` (``phi``)
     for broadcasting to a regular grid. The other inputs ``radius`` and
     ``coeffs`` must then be broadcastable as before but now with the resulting
     regular grid.
+
+    Examples
+    --------
+    The most straight forward computation uses a fully specified grid. For
+    example, compute the magnetic field at :math:`N=50` grid points on the
+    surface.
+
+    .. code-block:: python
+
+      import chaosmagpy.model_utils as cpm
+      import numpy as np
+
+      N = 50
+      coeffs = np.ones((3,))  # degree 1 coefficients for all points
+      radius = 6371.2 * np.ones((N,))  # radius of 50 points in km
+      phi = np.linspace(-180., 180., num=N)  # azimuth of 50 points in deg.
+      theta = np.linspace(0., 180., num=N)  # colatitude of 50 points in deg.
+
+      B = cpm.synth_values(coeffs, radius, theta, phi)
+      print([B[num].shape for num in range(3)])  # (N,) shaped output
+
+    Instead of `N` points, compute the field on a regular
+    :math:`N\\times N`-grid in azimuth and colatitude (slow).
+
+    .. code-block:: python
+
+      radius_grid = 6371.2 * np.ones((N, N))
+      phi_grid, theta_grid = np.meshgrid(phi, theta)  # regular NxN grid
+
+      B = cpm.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
+      print([B[num].shape for num in range(3)])  # NxN output
+
+    But this is slow since some computations on the grid are executed several
+    times. The preferred method is to use NumPy's broadcasting rules (fast).
+
+    .. code-block:: python
+
+      radius_grid = 6371.2  # float, () or (1,)-shaped array broadcasted to NxN
+      phi_grid = phi[None, ...]  # prepend singleton: 1xN
+      theta_grid = theta[..., None]  # append singleton: Nx1
+
+      B = cpm.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
+      print([B[num].shape for num in range(3)])  # NxN output
+
+    For convenience, you can do the same by using ``grid=True`` option.
+
+    .. code-block:: python
+
+      B = cpm.synth_values(coeffs, radius_grid, theta, phi, grid=True)
+      print([B[num].shape for num in range(3)])  # NxN output
+
+    Remember that ``grid=False`` (or left out completely) will result in
+    (N,)-shaped outputs as in the first example.
 
     """
 
