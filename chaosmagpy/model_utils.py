@@ -299,8 +299,8 @@ def synth_values(coeffs, radius, theta, phi, *,
         Array containing the longitude in degrees.
     nmax : int, positive, optional
         Maximum degree up to which expansion is to be used (default is given by
-        the `coeffs`, but can also be smaller if specified
-        `N` \\geq ``nmax`` (``nmax`` + 2))
+        the ``coeffs``, but can also be smaller if specified
+        :math:`N` :math:`\\geq` ``nmax`` (``nmax`` + 2)
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -359,7 +359,17 @@ def synth_values(coeffs, radius, theta, phi, *,
         phi = phi[None, ...]  # second dimension is phi
 
     # get shape of broadcasted result
-    b = np.broadcast(radius, theta, phi, np.broadcast_to(0, coeffs.shape[:-1]))
+    try:
+        b = np.broadcast(radius, theta, phi,
+                         np.broadcast_to(0, coeffs.shape[:-1]))
+    except ValueError as err:
+        print('Cannot broadcast grid shapes (excl. last dimension of coeffs):')
+        print(f'radius: {radius.shape}')
+        print(f'theta:  {theta.shape}')
+        print(f'phi:    {phi.shape}')
+        print(f'coeffs: {coeffs.shape}')
+        raise
+
     grid_shape = b.shape
 
     # initialize radial dependence given the source
