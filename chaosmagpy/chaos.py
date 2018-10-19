@@ -702,8 +702,8 @@ class CHAOS(object):
         df_RC = du.load_RC_datfile(filepath)
 
         # check RC index time and input times
-        start = df_RC['mjd2000'].iloc[0]
-        end = df_RC['mjd2000'].iloc[-1]
+        start = df_RC['time'].iloc[0]
+        end = df_RC['time'].iloc[-1]
         if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
@@ -738,7 +738,7 @@ class CHAOS(object):
         if source == 'external':
             # interpolate RC (linear) at input times: RC_ext is callable
             RC_ext = sip.interp1d(
-                df_RC['mjd2000'].values, df_RC['RC_e'].values, kind='linear')
+                df_RC['time'].values, df_RC['RC_e'].values, kind='linear')
 
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
 
@@ -761,7 +761,7 @@ class CHAOS(object):
         elif source == 'internal':
             # interpolate RC (linear) at input times: RC_int is callable
             RC_int = sip.interp1d(
-                df_RC['mjd2000'].values, df_RC['RC_i'].values, kind='linear')
+                df_RC['time'].values, df_RC['RC_i'].values, kind='linear')
 
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']

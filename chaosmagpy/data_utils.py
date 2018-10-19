@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 
-def load_RC_datfile(filepath, parse_dates=None):
+def load_RC_datfile(filepath, parse_dates=False):
     """
     Load RC-index data file into pandas data frame.
 
@@ -18,15 +18,13 @@ def load_RC_datfile(filepath, parse_dates=None):
     Returns
     -------
     df : dataframe
-        Pandas dataframe with names {'mjd2000', 'RC', 'RC_e', 'RC_i', 'flag'}.
+        Pandas dataframe with names {'time', 'RC', 'RC_e', 'RC_i', 'flag'},
+        where ``'time'`` is given in modified Julian dates.
 
     """
 
-    if parse_dates is None:
-        parse_dates = False
-
-    column_names = ['mjd2000', 'RC', 'RC_e', 'RC_i', 'flag']
-    column_types = {'mjd2000': 'float64', 'RC': 'float64', 'RC_e': 'float64',
+    column_names = ['time', 'RC', 'RC_e', 'RC_i', 'flag']
+    column_types = {'time': 'float64', 'RC': 'float64', 'RC_e': 'float64',
                     'RC_i': 'float64', 'flag': 'category'}
 
     df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='#',
@@ -34,7 +32,8 @@ def load_RC_datfile(filepath, parse_dates=None):
 
     if parse_dates is True:
         df.index = pd.to_datetime(
-            df['mjd2000'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
+            df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
+        df.drop(['time'], axis=1, inplace=True)
 
     return df
 
@@ -90,6 +89,27 @@ def load_shcfile(filepath):
         coeffs = np.squeeze(coeffs[:, 2:])  # discard columns with n and m
 
     return time, coeffs, parameters
+
+
+def load_magfile(filepath, parse_dates=False):
+
+    column_names = ['theta', 'phi', 'time', 'radius', 'B_radius',
+                    'B_theta', 'B_phi']
+
+    # convert decimal years to mjd2000
+    def to_mjd2000(time):
+        return (time - 2000.) * 365.25
+
+    df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='%',
+                     names=column_names, converters={'2': to_mjd2000},
+                     na_values=99999.0000, usecols=column_names)
+
+    if parse_dates is True:
+        df.index = pd.to_datetime(
+            df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
+        df.drop(['time'], axis=1, inplace=True)
+
+    return df
 
 
 def memory_usage(pandas_obj):
