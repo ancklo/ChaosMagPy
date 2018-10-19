@@ -1218,7 +1218,6 @@ def load_CHAOS_shcfile(filepath):
     """
 
     time, coeffs, params = du.load_shcfile(str(filepath))
-    time = (time - 2000.) * 365.25  # convert decimal years to mjd2000
 
     if time.size == 1:  # static field
 

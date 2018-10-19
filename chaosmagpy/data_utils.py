@@ -50,7 +50,8 @@ def load_shcfile(filepath):
     Returns
     -------
     time : ndarray, shape (N,)
-        Array containing `N` times for each model snapshot in decimal years.
+        Array containing `N` times for each model snapshot in modified
+        Julian dates with origin January 1, 2000 0:00 UTC.
     coeffs : ndarray, shape (nmax(nmax+2), N)
         Coefficients of model snapshots. Each column is a snapshot up to
         spherical degree and order `nmax`.
@@ -88,7 +89,7 @@ def load_shcfile(filepath):
         coeffs = data[parameters['N']:].reshape((-1, parameters['N']+2))
         coeffs = np.squeeze(coeffs[:, 2:])  # discard columns with n and m
 
-    return time, coeffs, parameters
+    return (time - 2000.) * 365.25, coeffs, parameters
 
 
 def load_magfile(filepath, parse_dates=False):
