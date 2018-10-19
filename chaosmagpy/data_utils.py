@@ -30,10 +30,11 @@ def load_RC_datfile(filepath, parse_dates=False):
     df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='#',
                      dtype=column_types, names=column_names)
 
+    # set datetime as index
     if parse_dates is True:
         df.index = pd.to_datetime(
             df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
-        df.drop(['time'], axis=1, inplace=True)
+        df.drop(['time'], axis=1, inplace=True)  # delete redundant time column
 
     return df
 
@@ -95,20 +96,30 @@ def load_shcfile(filepath):
 def load_magfile(filepath, parse_dates=False):
 
     column_names = ['theta', 'phi', 'time', 'radius', 'B_radius',
-                    'B_theta', 'B_phi']
+                    'B_theta', 'B_phi', 'codes']
 
     # convert decimal years to mjd2000
     def to_mjd2000(time):
-        return (time - 2000.) * 365.25
+        time = float(time)
+        if time == 99999:
+            return np.nan
+        else:
+            return (time - 2000.) * 365.25
 
     df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='%',
-                     names=column_names, converters={'2': to_mjd2000},
-                     na_values=99999.0000, usecols=column_names)
+                     names=column_names, na_values=99999,
+                     usecols=column_names, converters={'time': to_mjd2000})
 
+    # reordered column names to get "natural" ordering
+    column_names = ['time', 'radius', 'theta', 'phi', 'B_radius',
+                    'B_theta', 'B_phi', 'codes']
+    df = df.reindex(columns=column_names)
+
+    # set datetime as index
     if parse_dates is True:
         df.index = pd.to_datetime(
             df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
-        df.drop(['time'], axis=1, inplace=True)
+        df.drop(['time'], axis=1, inplace=True)  # delete redundant time column
 
     return df
 
