@@ -93,37 +93,6 @@ def load_shcfile(filepath):
     return (time - 2000.) * 365.25, coeffs, parameters
 
 
-def load_magfile(filepath, parse_dates=False):
-
-    column_names = ['theta', 'phi', 'time', 'radius', 'B_radius',
-                    'B_theta', 'B_phi', 'codes']
-
-    # convert decimal years to mjd2000
-    def to_mjd2000(time):
-        time = float(time)
-        if time == 99999:
-            return np.nan
-        else:
-            return (time - 2000.) * 365.25
-
-    df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='%',
-                     names=column_names, na_values=99999,
-                     usecols=column_names, converters={'time': to_mjd2000})
-
-    # reordered column names to get "natural" ordering
-    column_names = ['time', 'radius', 'theta', 'phi', 'B_radius',
-                    'B_theta', 'B_phi', 'codes']
-    df = df.reindex(columns=column_names)
-
-    # set datetime as index
-    if parse_dates is True:
-        df.index = pd.to_datetime(
-            df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
-        df.drop(['time'], axis=1, inplace=True)  # delete redundant time column
-
-    return df
-
-
 def memory_usage(pandas_obj):
     """
     Compute memory usage of pandas object. For full report, use:
