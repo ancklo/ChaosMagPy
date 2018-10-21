@@ -1,4 +1,5 @@
 import numpy as np
+import ntpath
 import os
 import warnings
 import scipy.io as sio
@@ -10,7 +11,7 @@ from chaosmagpy.plot_utils import plot_timeseries, plot_maps
 from datetime import datetime
 from timeit import default_timer as timer
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
+ROOT = ntpath.abspath(ntpath.dirname(__file__))
 
 
 class CHAOS(object):
@@ -608,7 +609,7 @@ class CHAOS(object):
         time = np.array(time, dtype=np.float)
 
         # build rotation matrix from file
-        filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_gsm.npz')
+        filepath = ntpath.join(ROOT, 'lib', 'frequency_spectrum_gsm.npz')
         frequency_spectrum = np.load(filepath)
 
         if source == 'external':
@@ -694,11 +695,11 @@ class CHAOS(object):
         time = np.array(time, dtype=np.float)
 
         # build rotation matrix from file
-        filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_sm.npz')
+        filepath = ntpath.join(ROOT, 'lib', 'frequency_spectrum_sm.npz')
         frequency_spectrum = np.load(filepath)
 
         # load RC-index into date frame
-        filepath = os.path.join(ROOT, 'lib', 'RC_1997-2018.dat')
+        filepath = ntpath.join(ROOT, 'lib', 'RC_1997-2018.dat')
         df_RC = du.load_RC_datfile(filepath)
 
         # check RC index time and input times
@@ -1054,7 +1055,7 @@ class CHAOS(object):
                 f.write('\n')
 
         print('Coefficients saved to {}.'.format(
-            os.path.join(os.getcwd(), filepath)))
+            ntpath.join(os.getcwd(), filepath)))
 
 
 def load_CHAOS_matfile(filepath):
@@ -1261,7 +1262,8 @@ def _guess_version(filepath):
     """
 
     # quick fix, not very stable: consider ntpath, imho
-    tail = os.path.splitext(os.path.split(filepath)[1])[0]
+    head, tail = ntpath.split(filepath)
+    tail = ntpath.splitext(tail or ntpath.basename(head))[0]
     version = '.'.join(tail.split('_')[0].split('-')[-2:])
     while len(version) != 4 or version[1] != '.':
         version = input('Type in version [6.x7]: ')

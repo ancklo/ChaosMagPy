@@ -24,13 +24,13 @@ MAG : magnetic orthogonal coordinate system (centered dipole)
 """
 
 import numpy as np
-import os
+import ntpath
 from numpy import degrees, radians
 from math import pi, ceil, factorial
 from datetime import datetime
 from chaosmagpy.model_utils import legendre_poly
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
+ROOT = ntpath.abspath(ntpath.dirname(__file__))
 
 
 def igrf_dipole(epoch=None):
@@ -255,7 +255,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     # save several arrays to binary
     if save_to is True:
-        filepath = os.path.join(
+        filepath = ntpath.join(
             ROOT, 'lib', 'frequency_spectrum_{:}.npz'.format(reference))
         np.savez(filepath,
                  frequency=frequency, spectrum=spectrum,
@@ -1212,7 +1212,7 @@ def q_response(frequency, nmax):
     """
 
     # load conductivity model
-    filepath = os.path.join(ROOT, 'lib', 'Earth_conductivity.dat')
+    filepath = ntpath.join(ROOT, 'lib', 'Earth_conductivity.dat')
     sigma_model = np.loadtxt(filepath)
 
     radius_ref = 6371.2  # reference radius in km

@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import os
+import ntpath
 
 
 def load_RC_datfile(filepath, parse_dates=False):
@@ -76,7 +76,7 @@ def load_shcfile(filepath):
 
             read_line = np.fromstring(line, sep=' ')
             if read_line.size == 5:
-                name = os.path.split(filepath)[1]  # file name string
+                name = ntpath.split(filepath)[1]  # file name string
                 values = [name] + read_line.astype(np.int).tolist()
 
             else:
