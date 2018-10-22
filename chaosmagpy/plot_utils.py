@@ -11,23 +11,29 @@ plt.rc('font', **{'family': 'serif', 'sans-serif': ['Helvetica'], 'size': 8})
 DEFAULT_WIDTH = 16 / 2.54  # default figure width: 25cm
 
 
-def plot_timeseries(time, X, Y, Z, *, figsize=None, titles=None, label=None):
+def plot_timeseries(time, X, Y, Z, **kwargs):
 
-    if figsize is None:
-        figsize = (DEFAULT_WIDTH, 0.8*DEFAULT_WIDTH)
+    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8*DEFAULT_WIDTH),
+                    titles=['', '', ''],
+                    label='')
 
-    if label is None:
-        label = ''
+    # overwrite value with the one in kwargs, if not then use the default
+    kwds = defaults
+    for key, value in kwargs.items():
+        if value is not None:
+            kwds[key] = value
 
-    if titles is None:
-        titles = ['', '', '']
+    # remove keywords that are not intended for pcolormesh
+    figsize = kwds.pop('figsize')
+    titles = kwds.pop('titles')
+    label = kwds.pop('label')
 
     date_time = np.array(  # generate list of datetime objects
         [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
 
     fig, axes = plt.subplots(3, 1, sharex='col', figsize=figsize)
     for ax, component, title in zip(axes, [X, Y, Z], titles):
-        ax.plot(date_time, component)
+        ax.plot(date_time, component, **kwds)
         ax.set_title(title)
         ax.grid()
         ax.set(ylabel=label)
@@ -38,37 +44,50 @@ def plot_timeseries(time, X, Y, Z, *, figsize=None, titles=None, label=None):
     plt.show()
 
 
-def plot_maps(theta_grid, phi_grid, X, Y, Z, *,
-              figsize=None, titles=None, label=None, cmap=None, climit=None):
+def plot_maps(theta_grid, phi_grid, X, Y, Z, **kwargs):
 
-    if figsize is None:
-        figsize = (DEFAULT_WIDTH, 1.2*DEFAULT_WIDTH)
+    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2*DEFAULT_WIDTH),
+                    titles=['', '', ''],
+                    label='',
+                    cmap='PuOr',
+                    limiter=lambda x: np.amax(np.abs(x)),  # maximum value
+                    projection=ccrs.Mollweide(),
+                    transform=ccrs.PlateCarree())
 
-    if titles is None:
-        titles = ['', '', '']
+    # overwrite value with the one in kwargs, if not then use the default
+    kwds = defaults
+    for key, value in kwargs.items():
+        if value is not None:
+            kwds[key] = value
 
-    if label is None:
-        label = ''
+    # remove keywords that are not intended for pcolormesh
+    figsize = kwds.pop('figsize')
+    titles = kwds.pop('titles')
+    label = kwds.pop('label')
+    limiter = kwds.pop('limiter')
+    projection = kwds.pop('projection')
 
-    if cmap is None:
-        cmap = 'PuOr'
-
-    # set axis projection
-    projection = ccrs.Mollweide()
-
+    # create axis handle
     fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=figsize,
                              subplot_kw=dict(projection=projection))
+    # make subplots
     for ax, component, title in zip(axes, [X, Y, Z], titles):
-        climit = np.amax(np.abs(component)) if climit is None else climit
-        pc = ax.pcolormesh(phi_grid, 90. - theta_grid, component,
-                           vmin=-climit, vmax=climit, cmap=cmap,
-                           transform=ccrs.PlateCarree())
+        # evaluate colorbar limits depending on vmax/vmin in kwargs
+        kwds.setdefault('vmax', limiter(component))
+        kwds.setdefault('vmin', -limiter(component))
+
+        # produce colormesh and evaluate keywords (defaults and input)
+        pc = ax.pcolormesh(phi_grid, 90. - theta_grid, component, **kwds)
+
         ax.gridlines(linewidth=0.5, linestyle='dashed',
                      ylocs=np.linspace(-90, 90, num=7),  # parallels
                      xlocs=np.linspace(-180, 180, num=13))  # meridians
+
         ax.coastlines(linewidth=0.5)
+
         clb = plt.colorbar(pc, ax=ax, format=ticker.FuncFormatter(fmt),
                            extend='both')
+
         clb.set_label(label)
         ax.set_global()
         ax.set_title(title)
