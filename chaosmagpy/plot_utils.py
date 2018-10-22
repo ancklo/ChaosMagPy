@@ -18,22 +18,21 @@ def plot_timeseries(time, X, Y, Z, **kwargs):
                     label='')
 
     # overwrite value with the one in kwargs, if not then use the default
-    kwds = defaults
-    for key, value in kwargs.items():
-        if value is not None:
-            kwds[key] = value
+    for key, value in defaults.items():
+        if kwargs.setdefault(key, value) is None:
+            kwargs[key] = value
 
-    # remove keywords that are not intended for pcolormesh
-    figsize = kwds.pop('figsize')
-    titles = kwds.pop('titles')
-    label = kwds.pop('label')
+    # remove keywords that are not intended for plot
+    figsize = kwargs.pop('figsize')
+    titles = kwargs.pop('titles')
+    label = kwargs.pop('label')
 
     date_time = np.array(  # generate list of datetime objects
         [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
 
     fig, axes = plt.subplots(3, 1, sharex='col', figsize=figsize)
     for ax, component, title in zip(axes, [X, Y, Z], titles):
-        ax.plot(date_time, component, **kwds)
+        ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
         ax.grid()
         ax.set(ylabel=label)
@@ -55,17 +54,16 @@ def plot_maps(theta_grid, phi_grid, X, Y, Z, **kwargs):
                     transform=ccrs.PlateCarree())
 
     # overwrite value with the one in kwargs, if not then use the default
-    kwds = defaults
-    for key, value in kwargs.items():
-        if value is not None:
-            kwds[key] = value
+    for key, value in defaults.items():
+        if kwargs.setdefault(key, value) is None:
+            kwargs[key] = value
 
     # remove keywords that are not intended for pcolormesh
-    figsize = kwds.pop('figsize')
-    titles = kwds.pop('titles')
-    label = kwds.pop('label')
-    limiter = kwds.pop('limiter')
-    projection = kwds.pop('projection')
+    figsize = kwargs.pop('figsize')
+    titles = kwargs.pop('titles')
+    label = kwargs.pop('label')
+    limiter = kwargs.pop('limiter')
+    projection = kwargs.pop('projection')
 
     # create axis handle
     fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=figsize,
@@ -73,11 +71,11 @@ def plot_maps(theta_grid, phi_grid, X, Y, Z, **kwargs):
     # make subplots
     for ax, component, title in zip(axes, [X, Y, Z], titles):
         # evaluate colorbar limits depending on vmax/vmin in kwargs
-        kwds.setdefault('vmax', limiter(component))
-        kwds.setdefault('vmin', -limiter(component))
+        kwargs.setdefault('vmax', limiter(component))
+        kwargs.setdefault('vmin', -limiter(component))
 
         # produce colormesh and evaluate keywords (defaults and input)
-        pc = ax.pcolormesh(phi_grid, 90. - theta_grid, component, **kwds)
+        pc = ax.pcolormesh(phi_grid, 90. - theta_grid, component, **kwargs)
 
         ax.gridlines(linewidth=0.5, linestyle='dashed',
                      ylocs=np.linspace(-90, 90, num=7),  # parallels

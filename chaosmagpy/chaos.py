@@ -480,7 +480,7 @@ class CHAOS(object):
                   f'$B_\\phi$ ($n\\leq{nmax}$, deriv={deriv})']
 
         plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units, cmap=None)
+                  titles=titles, label=units)
 
     def synth_static_field(self, nmax=None):
         """
@@ -564,7 +564,7 @@ class CHAOS(object):
                   f'$B_\\phi$ ($n\\leq{nmax}$)']
 
         plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  label=units, titles=titles, cmap='nio', climit=200)
+                  label=units, titles=titles, cmap='nio', vmax=200, vmin=-200)
 
     def synth_gsm_field(self, time, nmax=None, source=None):
         """
