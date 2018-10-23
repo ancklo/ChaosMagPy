@@ -164,8 +164,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'chaosmagpy', 'ChaosMagPy Documentation',
-     author, 'ChaosMagPy', 'Package to read the CHAOS model and '
-     'compute the geomagnetic field from it.',
+     author, 'ChaosMagPy', 'Package for reading the CHAOS model and '
+     'computing the geomagnetic field.',
      'Miscellaneous'),
 ]
 
@@ -181,8 +181,3 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
-
-# install copy button to hide prompts and outputs in code-blocks
-def setup(app):
-    app.add_javascript('copybutton.js')
