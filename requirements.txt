@@ -1,7 +1,7 @@
 numpy>=1.15
 scipy>=1.1
 pandas>=0.23
-cython>=0.28
+Cython>=0.28
 cartopy>=0.16
 matplotlib<=2
 cdflib>=0.3
