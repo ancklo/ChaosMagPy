@@ -18,6 +18,7 @@ import sys
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.insert(0, root)
 sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
+autodoc_mock_imports = ['_tkinter']
 
 from chaosmagpy import __version__
 
