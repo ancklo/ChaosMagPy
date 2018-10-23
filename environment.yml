@@ -2,6 +2,7 @@ dependencies:
 - cython
 - python=3.6
 - numpy
+- numpydoc
 - pandas
 - scipy
 - cartopy
