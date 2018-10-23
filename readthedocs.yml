@@ -7,4 +7,5 @@ python:
   version: 3.6
   use_system_site_packages: true
 
-requirements_file: requirements.txt
+conda:
+  file: environment.yml
