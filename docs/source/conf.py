@@ -20,7 +20,7 @@ sys.path.insert(0, root)
 sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
 autodoc_mock_imports = ['_tkinter']
 
-import matplotlib
+import matplotlib  # import so that 'agg' can be given, as readthedocs fails
 matplotlib.use('agg')
 from chaosmagpy import __version__
 
