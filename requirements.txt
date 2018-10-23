@@ -1,0 +1,10 @@
+python>=3.6
+numpy>=1.15
+scipy>=1.1
+pandas>=0.23
+cython>=0.28
+cartopy>=0.16
+matplotlib<=2
+cdflib>=0.3
+docutils>=0.13
+pygments>=2.2
