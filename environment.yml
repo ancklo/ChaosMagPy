@@ -1,0 +1,10 @@
+dependencies:
+- cython
+- python=3.6
+- numpy
+- pandas
+- scipy
+- cartopy
+- matplotlib=2
+- pip:
+    - cdflib
