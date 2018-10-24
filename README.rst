@@ -21,3 +21,8 @@ Geophys. J. Int., Vol 197, 815-827, doi: 10.1093/gji/ggu033.
 *Olsen, N.,  Luehr, H.,  Sabaka, T.J.,  Mandea, M. ,Rother, M., Toeffner-Clausen, L.
 and Choi, S. (2006)*, CHAOS — a model of Earth's magnetic field derived from CHAMP,
 Ørsted, and SAC-C magnetic satellite data, Geophys. J. Int., vol. 166 67-75
+
+Documentation
+-------------
+
+The latest documentation of the package is available on `Read the Docs <https://chaosmagpy.readthedocs.io/en/latest/>`_. 
