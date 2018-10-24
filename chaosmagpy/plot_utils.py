@@ -52,7 +52,7 @@ def plot_timeseries(time, *args, **kwargs):
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
-    print(n)
+
     defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * n/3 * DEFAULT_WIDTH),
                     titles=n*[''],
                     label='',
