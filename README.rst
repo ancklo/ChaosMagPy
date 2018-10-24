@@ -25,4 +25,5 @@ and Choi, S. (2006)*, CHAOS — a model of Earth's magnetic field derived from C
 Documentation
 -------------
 
-The latest documentation of the package is available on `Read the Docs <https://chaosmagpy.readthedocs.io/en/latest/>`_. 
+The latest documentation of the package is available on
+`Read the Docs <https://chaosmagpy.readthedocs.io/en/latest/>`_. 
