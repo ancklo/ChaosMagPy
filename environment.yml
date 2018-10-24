@@ -1,11 +1,12 @@
 dependencies:
-- cython
-- python=3.6
+- python >= 3.6
 - numpy
 - numpydoc
-- pandas
 - scipy
+- pandas
+- cython
 - cartopy
-- matplotlib=2
+- matplotlib < 3
+- sphinx
 - pip:
     - cdflib
