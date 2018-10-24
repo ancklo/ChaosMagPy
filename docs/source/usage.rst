@@ -15,6 +15,12 @@ CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory:
 
    model.plot_tdep_map(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
 
+.. figure:: images/plot_tdep_map.png
+   :align: center
+
+   Secular variation at the core-mantle-boundary up to degree 16 in
+   January 1, 2000 0:00 UTC.
+
 Save Gauss coefficients of the time-dependent internal (i.e. large-scale core)
 field in shc-format to a file:
 
@@ -35,13 +41,15 @@ and saved
 
    model.write_to_shc('CHAOS-6-x7_static.shc', source='static')
 
-Plot the external inducing and induced field:
+Plot the static internal small-scale part of the model up to degree 85:
 
 .. code-block:: python
 
-   from cp.coordinate_utils import mjd2000  # easy date conversion
-
    radius = 6371.2
-   time = mjd2000(2015, 9, 1)  # date as modified Julian date
 
-   model.plot_external_map(time, radius, reference='all')
+   model.plot_static_map(radius, nmax=85)
+
+.. figure:: images/plot_static_map.png
+   :align: center
+
+   Static internal small-scale field at Earth's surface up to degree 85.
