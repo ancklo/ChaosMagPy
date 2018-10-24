@@ -11,10 +11,12 @@ plt.rc('font', **{'family': 'serif', 'sans-serif': ['Helvetica'], 'size': 8})
 DEFAULT_WIDTH = 16 / 2.54  # default figure width: 25cm
 
 
-def plot_timeseries(time, X, Y, Z, **kwargs):
+def plot_timeseries(time, *args, **kwargs):
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8*DEFAULT_WIDTH),
-                    titles=['', '', ''],
+    n = len(args)  # number of subplots
+
+    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * n/3 * DEFAULT_WIDTH),
+                    titles=n*[''],
                     label='')
 
     # overwrite value with the one in kwargs, if not then use the default
@@ -30,8 +32,8 @@ def plot_timeseries(time, X, Y, Z, **kwargs):
     date_time = np.array(  # generate list of datetime objects
         [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
 
-    fig, axes = plt.subplots(3, 1, sharex='col', figsize=figsize)
-    for ax, component, title in zip(axes, [X, Y, Z], titles):
+    fig, axes = plt.subplots(n, 1, sharex='col', figsize=figsize)
+    for ax, component, title in zip(axes, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
         ax.grid()
@@ -43,10 +45,12 @@ def plot_timeseries(time, X, Y, Z, **kwargs):
     plt.show()
 
 
-def plot_maps(theta_grid, phi_grid, X, Y, Z, **kwargs):
+def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2*DEFAULT_WIDTH),
-                    titles=['', '', ''],
+    n = len(args)  # number of plots
+
+    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * n/3 * DEFAULT_WIDTH),
+                    titles=n*[''],
                     label='',
                     cmap='PuOr',
                     limiter=lambda x: np.amax(np.abs(x)),  # maximum value
@@ -66,10 +70,10 @@ def plot_maps(theta_grid, phi_grid, X, Y, Z, **kwargs):
     projection = kwargs.pop('projection')
 
     # create axis handle
-    fig, axes = plt.subplots(3, 1, sharex=True, sharey=True, figsize=figsize,
+    fig, axes = plt.subplots(n, 1, sharex=True, sharey=True, figsize=figsize,
                              subplot_kw=dict(projection=projection))
     # make subplots
-    for ax, component, title in zip(axes, [X, Y, Z], titles):
+    for ax, component, title in zip(axes, args, titles):
         # evaluate colorbar limits depending on vmax/vmin in kwargs
         kwargs.setdefault('vmax', limiter(component))
         kwargs.setdefault('vmin', -limiter(component))
