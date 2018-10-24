@@ -33,23 +33,15 @@ on a map:
 
 .. code-block:: python
 
-   model.plot_static_map(radius=6371.2, nmax=50)
+   model.plot_static_map(radius=6371.2, nmax=85)
+
+.. figure:: images/plot_static_map.png
+  :align: center
+
+  Static internal small-scale field at Earth's surface up to degree 85.
 
 and saved
 
 .. code-block:: python
 
    model.write_to_shc('CHAOS-6-x7_static.shc', source='static')
-
-Plot the static internal small-scale part of the model up to degree 85:
-
-.. code-block:: python
-
-   radius = 6371.2
-
-   model.plot_static_map(radius, nmax=85)
-
-.. figure:: images/plot_static_map.png
-   :align: center
-
-   Static internal small-scale field at Earth's surface up to degree 85.
