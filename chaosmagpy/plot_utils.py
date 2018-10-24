@@ -33,6 +33,10 @@ def plot_timeseries(time, *args, **kwargs):
         [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
 
     fig, axes = plt.subplots(n, 1, sharex='col', figsize=figsize)
+
+    if n == 1:  # ensure iterable axis even if only one plot
+        axes = [axes]
+
     for ax, component, title in zip(axes, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
@@ -48,7 +52,7 @@ def plot_timeseries(time, *args, **kwargs):
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
-
+    print(n)
     defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * n/3 * DEFAULT_WIDTH),
                     titles=n*[''],
                     label='',
@@ -72,6 +76,10 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     # create axis handle
     fig, axes = plt.subplots(n, 1, sharex=True, sharey=True, figsize=figsize,
                              subplot_kw=dict(projection=projection))
+
+    if n == 1:  # ensure iterable axis even if only one plot
+        axes = [axes]
+
     # make subplots
     for ax, component, title in zip(axes, args, titles):
         # evaluate colorbar limits depending on vmax/vmin in kwargs
