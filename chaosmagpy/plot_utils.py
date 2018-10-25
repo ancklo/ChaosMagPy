@@ -17,7 +17,8 @@ def plot_timeseries(time, *args, **kwargs):
 
     defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * n/3 * DEFAULT_WIDTH),
                     titles=n*[''],
-                    label='')
+                    label='',
+                    layout=(n, 1))
 
     # overwrite value with the one in kwargs, if not then use the default
     for key, value in defaults.items():
@@ -28,16 +29,22 @@ def plot_timeseries(time, *args, **kwargs):
     figsize = kwargs.pop('figsize')
     titles = kwargs.pop('titles')
     label = kwargs.pop('label')
+    layout = kwargs.pop('layout')
+
+    if layout[0]*layout[1] != n:
+        raise ValueError('Plot layout is not compatible with the number of '
+                         'produced plots.')
 
     date_time = np.array(  # generate list of datetime objects
         [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
 
-    fig, axes = plt.subplots(n, 1, sharex='col', figsize=figsize)
+    fig, axes = plt.subplots(layout[0], layout[1], sharex='all',
+                             figsize=figsize)
 
     if n == 1:  # ensure iterable axis even if only one plot
         axes = [axes]
 
-    for ax, component, title in zip(axes, args, titles):
+    for ax, component, title in zip(axes.flat, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
         ax.grid()
@@ -56,6 +63,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * n/3 * DEFAULT_WIDTH),
                     titles=n*[''],
                     label='',
+                    layout=(n, 1),
                     cmap='PuOr',
                     limiter=lambda x: np.amax(np.abs(x)),  # maximum value
                     projection=ccrs.Mollweide(),
@@ -72,16 +80,21 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     label = kwargs.pop('label')
     limiter = kwargs.pop('limiter')
     projection = kwargs.pop('projection')
+    layout = kwargs.pop('layout')
 
+    if layout[0]*layout[1] != n:
+        raise ValueError('Plot layout is not compatible with the number of '
+                         'produced plots.')
     # create axis handle
-    fig, axes = plt.subplots(n, 1, sharex=True, sharey=True, figsize=figsize,
-                             subplot_kw=dict(projection=projection))
+    fig, axes = plt.subplots(layout[0], layout[1], sharex=True, sharey=True,
+                             subplot_kw=dict(projection=projection),
+                             figsize=figsize,)
 
     if n == 1:  # ensure iterable axis even if only one plot
         axes = [axes]
 
     # make subplots
-    for ax, component, title in zip(axes, args, titles):
+    for ax, component, title in zip(axes.flat, args, titles):
         # evaluate colorbar limits depending on vmax/vmin in kwargs
         kwargs.setdefault('vmax', limiter(component))
         kwargs.setdefault('vmin', -limiter(component))
