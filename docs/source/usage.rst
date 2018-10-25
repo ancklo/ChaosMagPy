@@ -89,7 +89,9 @@ example, the time-dependent internal field:
 
    B_radius, B_theta, B_phi = synth_values(coeffs, radius_grid, theta_grid, phi_grid)
 
-When using a fully specified regular grid, consider ``grid=True`` option:
+When using a fully specified regular grid, consider ``grid=True`` option for
+speed. It will internally compute a grid similar to :func:`numpy.meshgrid`
+without repeating some computations:
 
 .. code-block:: python
 
