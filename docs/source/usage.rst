@@ -91,7 +91,8 @@ example, the time-dependent internal field:
 
 When using a fully specified regular grid, consider ``grid=True`` option for
 speed. It will internally compute a grid similar to :func:`numpy.meshgrid`
-without repeating some computations:
+without repeating some computations (note the usage of, for example, ``theta``
+instead of ``theta_grid``):
 
 .. code-block:: python
 
