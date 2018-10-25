@@ -2,7 +2,15 @@ Usage
 =====
 
 Here are some simple examples on how to use the package. This only requires a
-CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory:
+CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory
+which can be downloaded `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_.
+
+Plotting a map of the time-dependent internal field
+---------------------------------------------------
+
+Here, we make a map of the first time-derivative of the time-dependent internal
+part of the model. We will plot it on the surface at 3485 km (core-mantle
+boundary) from the center of Earth and on January 1, 2000:
 
 .. code-block:: python
 
@@ -28,8 +36,11 @@ field in shc-format to a file:
 
    model.write_to_shc('CHAOS-6-x7_tdep.shc', source='tdep')
 
-Similarly, the static internal (i.e. small-scale crustal) field can be plotted
-on a map:
+Plotting a map of the static internal field
+-------------------------------------------
+
+Similarly, the static internal (i.e. small-scale crustal) part of the model can
+be plotted on a map:
 
 .. code-block:: python
 
@@ -45,3 +56,55 @@ and saved
 .. code-block:: python
 
    model.write_to_shc('CHAOS-6-x7_static.shc', source='static')
+
+Computing field components on a grid
+------------------------------------
+
+Instead of plotting the field components, we can just have ChaosMagPy return
+the numerical values of the different source components in the model. For
+example, the time-dependent internal field:
+
+.. code-block:: python
+
+   import numpy as np
+   from chaosmagpy import load_CHAOS_matfile
+   from chaosmagpy.model_utils import synth_values
+   from chaosmagpy.coordinate_utils import mjd2000
+
+   # create full grid
+   radius = 3485.  # km, core-mantle coundary
+   theta = np.linspace(0., 180., num=181)  # colatitude in degrees
+   phi = np.linspace(-180., 180., num=361)  # longitude in degrees
+
+   phi_grid, theta_grid = np.meshgrid(phi, theta)
+   radius_grid = radius*np.ones(phi_grid.shape)
+
+   time = mjd2000(2000, 1, 1)  # modified Julian date
+
+   # load the CHAOS model
+   model = load_CHAOS_matfile('CHAOS-6-x7.mat')
+
+   print('Computing core field.')
+   coeffs = model.synth_tdep_field(time, nmax=16, deriv=1)  # SV max. degree 16
+
+   B_radius, B_theta, B_phi = synth_values(coeffs, radius_grid, theta_grid, phi_grid)
+
+When using a fully specified regular grid, consider ``grid=True`` option:
+
+.. code-block:: python
+
+   B_radius, B_theta, B_phi = synth_values(coeffs, radius, theta, phi, grid=True)
+
+The same computation can be done with other sources described by the model:
+
++----------+-----------------+---------------------------------------------------+
+|  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
++==========+=================+===================================================+
+| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_tdep_field`             |
++          +-----------------+---------------------------------------------------+
+|          | static          | :meth:`~chaos.CHAOS.synth_static_field`           |
++----------+-----------------+---------------------------------------------------+
+| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_gsm_field`                   |
++          +-----------------+---------------------------------------------------+
+|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_sm_field`                    |
++----------+-----------------+---------------------------------------------------+
