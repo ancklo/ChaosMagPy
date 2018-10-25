@@ -36,19 +36,19 @@ def plot_timeseries(time, *args, **kwargs):
                          'produced plots.')
 
     date_time = np.array(  # generate list of datetime objects
-        [timedelta(days=dt) + date(2000, 1, 1) for dt in time])
+        [timedelta(days=dt) + date(2000, 1, 1) for dt in np.ravel(time)])
 
     fig, axes = plt.subplots(layout[0], layout[1], sharex='all',
                              figsize=figsize)
 
     if n == 1:  # ensure iterable axis even if only one plot
-        axes = [axes]
+        axes = np.array([axes])
 
     for ax, component, title in zip(axes.flat, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
         ax.grid()
-        ax.set(ylabel=label)
+        ax.set(ylabel=label, xlabel='time')
         fig.autofmt_xdate()
         ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
 
@@ -91,7 +91,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
                              figsize=figsize,)
 
     if n == 1:  # ensure iterable axis even if only one plot
-        axes = [axes]
+        axes = np.array([axes])
 
     # make subplots
     for ax, component, title in zip(axes.flat, args, titles):

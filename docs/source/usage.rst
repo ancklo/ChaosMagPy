@@ -44,6 +44,9 @@ be plotted on a map:
 
 .. code-block:: python
 
+   import chaosmagpy as cp
+
+   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
    model.plot_static_map(radius=6371.2, nmax=85)
 
 .. figure:: images/plot_static_map.png
@@ -111,3 +114,55 @@ The same computation can be done with other sources described by the model:
 +          +-----------------+---------------------------------------------------+
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_sm_field`                    |
 +----------+-----------------+---------------------------------------------------+
+
+Compute the timeseries of the field components at two ground observatories
+--------------------------------------------------------------------------
+
+Compute the timeseries of the first time-derivative of the field components at
+the ground observatories in Niemegk (Germany) and Mbour (Senegal).
+
+.. code-block:: python
+
+   from chaosmagpy import load_CHAOS_matfile
+   from chaosmagpy.model_utils import synth_values
+   from chaosmagpy.coordinate_utils import mjd2000
+   from chaosmagpy.plot_utils import plot_timeseries
+   import numpy as np
+
+   model = load_CHAOS_matfile('CHAOS-6-x7.mat')
+
+   model = load_CHAOS_matfile('data/CHAOS-6-x7.mat')
+
+   N = 500
+   time = np.linspace(mjd2000(1998, 1, 1), mjd2000(2018, 1, 1), num=N)
+   radius = 6371.2 * np.ones((2,))
+   theta = np.array([75.62, 37.93])  # colatitude in degrees
+   phi = np.array([343.03, 12.68])  # longitude in degrees
+
+   stations = ['Mbour', 'Niemegk']  # ground observatory names
+
+   # reshape to use NumPy broadcasting
+   time = np.reshape(time, (1, N))  # 1 x N
+   radius = np.reshape(radius, (2, 1))  # 2 x 1
+   theta = np.reshape(theta, (2, 1))  # 2 x 1
+   phi = np.reshape(phi, (2, 1))  # 2 x 1
+
+   coeffs = model.synth_tdep_field(time, nmax=16, deriv=1)
+
+   # compute field components of shape 2 x N
+   B_radius, B_theta, B_phi = synth_values(coeffs, radius, theta, phi)
+
+   # plot time series of the stations
+   for idx, station in enumerate(stations):
+       titles = [' $dB_r/dt$ at ' + station,
+                 ' $dB_\\theta/dt$ at ' + station,
+                 ' $dB_\\phi/dt$ at ' + station]
+       plot_timeseries(time, B_radius[idx], B_theta[idx], B_phi[idx],
+                       label='nT/yr', titles=titles)
+
+.. figure:: images/plot_timeseries.png
+   :align: left
+
+   Timeseries of the secular variation at two ground observatory station.
+
+The same procedure can be repeated with any number of stations.
