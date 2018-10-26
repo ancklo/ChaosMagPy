@@ -12,12 +12,41 @@ DEFAULT_WIDTH = 16 / 2.54  # default figure width: 25cm
 
 
 def plot_timeseries(time, *args, **kwargs):
+    """
+    Returns a line plot showing the timeseries of the input arguments.
+
+    Parameters
+    ----------
+    time : ndarray, shape (N,)
+        Array containing time in modified Julian dates.
+    *args : ndarray, shape (N, k)
+        Array containing `k` columns of values to plot against time. Several
+        arrays can be provided as separated arguments.
+
+    Returns
+    -------
+    Plot of the input arguments.
+
+    Other Parameters
+    ----------------
+    figsize : 2-tuple of floats
+        Figure dimension (width, height) in inches (defaults to (6.3, 1.7)).
+    titles : list of strings
+        Subplot titles (defaults to empty strings).
+    label : string
+        Label of the vertical axis (defaults to an empty string).
+    layout : 2-tuple of int
+        Layout of the subplots (defaults to vertically stacked subplots).
+    **kwargs : keywords
+        Other options to pass to matplotlib plotting method.
+
+    """
 
     n = len(args)  # number of subplots
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * n/3 * DEFAULT_WIDTH),
+    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
                     titles=n*[''],
-                    label='',
+                    ylabel='',
                     layout=(n, 1))
 
     # overwrite value with the one in kwargs, if not then use the default
@@ -27,13 +56,13 @@ def plot_timeseries(time, *args, **kwargs):
 
     # remove keywords that are not intended for plot
     figsize = kwargs.pop('figsize')
+    layout = kwargs.pop('layout')
     titles = kwargs.pop('titles')
     label = kwargs.pop('label')
-    layout = kwargs.pop('layout')
 
     if layout[0]*layout[1] != n:
         raise ValueError('Plot layout is not compatible with the number of '
-                         'produced plots.')
+                         'produced subplots.')
 
     date_time = np.array(  # generate list of datetime objects
         [timedelta(days=dt) + date(2000, 1, 1) for dt in np.ravel(time)])
@@ -57,10 +86,53 @@ def plot_timeseries(time, *args, **kwargs):
 
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
+    """
+    Returns a global map showing the input arguments.
+
+    Parameters
+    ----------
+    theta_grid : ndarray
+        Array containing the colatitude in degrees.
+    phi_grid : ndarray
+        Array containing the longitude in degrees.
+    *args : ndarray
+        Array of values to plot on the global map. Several
+        arrays can be provided as separated arguments.
+
+    Returns
+    -------
+    Global map of the input arguments.
+
+    Other Parameters
+    ----------------
+    figsize : 2-tuple of floats
+        Figure dimension (width, height) in inches (defaults to (6.3, 7.5)).
+    titles : list of strings
+        Subplot titles (defaults to empty strings).
+    label : string
+        Label of the vertical axis (defaults to an empty string).
+    layout : 2-tuple of int
+        Layout of the subplots (defaults to vertically stacked subplots).
+    cmap : str
+        Colormap code (defaults to ``'PuOr'`` colormap).
+    limiter : function, lambda expression
+        Function to compute symmetric colorbar limits (defaults to maximum of
+        the absolute values in the input, or use ``'vmin'``, ``'vmax'``
+        keywords instead).
+    projection : :mod:`cartopy.crs`
+        Projection of the target frame (defaults to
+        :func:`cartopy.crs.Mollweide()`).
+    transform : :mod:`cartopy.crs`
+        Projection of input frame (defaults to
+        :func:`cartopy.crs.PlateCarree()`)
+    **kwargs : keywords
+        Other options to pass to matplotlib :func:`pcolormesh` method.
+
+    """
 
     n = len(args)  # number of plots
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * n/3 * DEFAULT_WIDTH),
+    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * DEFAULT_WIDTH),
                     titles=n*[''],
                     label='',
                     layout=(n, 1),
@@ -84,7 +156,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     if layout[0]*layout[1] != n:
         raise ValueError('Plot layout is not compatible with the number of '
-                         'produced plots.')
+                         'produced subplots.')
     # create axis handle
     fig, axes = plt.subplots(layout[0], layout[1], sharex=True, sharey=True,
                              subplot_kw=dict(projection=projection),
