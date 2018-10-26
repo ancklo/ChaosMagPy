@@ -5,8 +5,8 @@ Here are some simple examples on how to use the package. This only requires a
 CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory
 which can be downloaded `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_.
 
-Plotting a map of the time-dependent internal field
----------------------------------------------------
+Plotting the map of the time-dependent internal field
+-----------------------------------------------------
 
 Here, we make a map of the first time-derivative of the time-dependent internal
 part of the model. We will plot it on the surface at 3485 km (core-mantle
@@ -36,8 +36,8 @@ field in shc-format to a file:
 
    model.write_to_shc('CHAOS-6-x7_tdep.shc', source='tdep')
 
-Plotting a map of the static internal field
--------------------------------------------
+Plotting the map of the static internal field
+---------------------------------------------
 
 Similarly, the static internal (i.e. small-scale crustal) part of the model can
 be plotted on a map:
@@ -115,8 +115,8 @@ The same computation can be done with other sources described by the model:
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_sm_field`                    |
 +----------+-----------------+---------------------------------------------------+
 
-Compute the timeseries of the field components at two ground observatories
---------------------------------------------------------------------------
+Computing the timeseries of field components at two ground observatories
+------------------------------------------------------------------------
 
 Compute the timeseries of the first time-derivative of the field components at
 the ground observatories in Niemegk (Germany) and Mbour (Senegal).
