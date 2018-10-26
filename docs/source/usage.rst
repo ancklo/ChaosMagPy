@@ -131,8 +131,6 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 
    model = load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   model = load_CHAOS_matfile('data/CHAOS-6-x7.mat')
-
    N = 500
    time = np.linspace(mjd2000(1998, 1, 1), mjd2000(2018, 1, 1), num=N)
    radius = 6371.2 * np.ones((2,))
