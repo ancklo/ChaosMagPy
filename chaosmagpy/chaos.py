@@ -1056,6 +1056,83 @@ class CHAOS(object):
         print('Coefficients saved to {}.'.format(
             os.path.join(os.getcwd(), filepath)))
 
+    @classmethod
+    def from_mat(self, filepath):
+        """
+        Alternative constructor for creating a :class:`CHAOS` class instance.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to mat-file containing the CHAOS model.
+
+        Returns
+        -------
+        model : :class:`CHAOS` instance
+            Fully initialized model.
+
+        Examples
+        --------
+        Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+        directory like this:
+
+        .. code-block:: python
+
+           import chaosmagpy as cp
+
+           model = cp.CHAOS.load_matfile('CHAOS-6-x7.mat')
+           print(model)
+
+        See Also
+        --------
+        load_CHAOS_matfile
+
+        """
+
+        return load_CHAOS_matfile(filepath)
+
+    def to_mat(self):
+        raise NotImplementedError
+
+    @classmethod
+    def from_shc(self, filepath):
+        """
+        Alternative constructor for creating a :class:`CHAOS` class instance.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to shc-file.
+
+        Returns
+        -------
+        model : :class:`CHAOS` instance
+            Class instance with either the time-dependent or static internal
+            part initialized.
+
+        Examples
+        --------
+        Load for example the shc-file ``CHAOS-6-x7_tdep.shc`` in the current
+        working directory, containing the coefficients of time-dependent
+        internal part of the CHAOS-6-x7 model.
+
+        .. code-block:: python
+
+           import chaosmagpy as cp
+
+           model = cp.CHAOS.from shc('CHAOS-6-x7_tdep.shc')
+           print(model)
+
+        See Also
+        --------
+        load_CHAOS_shcfile
+
+        """
+        return load_CHAOS_shcfile(filepath)
+
+    def to_shc(self):
+        raise NotImplementedError
+
 
 def load_CHAOS_matfile(filepath):
     """

@@ -46,7 +46,7 @@ def plot_timeseries(time, *args, **kwargs):
 
     defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
                     titles=n*[''],
-                    ylabel='',
+                    label='',
                     layout=(n, 1))
 
     # overwrite value with the one in kwargs, if not then use the default
