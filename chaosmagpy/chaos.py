@@ -1080,7 +1080,7 @@ class CHAOS(object):
 
            import chaosmagpy as cp
 
-           model = cp.CHAOS.load_matfile('CHAOS-6-x7.mat')
+           model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
            print(model)
 
         See Also
@@ -1120,7 +1120,7 @@ class CHAOS(object):
 
            import chaosmagpy as cp
 
-           model = cp.CHAOS.from shc('CHAOS-6-x7_tdep.shc')
+           model = cp.CHAOS.from_shc('CHAOS-6-x7_tdep.shc')
            print(model)
 
         See Also
