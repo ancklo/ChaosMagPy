@@ -109,6 +109,7 @@ def example2():
     time = cdf_file.varget('Timestamp')  # milli seconds since year 1
     time = (time - time[0]) / (1e3*3600*24) + mjd2000(2014, 5, 2)
     F_swarm = cdf_file.varget('F')
+    cdf_file.close()
 
     step = 15  # down-sample data to 15 sec
     radius, theta, phi = radius[::step], theta[::step], phi[::step]
