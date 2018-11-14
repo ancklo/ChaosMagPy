@@ -659,3 +659,45 @@ def legendre_poly(nmax, theta):
         Pnm[n, n+1] = np.sqrt(2 * n) * Pnm[n, n-1] / 2
 
     return Pnm
+
+
+def power_spectrum(coeffs, *, radius=None, nmax=None):
+    """
+    Compute the Mauersberger-Lowes spatial powerspectrum.
+
+    Parameters
+    ----------
+    coeffs : ndarray, shape (..., N*(N+2))
+        Spherical harmonic coefficients for degree `N`.
+    radius : float, optional
+        Radius in kilometers (defaults to 6371.2 km).
+    nmax : int, optional
+        Maximum sphercial degree (defaults to `N`).
+
+    Returns
+    -------
+    R_n : ndarray, shape (..., ``nmax`` * ( ``nmax`` + 2))
+        Power spectrum for degrees smaller than ``nmax``
+
+    """
+
+    ratio = 1 if radius is None else R_REF / radius
+
+    N = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # maximum degree
+
+    if nmax is None:
+        nmax = N
+    elif nmax > N:
+        print(f'Incompatible maximum degree nmax = {nmax}, '
+              f'setting nmax to {N}.')
+        nmax = N
+
+    R_n = np.empty(coeffs.shape[:-1] + (nmax,))
+
+    for n in range(1, nmax+1):
+        min = n**2 - 1
+        max = (n+1)**2 - 1
+        R_n[..., n-1] = (n+1)*ratio**(2*n+4)*np.sum(coeffs[..., min:max]**2,
+                                                    axis=-1)
+
+    return R_n
