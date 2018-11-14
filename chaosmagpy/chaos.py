@@ -13,17 +13,17 @@ from timeit import default_timer as timer
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
-class SphericalHarmonics(object):
+class TimeDependentModel(object):
 
-    def __init__(self, breaks, order, coeffs=None):
+    def __init__(self, breaks=None, order=None, coeffs=None, source=None):
         """
-        Initialize spherical harmonic model using piecewise polynomials.
+        Initialize time-dependent spherical harmonic model as a piecewise
+        polynomial.
         """
 
-        # time-dependent internal field
         self.breaks = breaks
-        self.pieces = int(breaks.size - 1)
-        self.order = int(order)
+        self.pieces = None if breaks is None else int(breaks.size - 1)
+        self.order = None if order is None else int(order)
 
         # helper for returning the degree of the provided coefficients
         def dimension(coeffs):
@@ -32,10 +32,11 @@ class SphericalHarmonics(object):
             else:
                 return int(np.sqrt(coeffs.shape[-1] + 1) - 1)
 
-        self._coeffs = coeffs
+        self.coeffs = coeffs
         self.nmax = dimension(coeffs)
+        self.source = 'internal' if source is None else source
 
-    def coeffs(self, time, nmax=None, deriv=None):
+    def synth_coeffs(self, time, nmax=None, deriv=None):
         """
         Compute the field coefficients at points in time.
 
@@ -57,7 +58,7 @@ class SphericalHarmonics(object):
 
         """
 
-        if self._coeffs is None:
+        if self.coeffs is None:
             raise ValueError("Coefficients are missing.")
 
         # handle optional argument: nmax
@@ -80,13 +81,126 @@ class SphericalHarmonics(object):
                           "Returning nan's.")
 
         PP = sip.PPoly.construct_fast(
-            self._coeffs[..., :nmax*(nmax+2)].astype(float),
+            self.coeffs[..., :nmax*(nmax+2)].astype(float),
             self.breaks.astype(float), extrapolate=False)
 
         PP = PP.derivative(nu=deriv)
         coeffs = PP(time) * 365.25**deriv
 
         return coeffs
+
+    def synth_values(self, time, radius, theta, phi, *, nmax=None, deriv=None,
+                     grid=None):
+
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+
+        return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
+                               source=self.source, grid=grid)
+
+    def power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
+
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+
+        return mu.power_spectrum(coeffs, radius=radius)
+
+    def plot_global_map(self, time, radius, nmax=None, deriv=None):
+        """
+        Plot global maps of the field components.
+
+        Parameters
+        ----------
+        time : ndarray, shape (), (1,) or float
+            Time given as MJD2000 (modified Julian date).
+        radius : ndarray, shape (), (1,) or float
+            Array containing the radius in kilometers.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Global map of the radial, colatitude and azimuthal field
+            components.
+
+        """
+
+        deriv = 0 if deriv is None else deriv
+
+        # handle optional argument: nmax
+        if nmax is None:
+            nmax = self.nmax
+        elif nmax > self.nmax:
+            warnings.warn(
+                'Supplied nmax = {0} is incompatible with number of model '
+                'coefficients. Using nmax = {1} instead.'.format(
+                    nmax, self.nmax))
+            nmax = self.nmax
+
+        time = np.array(time, dtype=np.float)
+        theta = np.linspace(1, 179, num=320)
+        phi = np.linspace(-180, 180, num=721)
+
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+
+        B_radius, B_theta, B_phi = mu.synth_values(
+            coeffs, radius, theta, phi, nmax=nmax, source=self.source,
+            grid=True)
+
+        units = du.gauss_units(deriv)
+        titles = [f'$B_r$ ($n\\leq{nmax}$, deriv={deriv})',
+                  f'$B_\\theta$ ($n\\leq{nmax}$, deriv={deriv})',
+                  f'$B_\\phi$ ($n\\leq{nmax}$, deriv={deriv})']
+
+        plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                  titles=titles, label=units)
+
+    def plot_timeseries(self, radius, theta, phi, nmax=None, deriv=None):
+        """
+        Plot the time series of the time-dependent field components at a
+        specific location.
+
+        Parameters
+        ----------
+        radius : ndarray, shape (), (1,) or float
+            Radius of station in kilometers.
+        theta : ndarray, shape (), (1,) or float
+            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        phi : ndarray, shape (), (1,) or float
+            Longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Time series plot of the radial, colatitude and azimuthal field
+            components.
+
+        """
+
+        if deriv is None:
+            deriv = 0
+
+        time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
+
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+
+        B_radius, B_theta, B_phi = mu.synth_values(
+            coeffs, radius, theta, phi, nmax=nmax, source=self.source)
+
+        units = du.gauss_units(deriv)
+        titles = ['$B_r$', '$B_\\theta$', '$B_\\phi$']
+
+        plot_timeseries(time, B_radius, B_theta, B_phi,
+                        figsize=None, titles=titles, label=units)
 
 
 class CHAOS(object):
