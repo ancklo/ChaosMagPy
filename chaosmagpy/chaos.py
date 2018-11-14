@@ -13,6 +13,82 @@ from timeit import default_timer as timer
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
+class SphericalHarmonics(object):
+
+    def __init__(self, breaks, order, coeffs=None):
+        """
+        Initialize spherical harmonic model using piecewise polynomials.
+        """
+
+        # time-dependent internal field
+        self.breaks = breaks
+        self.pieces = int(breaks.size - 1)
+        self.order = int(order)
+
+        # helper for returning the degree of the provided coefficients
+        def dimension(coeffs):
+            if coeffs is None:
+                return coeffs
+            else:
+                return int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+
+        self._coeffs = coeffs
+        self.nmax = dimension(coeffs)
+
+    def coeffs(self, time, nmax=None, deriv=None):
+        """
+        Compute the field coefficients at points in time.
+
+        Parameters
+        ----------
+        time : ndarray, shape (...) or float
+            Array containing the time in modified Julian dates.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
+
+        Returns
+        -------
+        coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
+            Array containing the coefficients.
+
+        """
+
+        if self._coeffs is None:
+            raise ValueError("Coefficients are missing.")
+
+        # handle optional argument: nmax
+        if nmax is None:
+            nmax = self.nmax
+        elif nmax > self.nmax:
+            warnings.warn(
+                'Supplied nmax = {0} is incompatible with number of model '
+                'coefficients. Using nmax = {1} instead.'.format(
+                    nmax, self.nmax))
+            nmax = self.nmax
+
+        if deriv is None:
+            deriv = 0
+
+        if np.amin(time) < self.breaks[0] or np.amax(time) > self.breaks[-1]:
+            warnings.warn("Requested coefficients are "
+                          "outside of the modelled period from "
+                          f"{self.breaks[0]} to {self.breaks[-1]}. "
+                          "Returning nan's.")
+
+        PP = sip.PPoly.construct_fast(
+            self._coeffs[..., :nmax*(nmax+2)].astype(float),
+            self.breaks.astype(float), extrapolate=False)
+
+        PP = PP.derivative(nu=deriv)
+        coeffs = PP(time) * 365.25**deriv
+
+        return coeffs
+
+
 class CHAOS(object):
     """
     Class for the time-dependent geomagnetic field model CHAOS. Currently only
