@@ -24,16 +24,13 @@ class TimeDependentModel(object):
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
         self.order = None if order is None else int(order)
-
-        # helper for returning the degree of the provided coefficients
-        def dimension(coeffs):
-            if coeffs is None:
-                return coeffs
-            else:
-                return int(np.sqrt(coeffs.shape[-1] + 1) - 1)
-
         self.coeffs = coeffs
-        self.nmax = dimension(coeffs)
+
+        if coeffs is None:
+            self.nmax = None
+        else:
+            self.nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+
         self.source = 'internal' if source is None else source
 
     def synth_coeffs(self, time, nmax=None, deriv=None):
@@ -103,7 +100,7 @@ class TimeDependentModel(object):
 
         return mu.power_spectrum(coeffs, radius=radius)
 
-    def plot_global_map(self, time, radius, nmax=None, deriv=None):
+    def plot_global_map(self, time, radius, **kwargs):
         """
         Plot global maps of the field components.
 
@@ -113,12 +110,18 @@ class TimeDependentModel(object):
             Time given as MJD2000 (modified Julian date).
         radius : ndarray, shape (), (1,) or float
             Array containing the radius in kilometers.
+
+        Other Parameters
+        ----------------
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+        **kwargs : keywords
+            Other options to pass to :func:`plot_maps` method.
+
 
         Returns
         -------
@@ -128,12 +131,27 @@ class TimeDependentModel(object):
 
         """
 
-        deriv = 0 if deriv is None else deriv
+        defaults = dict(deriv=0,
+                        nmax=self.nmax)
 
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.nmax
-        elif nmax > self.nmax:
+        # overwrite value with the one in kwargs, if not then use the default
+        for key, value in defaults.items():
+            if kwargs.setdefault(key, value) is None:
+                kwargs[key] = value
+
+        # remove keywords that are not intended for pcolormesh
+        nmax = kwargs.pop('nmax')
+        deriv = kwargs.pop('deriv')
+        titles = [f'$B_r$ ($n\\leq{nmax}$, deriv={deriv})',
+                  f'$B_\\theta$ ($n\\leq{nmax}$, deriv={deriv})',
+                  f'$B_\\phi$ ($n\\leq{nmax}$, deriv={deriv})']
+
+        # add plot_maps options to dictionary
+        kwargs.setdefault('label', du.gauss_units(deriv))
+        kwargs.setdefault('titles', titles)
+
+        # handle optional argument: nmax > coefficent nmax
+        if nmax > self.nmax:
             warnings.warn(
                 'Supplied nmax = {0} is incompatible with number of model '
                 'coefficients. Using nmax = {1} instead.'.format(
@@ -150,13 +168,7 @@ class TimeDependentModel(object):
             coeffs, radius, theta, phi, nmax=nmax, source=self.source,
             grid=True)
 
-        units = du.gauss_units(deriv)
-        titles = [f'$B_r$ ($n\\leq{nmax}$, deriv={deriv})',
-                  f'$B_\\theta$ ($n\\leq{nmax}$, deriv={deriv})',
-                  f'$B_\\phi$ ($n\\leq{nmax}$, deriv={deriv})']
-
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units)
+        plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
     def plot_timeseries(self, radius, theta, phi, nmax=None, deriv=None):
         """
@@ -201,6 +213,16 @@ class TimeDependentModel(object):
 
         plot_timeseries(time, B_radius, B_theta, B_phi,
                         figsize=None, titles=titles, label=units)
+
+
+class StaticModel(TimeDependentModel):
+
+    def __init__(self, *arg, **kwargs):
+        super().__init__(*arg, **kwargs)
+
+    def plot_global_map(self, time, radius, **kwargs):
+        kwargs.setdefault('cmap', 'nio')
+        super().plot_global_map(time, radius, **kwargs)
 
 
 class CHAOS(object):
@@ -343,6 +365,9 @@ class CHAOS(object):
         self.timestamp = str(datetime.utcnow())
 
         # time-dependent internal field
+        self.model_tdep = TimeDependentModel(breaks, order, coeffs_tdep)
+        self.model_static = StaticModel(breaks[[0, -1]], 1, coeffs_static.reshape((1, 1, -1)))
+
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
         self.order = None if order is None else int(order)
