@@ -114,6 +114,8 @@ def gauss_units(deriv):
     String is meant to be parsed to plot labels.
     """
 
+    deriv = 0 if deriv is None else deriv
+
     if deriv == 0:
         units = 'nT'
     else:

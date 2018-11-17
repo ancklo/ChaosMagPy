@@ -154,7 +154,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     # create axis handle
     fig, axes = plt.subplots(layout[0], layout[1], sharex=True, sharey=True,
                              subplot_kw=dict(projection=projection),
-                             figsize=figsize,)
+                             figsize=figsize)
 
     if n == 1:  # ensure iterable axis even if only one plot
         axes = np.array([axes])
@@ -182,6 +182,32 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
         ax.set_title(title)
 
     plt.tight_layout()
+    plt.show()
+
+
+def plot_power_spectrum(spectrum, **kwargs):
+
+    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
+                    titles='',
+                    label='')
+
+    kwargs = defaultkeys(defaults, kwargs)
+
+    figsize = kwargs.pop('figsize')
+    titles = kwargs.pop('titles')
+    label = kwargs.pop('label')
+
+    degrees = np.arange(1, spectrum.shape[-1] + 1, step=1.0)
+
+    # create axis handle
+    fig, ax = plt.subplots(1, 1, sharex=True, sharey=True, figsize=figsize)
+
+    ax.semilogy(degrees, spectrum, **kwargs)
+    ax.set_title(titles)
+    ax.grid()
+    ax.set(ylabel=label, xlabel='degree')
+
+    plt.xticks(np.arange(0, degrees[-1] + 1, step=1.0))
     plt.show()
 
 

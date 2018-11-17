@@ -6,11 +6,14 @@ import scipy.interpolate as sip
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
-from chaosmagpy.plot_utils import plot_timeseries, plot_maps, defaultkeys
+import matplotlib.pyplot as plt
+from chaosmagpy.plot_utils import (plot_timeseries, plot_maps, defaultkeys,
+                                   plot_power_spectrum)
 from datetime import datetime
 from timeit import default_timer as timer
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
+R_REF = 6371.1  # mean surface radius
 
 
 class TimeDependentModel(object):
@@ -116,17 +119,35 @@ class TimeDependentModel(object):
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
+    def power_spectrum(self, time, radius, *, nmax=None, deriv=None):
         """
         Compute the powerspectrum.
 
         See Also
         --------
         model_utils.power_spectrum
+
         """
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
-        return mu.power_spectrum(coeffs, radius=radius)
+        return mu.power_spectrum(coeffs, radius)
+
+    def plot_power_spectrum(self, time, radius, *, nmax=None, deriv=None):
+        """
+        Plot power spectrum.
+
+        See Also
+        --------
+        plot_utils.plot_power_spectrum
+
+        """
+
+        units = du.gauss_units(deriv)
+        units = f'({units})$^2$'
+
+        R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
+
+        plot_power_spectrum(R_n, titles='power spectrum', label=units)
 
     def plot_global_maps(self, time, radius, **kwargs):
         """
@@ -258,6 +279,12 @@ class StaticModel(TimeDependentModel):
         kwargs = defaultkeys(defaults, kwargs)
         time = 0.0  # time for 2000, irrelevant since static
         super().plot_global_maps(time, radius, **kwargs)
+
+    def plot_power_spectrum(self, radius, **kwargs):
+
+        time = 0.0
+        radius = 6371.2 if radius is None else radius
+        super().plot_power_spectrum(time, radius, **kwargs)
 
 
 class CHAOS(object):
@@ -1202,9 +1229,6 @@ class CHAOS(object):
 
         return load_CHAOS_matfile(filepath)
 
-    def to_mat(self):
-        raise NotImplementedError
-
     @classmethod
     def from_shc(self, filepath):
         """
@@ -1240,9 +1264,6 @@ class CHAOS(object):
 
         """
         return load_CHAOS_shcfile(filepath)
-
-    def to_shc(self):
-        raise NotImplementedError
 
 
 def load_CHAOS_matfile(filepath):
@@ -1356,6 +1377,10 @@ def load_CHAOS_matfile(filepath):
         breaks_euler=breaks_euler,
         coeffs_euler=coeffs_euler,
         version=version)
+
+
+def save_CHAOS_matfile(filepath):
+    raise NotImplementedError
 
 
 def load_CHAOS_shcfile(filepath):

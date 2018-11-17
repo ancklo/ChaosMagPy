@@ -661,7 +661,7 @@ def legendre_poly(nmax, theta):
     return Pnm
 
 
-def power_spectrum(coeffs, *, radius=None, nmax=None):
+def power_spectrum(coeffs, radius=None, *, nmax=None):
     """
     Compute the Mauersberger-Lowes spatial powerspectrum.
 
@@ -696,7 +696,7 @@ def power_spectrum(coeffs, *, radius=None, nmax=None):
 
     for n in range(1, nmax+1):
         min = n**2 - 1
-        max = (n+1)**2 - 1
+        max = min + (2*n + 1)
         R_n[..., n-1] = (n+1)*ratio**(2*n+4)*np.sum(coeffs[..., min:max]**2,
                                                     axis=-1)
 
