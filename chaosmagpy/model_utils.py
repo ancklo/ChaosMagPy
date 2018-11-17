@@ -661,7 +661,7 @@ def legendre_poly(nmax, theta):
     return Pnm
 
 
-def power_spectrum(coeffs, radius=None, *, nmax=None):
+def power_spectrum(coeffs, *, radius=None, nmax=None):
     """
     Compute the Mauersberger-Lowes spatial powerspectrum.
 
@@ -670,7 +670,7 @@ def power_spectrum(coeffs, radius=None, *, nmax=None):
     coeffs : ndarray, shape (..., N*(N+2))
         Spherical harmonic coefficients for degree `N`.
     radius : float, optional
-        Radius in kilometers (defaults to 6371.2 km).
+        Radius in kilometers (defaults to mean Earth's surface radius).
     nmax : int, optional
         Maximum sphercial degree (defaults to `N`).
 

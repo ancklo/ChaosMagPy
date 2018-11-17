@@ -6,7 +6,6 @@ import scipy.interpolate as sip
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
-import matplotlib.pyplot as plt
 from chaosmagpy.plot_utils import (plot_timeseries, plot_maps, defaultkeys,
                                    plot_power_spectrum)
 from datetime import datetime
@@ -20,6 +19,19 @@ class TimeDependentModel(object):
     """
     Parameters
     ----------
+    breaks : ndarray, shape (m+1,)
+        Break points for piecewise-polynomial representation of the
+        time-dependent internal field in modified Julian date format.
+    order : int, positive
+        Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
+        field.
+    nmax : int, positive
+        Maximum spherical harmonic degree of the time-dependent field.
+    coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
+        Coefficients of the time-dependent field.
+    source : {'internal', 'external'}
+        Internal or external source (defaults to ``'internal'``)
+
 
     Attributes
     ----------
@@ -58,7 +70,7 @@ class TimeDependentModel(object):
 
         self.source = 'internal' if source is None else source
 
-    def synth_coeffs(self, time, nmax=None, deriv=None):
+    def synth_coeffs(self, time, *, nmax=None, deriv=None):
         """
         Compute the field coefficients at points in time.
 
@@ -119,33 +131,54 @@ class TimeDependentModel(object):
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, radius, *, nmax=None, deriv=None):
+    def power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
         """
         Compute the powerspectrum.
+
+        Parameters
+        ----------
+        time : ndarray, shape (...)
+            Time in modified Julian date.
+        radius : float
+            Radius in kilometers (defaults to mean Earth's surface).
+        nmax : int, optional
+            Maximum spherical harmonic degree (defaults to available
+            coefficients).
+        deriv : int, optional
+            Derivative with respect to time (defaults to 0).
+
+        Returns
+        -------
+        R_n : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
+            Power spectrum of spherical harmonics.
 
         See Also
         --------
         model_utils.power_spectrum
 
         """
+
+        radius = R_REF if radius is None else radius
+        deriv = 0 if deriv is None else deriv
+
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
-        return mu.power_spectrum(coeffs, radius)
+        return mu.power_spectrum(coeffs, radius=radius)
 
-    def plot_power_spectrum(self, time, radius, *, nmax=None, deriv=None):
+    def plot_power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
         """
         Plot power spectrum.
 
         See Also
         --------
-        plot_utils.plot_power_spectrum
+        TimeDependentModel.power_spectrum
 
         """
 
         units = du.gauss_units(deriv)
         units = f'({units})$^2$'
 
-        R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
+        R_n = self.power_spectrum(time, radius=radius, nmax=nmax, deriv=deriv)
 
         plot_power_spectrum(R_n, titles='power spectrum', label=units)
 
@@ -280,11 +313,11 @@ class StaticModel(TimeDependentModel):
         time = 0.0  # time for 2000, irrelevant since static
         super().plot_global_maps(time, radius, **kwargs)
 
-    def plot_power_spectrum(self, radius, **kwargs):
+    def plot_power_spectrum(self, *, radius=None, nmax=None, deriv=None):
 
         time = 0.0
-        radius = 6371.2 if radius is None else radius
-        super().plot_power_spectrum(time, radius, **kwargs)
+        super().plot_power_spectrum(time, radius=radius,
+                                    nmax=nmax, deriv=deriv)
 
 
 class CHAOS(object):
@@ -576,7 +609,7 @@ class CHAOS(object):
 
         return string
 
-    def synth_tdep_field(self, time, nmax=None, deriv=None):
+    def synth_tdep_field(self, time, *, nmax=None, deriv=None):
         """
         Compute the time-dependent internal field coefficients from the CHAOS
         model.
@@ -601,7 +634,7 @@ class CHAOS(object):
 
         return self.model_tdep.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
-    def plot_tdep_timeseries(self, radius, theta, phi,
+    def plot_tdep_timeseries(self, radius, theta, phi, *,
                              nmax=None, deriv=None):
         """
         Plot the time series of the time-dependent internal field from the
@@ -633,7 +666,7 @@ class CHAOS(object):
         self.model_tdep.plot_timeseries(radius, theta, phi,
                                         nmax=nmax, deriv=deriv)
 
-    def plot_tdep_map(self, time, radius, nmax=None, deriv=None):
+    def plot_tdep_map(self, time, radius, *, nmax=None, deriv=None):
         """
         Plot global map of the time-dependent internal field from the CHAOS
         model.
@@ -661,7 +694,7 @@ class CHAOS(object):
 
         self.model_tdep.plot_global_maps(time, radius, nmax=nmax, deriv=deriv)
 
-    def synth_static_field(self, nmax=None):
+    def synth_static_field(self, *, nmax=None):
         """
         Compute the static internal field coefficients from the CHAOS model.
 
@@ -680,7 +713,7 @@ class CHAOS(object):
 
         return self.model_static.synth_coeffs(time=0.0, nmax=nmax, deriv=0)
 
-    def plot_static_map(self, radius, nmax=None):
+    def plot_static_map(self, radius, *, nmax=None):
         """
         Plot global map of the static internal field from the CHAOS model.
 
@@ -702,7 +735,7 @@ class CHAOS(object):
 
         self.model_static.plot_global_maps(radius, nmax=nmax)
 
-    def synth_gsm_field(self, time, nmax=None, source=None):
+    def synth_gsm_field(self, time, *, nmax=None, source=None):
         """
         Compute the external GSM field coefficients from the CHAOS model.
 
@@ -776,7 +809,7 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_sm_field(self, time, nmax=None, source=None):
+    def synth_sm_field(self, time, *, nmax=None, source=None):
         """
         Compute the external SM field from the CHAOS model.
 
@@ -940,7 +973,7 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def plot_external_map(self, time, radius, nmax=None, reference=None,
+    def plot_external_map(self, time, radius, *, nmax=None, reference=None,
                           source=None):
         """
         Plot global map of the external field from the CHAOS model.
@@ -1084,7 +1117,7 @@ class CHAOS(object):
         plot_maps(theta, phi, B_radius, B_theta, B_phi,
                   titles=titles, label=units)
 
-    def save_shcfile(self, filepath, source=None, deriv=None):
+    def save_shcfile(self, filepath, *, source=None, deriv=None):
         """
         Save spherical harmonic coefficients to a file in `shc`-format.
 
