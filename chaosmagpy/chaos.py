@@ -6,7 +6,7 @@ import scipy.interpolate as sip
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
-from chaosmagpy.plot_utils import plot_timeseries, plot_maps
+from chaosmagpy.plot_utils import plot_timeseries, plot_maps, defaultkeys
 from datetime import datetime
 from timeit import default_timer as timer
 
@@ -14,6 +14,28 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
 class TimeDependentModel(object):
+    """
+    Parameters
+    ----------
+
+    Attributes
+    ----------
+    breaks : ndarray, shape (m+1,)
+        Break points for piecewise-polynomial representation of the
+        time-dependent internal field in modified Julian date format.
+    pieces : int, positive
+        Number `m` of intervals given by break points in ``breaks``.
+    order : int, positive
+        Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
+        field.
+    nmax : int, positive
+        Maximum spherical harmonic degree of the time-dependent field.
+    coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
+        Coefficients of the time-dependent field.
+    source : {'internal', 'external'}
+        Internal or external source (defaults to ``'internal'``)
+
+    """
 
     def __init__(self, breaks=None, order=None, coeffs=None, source=None):
         """
@@ -95,12 +117,18 @@ class TimeDependentModel(object):
                                source=self.source, grid=grid)
 
     def power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
+        """
+        Compute the powerspectrum.
 
+        See Also
+        --------
+        model_utils.power_spectrum
+        """
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
         return mu.power_spectrum(coeffs, radius=radius)
 
-    def plot_global_map(self, time, radius, **kwargs):
+    def plot_global_maps(self, time, radius, **kwargs):
         """
         Plot global maps of the field components.
 
@@ -120,7 +148,8 @@ class TimeDependentModel(object):
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
         **kwargs : keywords
-            Other options to pass to :func:`plot_maps` method.
+            Other options to pass to :func:`plot_utils.plot_maps`
+            function.
 
 
         Returns
@@ -134,10 +163,7 @@ class TimeDependentModel(object):
         defaults = dict(deriv=0,
                         nmax=self.nmax)
 
-        # overwrite value with the one in kwargs, if not then use the default
-        for key, value in defaults.items():
-            if kwargs.setdefault(key, value) is None:
-                kwargs[key] = value
+        kwargs = defaultkeys(defaults, kwargs)
 
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
@@ -170,7 +196,7 @@ class TimeDependentModel(object):
 
         plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
-    def plot_timeseries(self, radius, theta, phi, nmax=None, deriv=None):
+    def plot_timeseries(self, radius, theta, phi, *, nmax=None, deriv=None):
         """
         Plot the time series of the time-dependent field components at a
         specific location.
@@ -216,13 +242,22 @@ class TimeDependentModel(object):
 
 
 class StaticModel(TimeDependentModel):
+    """
+    Subclass of :class:`TimeDependentModel` with diffferent default settings.
 
+    """
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
 
-    def plot_global_map(self, time, radius, **kwargs):
-        kwargs.setdefault('cmap', 'nio')
-        super().plot_global_map(time, radius, **kwargs)
+    def plot_global_maps(self, radius, **kwargs):
+
+        defaults = dict(cmap='nio',
+                        vmax=200,
+                        vmin=-200)
+
+        kwargs = defaultkeys(defaults, kwargs)
+        time = 0.0  # time for 2000, irrelevant since static
+        super().plot_global_maps(time, radius, **kwargs)
 
 
 class CHAOS(object):
@@ -268,23 +303,10 @@ class CHAOS(object):
     ----------
     timestamp : str
         UTC timestamp at initialization.
-    breaks : ndarray, shape (m+1,)
-        Break points for piecewise-polynomial representation of the
-        time-dependent internal field in modified Julian date format.
-    pieces : int, positive
-        Number `m` of intervals given by break points in ``breaks``.
-    order : int, positive
-        Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
-        internal field.
-    n_tdep : int, positive
-        Maximum spherical harmonic degree of the time-dependent internal field.
-    coeffs_tdep : ndarray, shape (`k`, `m`, ``n_tdep`` * (``n_tdep`` + 2))
-        Coefficients of the time-dependent internal field.
-    n_static : int, positive
-        Maximum spherical harmonic degree of the static internal (i.e.
-        small-scale crustal) field.
-    coeffs_static : ndarray,  shape (``n_static`` * (``n_static`` + 2),)
-        Coefficients of the static internal field.
+    model_tdep : :class:`TimeDependentModel` instance
+        Time-dependent internal field model.
+    model_static : :class:`StaticModel` instance
+        Static internal field model.
     n_sm : int, positive
         Maximum spherical harmonic degree of external field in SM coordinates.
     coeffs_sm : ndarray, shape (``n_sm`` * (``n_sm`` + 2),)
@@ -333,7 +355,7 @@ class CHAOS(object):
       # create CHAOS class instance
       model = cp.CHAOS(breaks, k, coeffs_tdep=coeffs)
 
-      model.n_tdep  # check degree of time-dependent model, should be 1
+      model.model_tdep.nmax  # check degree of time-dependent model, equal to 1
 
     Now, plot for example the field map on January 2, 2000 0:00 UTC
 
@@ -366,11 +388,7 @@ class CHAOS(object):
 
         # time-dependent internal field
         self.model_tdep = TimeDependentModel(breaks, order, coeffs_tdep)
-        self.model_static = StaticModel(breaks[[0, -1]], 1, coeffs_static.reshape((1, 1, -1)))
-
-        self.breaks = breaks
-        self.pieces = None if breaks is None else int(breaks.size - 1)
-        self.order = None if order is None else int(order)
+        self.model_static = StaticModel(breaks[[0, -1]], 1, coeffs_static)
 
         # helper for returning the degree of the provided coefficients
         def dimension(coeffs):
@@ -378,16 +396,6 @@ class CHAOS(object):
                 return coeffs
             else:
                 return int(np.sqrt(coeffs.shape[-1] + 1) - 1)
-
-        self.coeffs_tdep = coeffs_tdep
-        self.n_tdep = dimension(coeffs_tdep)
-
-        # static field
-        if coeffs_static is not None:
-            assert coeffs_static.ndim == 1
-
-        self.coeffs_static = coeffs_static
-        self.n_static = dimension(coeffs_static)
 
         # external source in SM reference
         self.coeffs_sm = coeffs_sm
@@ -456,7 +464,7 @@ class CHAOS(object):
         if 'tdep' in source_list:
 
             print(f'Computing time-dependent internal field'
-                  f' up to degree {self.n_tdep}.')
+                  f' up to degree {self.model_tdep.nmax}.')
 
             s = timer()
             coeffs = self.synth_tdep_field(time)
@@ -564,37 +572,7 @@ class CHAOS(object):
 
         """
 
-        if self.coeffs_tdep is None:
-            raise ValueError("Time-dependent internal field coefficients "
-                             "are missing.")
-
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.n_tdep
-        elif nmax > self.n_tdep:
-            warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_tdep))
-            nmax = self.n_tdep
-
-        if deriv is None:
-            deriv = 0
-
-        if np.amin(time) < self.breaks[0] or np.amax(time) > self.breaks[-1]:
-            warnings.warn("Requested time-dependent internal coefficients are "
-                          "outside of the modelled period from "
-                          f"{self.breaks[0]} to {self.breaks[-1]}. "
-                          "Returning nan's.")
-
-        PP = sip.PPoly.construct_fast(
-            self.coeffs_tdep[..., :nmax*(nmax+2)].astype(float),
-            self.breaks.astype(float), extrapolate=False)
-
-        PP = PP.derivative(nu=deriv)
-        coeffs = PP(time) * 365.25**deriv
-
-        return coeffs
+        return self.model_tdep.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
     def plot_tdep_timeseries(self, radius, theta, phi,
                              nmax=None, deriv=None):
@@ -625,21 +603,8 @@ class CHAOS(object):
 
         """
 
-        if deriv is None:
-            deriv = 0
-
-        time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
-
-        coeffs = self.synth_tdep_field(time, nmax=nmax, deriv=deriv)
-
-        B_radius, B_theta, B_phi = mu.synth_values(
-            coeffs, radius, theta, phi, nmax=nmax, source='internal')
-
-        units = du.gauss_units(deriv)
-        titles = ['$B_r$', '$B_\\theta$', '$B_\\phi$']
-
-        plot_timeseries(time, B_radius, B_theta, B_phi,
-                        figsize=None, titles=titles, label=units)
+        self.model_tdep.plot_timeseries(radius, theta, phi,
+                                        nmax=nmax, deriv=deriv)
 
     def plot_tdep_map(self, time, radius, nmax=None, deriv=None):
         """
@@ -667,35 +632,7 @@ class CHAOS(object):
 
         """
 
-        deriv = 0 if deriv is None else deriv
-
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.n_tdep
-        elif nmax > self.n_tdep:
-            warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_tdep))
-            nmax = self.n_tdep
-
-        time = np.array(time, dtype=np.float)
-        theta = np.linspace(1, 179, num=320)
-        phi = np.linspace(-180, 180, num=721)
-
-        coeffs = self.synth_tdep_field(time, nmax=nmax, deriv=deriv)
-
-        B_radius, B_theta, B_phi = mu.synth_values(
-            coeffs, radius, theta, phi,
-            nmax=nmax, source='internal', grid=True)
-
-        units = du.gauss_units(deriv)
-        titles = [f'$B_r$ ($n\\leq{nmax}$, deriv={deriv})',
-                  f'$B_\\theta$ ($n\\leq{nmax}$, deriv={deriv})',
-                  f'$B_\\phi$ ($n\\leq{nmax}$, deriv={deriv})']
-
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units)
+        self.model_tdep.plot_global_maps(time, radius, nmax=nmax, deriv=deriv)
 
     def synth_static_field(self, nmax=None):
         """
@@ -714,25 +651,7 @@ class CHAOS(object):
 
         """
 
-        if self.coeffs_static is None:
-            raise ValueError("Static internal field coefficients are missing.")
-
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.n_static
-        elif nmax > self.n_static:
-            warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_static))
-            nmax = self.n_static
-        elif self.n_tdep and nmax <= self.n_tdep:
-            raise ValueError("SH degree of static internal field is smaller "
-                             "than the time-dependent internal field degree.")
-
-        coeffs = self.coeffs_static[:nmax*(nmax+2)]
-
-        return coeffs
+        return self.model_static.synth_coeffs(time=0.0, nmax=nmax, deriv=0)
 
     def plot_static_map(self, radius, nmax=None):
         """
@@ -754,32 +673,7 @@ class CHAOS(object):
 
         """
 
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.n_static
-        elif nmax > self.n_static:
-            warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_static))
-            nmax = self.n_static
-
-        theta = np.linspace(1, 179, num=360)
-        phi = np.linspace(-180, 180, num=721)
-
-        coeffs = self.synth_static_field(nmax=nmax)
-
-        B_radius, B_theta, B_phi = mu.synth_values(
-            coeffs, radius, theta, phi,
-            nmax=nmax, source='internal', grid=True)
-
-        units = du.gauss_units(0)
-        titles = [f'$B_r$ ($n\\leq{nmax}$)',
-                  f'$B_\\theta$ ($n\\leq{nmax}$)',
-                  f'$B_\\phi$ ($n\\leq{nmax}$)']
-
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  label=units, titles=titles, cmap='nio', vmax=200, vmin=-200)
+        self.model_static.plot_global_maps(radius, nmax=nmax)
 
     def synth_gsm_field(self, time, nmax=None, source=None):
         """
@@ -1184,19 +1078,21 @@ class CHAOS(object):
         deriv = 0 if deriv is None else deriv
 
         if source == 'tdep':
-            if self.coeffs_tdep is None:
+            if self.model_tdep_coeffs is None:
                 raise ValueError("Time-dependent internal field coefficients "
                                  "are missing.")
 
             nmin = 1
-            nmax = self.n_tdep
+            nmax = self.model_tdep.nmax
+            breaks = self.model_tdep.breaks
+            order = self.model_tdep.order
 
             # compute times in mjd2000
             times = np.array([], dtype=np.float)
-            for start, end in zip(self.breaks[:-1], self.breaks[1:]):
-                step = (end - start)/(self.order-1)
+            for start, end in zip(breaks[:-1], breaks[1:]):
+                step = (end - start)/(order-1)
                 times = np.append(times, np.arange(start, end, step))
-            times = np.append(times, self.breaks[-1])
+            times = np.append(times, breaks[-1])
 
             # write comment lines
             comment = (
@@ -1205,27 +1101,27 @@ class CHAOS(object):
                 f" internal field model (derivative = {deriv})"
                 f" from degree {nmin} to {nmax}.\n"
                 f"# Coefficients (nT/yr^{deriv}) are given at"
-                f" {(self.breaks.size-1) * (self.order-1) + 1} points in"
-                f" time and were extracted from order-{self.order}"
+                f" {(breaks.size-1) * (order-1) + 1} points in"
+                f" time and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
-                f" {self.order-1} steps).\n"
+                f" {order-1} steps).\n"
                 f"# Created on {datetime.utcnow()} UTC.\n"
-                f"{nmin} {nmax} {times.size} {self.order} {self.order-1}\n"
+                f"{nmin} {nmax} {times.size} {order} {order-1}\n"
                 )
 
             gauss_coeffs = self.synth_tdep_field(times, nmax=nmax, deriv=deriv)
 
         # output static field model coefficients
         if source == 'static':
-            if self.coeffs_static is None:
+            if self.model_static.coeffs is None:
                 raise ValueError("Static internal field coefficients "
                                  "are missing.")
 
-            nmin = self.n_tdep + 1
-            nmax = self.n_static
+            nmin = self.model_tdep.nmax + 1
+            nmax = self.model_static.nmax
 
             # compute times in mjd2000
-            times = np.array([self.breaks[0]])
+            times = np.array([self.model_static.breaks[0]])
 
             # write comment lines
             comment = (
@@ -1293,9 +1189,9 @@ class CHAOS(object):
 
         .. code-block:: python
 
-           import chaosmagpy as cp
+           from chaosmagpy import CHAOS
 
-           model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+           model = CHAOS.from_mat('CHAOS-6-x7.mat')
            print(model)
 
         See Also
@@ -1398,7 +1294,7 @@ def load_CHAOS_matfile(filepath):
     dim = int(pp['dim'])
     breaks = np.ravel(pp['breaks'])  # flatten 2-D array
     coefs = pp['coefs']
-    coeffs_static = np.ravel(mat_contents['g'])
+    coeffs_static = np.ravel(mat_contents['g']).reshape((1, 1, -1))
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     n_tdep = int(np.sqrt(dim+1)-1)
@@ -1517,6 +1413,7 @@ def load_CHAOS_shcfile(filepath):
         nmax = params['nmax']
         coeffs_static = np.zeros((nmax*(nmax+2),))
         coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
+        coeffs_static = coeffs_static.reshape((1, 1, -1))
         model = CHAOS(coeffs_static=coeffs_static,
                       version=_guess_version(filepath))
 

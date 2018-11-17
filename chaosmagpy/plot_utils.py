@@ -49,10 +49,7 @@ def plot_timeseries(time, *args, **kwargs):
                     label='',
                     layout=(n, 1))
 
-    # overwrite value with the one in kwargs, if not then use the default
-    for key, value in defaults.items():
-        if kwargs.setdefault(key, value) is None:
-            kwargs[key] = value
+    kwargs = defaultkeys(defaults, kwargs)
 
     # remove keywords that are not intended for plot
     figsize = kwargs.pop('figsize')
@@ -141,10 +138,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
                     projection=ccrs.Mollweide(),
                     transform=ccrs.PlateCarree())
 
-    # overwrite value with the one in kwargs, if not then use the default
-    for key, value in defaults.items():
-        if kwargs.setdefault(key, value) is None:
-            kwargs[key] = value
+    kwargs = defaultkeys(defaults, kwargs)
 
     # remove keywords that are not intended for pcolormesh
     figsize = kwargs.pop('figsize')
@@ -200,6 +194,30 @@ def fmt(x, pos):
         return r'${}$'.format(a)
     else:
         return r'${}$e${}$'.format(a, b)
+
+
+def defaultkeys(defaults, keywords):
+    """
+    Return dictionary of default keywords. Overwrite any keywords in
+    ``defaults`` using keywords from ``keywords``, except if they are None.
+
+    Parameters
+    ----------
+    defaults, keywords : dict
+        Dictionary of default and replacing keywords.
+
+    Returns
+    -------
+    keywords : dict
+
+    """
+
+    # overwrite value with the one in kwargs, if not then use the default
+    for key, value in defaults.items():
+        if keywords.setdefault(key, value) is None:
+            keywords[key] = value
+
+    return keywords
 
 
 def nio_colormap():
