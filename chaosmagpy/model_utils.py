@@ -661,7 +661,7 @@ def legendre_poly(nmax, theta):
     return Pnm
 
 
-def power_spectrum(coeffs, *, radius=None, nmax=None):
+def power_spectrum(coeffs, radius=None, *, nmax=None):
     """
     Compute the Mauersberger-Lowes spatial powerspectrum.
 

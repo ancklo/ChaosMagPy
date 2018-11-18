@@ -131,7 +131,7 @@ class TimeDependentModel(object):
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
+    def power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
         """
         Compute the powerspectrum.
 
@@ -163,9 +163,9 @@ class TimeDependentModel(object):
 
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
-        return mu.power_spectrum(coeffs, radius=radius)
+        return mu.power_spectrum(coeffs, radius)
 
-    def plot_power_spectrum(self, time, *, radius=None, nmax=None, deriv=None):
+    def plot_power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
         """
         Plot power spectrum.
 
@@ -178,7 +178,7 @@ class TimeDependentModel(object):
         units = du.gauss_units(deriv)
         units = f'({units})$^2$'
 
-        R_n = self.power_spectrum(time, radius=radius, nmax=nmax, deriv=deriv)
+        R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
         plot_power_spectrum(R_n, titles='power spectrum', label=units)
 
@@ -250,7 +250,7 @@ class TimeDependentModel(object):
 
         plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
-    def plot_timeseries(self, radius, theta, phi, *, nmax=None, deriv=None):
+    def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
         Plot the time series of the time-dependent field components at a
         specific location.
@@ -263,12 +263,18 @@ class TimeDependentModel(object):
             Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
         phi : ndarray, shape (), (1,) or float
             Longitude in degrees.
+
+        Other Parameters
+        ----------------
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+        **kwargs : keywords
+            Other options to pass to :func:`plot_utils.plot_timeseries`
+            function.
 
         Returns
         -------
@@ -278,8 +284,18 @@ class TimeDependentModel(object):
 
         """
 
-        if deriv is None:
-            deriv = 0
+        defaults = dict(deriv=0,
+                        nmax=self.nmax,
+                        titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'])
+
+        kwargs = defaultkeys(defaults, kwargs)
+
+        # remove keywords that are not intended for pcolormesh
+        nmax = kwargs.pop('nmax')
+        deriv = kwargs.pop('deriv')
+
+        # add plot_maps options to dictionary
+        kwargs.setdefault('label', du.gauss_units(deriv))
 
         time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
 
@@ -288,11 +304,7 @@ class TimeDependentModel(object):
         B_radius, B_theta, B_phi = mu.synth_values(
             coeffs, radius, theta, phi, nmax=nmax, source=self.source)
 
-        units = du.gauss_units(deriv)
-        titles = ['$B_r$', '$B_\\theta$', '$B_\\phi$']
-
-        plot_timeseries(time, B_radius, B_theta, B_phi,
-                        figsize=None, titles=titles, label=units)
+        plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
 
 
 class StaticModel(TimeDependentModel):
@@ -313,11 +325,10 @@ class StaticModel(TimeDependentModel):
         time = 0.0  # time for 2000, irrelevant since static
         super().plot_global_maps(time, radius, **kwargs)
 
-    def plot_power_spectrum(self, *, radius=None, nmax=None, deriv=None):
+    def plot_power_spectrum(self, radius=None, *, nmax=None, deriv=None):
 
         time = 0.0
-        super().plot_power_spectrum(time, radius=radius,
-                                    nmax=nmax, deriv=deriv)
+        super().plot_power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
 
 class CHAOS(object):
@@ -433,7 +444,7 @@ class CHAOS(object):
 
     """
 
-    def __init__(self, breaks=None, order=None, *,
+    def __init__(self, breaks, order=None, *,
                  coeffs_tdep=None, coeffs_static=None,
                  coeffs_sm=None, coeffs_gsm=None,
                  breaks_delta=None, coeffs_delta=None,
