@@ -161,6 +161,6 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 .. figure:: images/plot_timeseries.png
    :align: left
 
-   Timeseries of the secular variation at two ground observatory station.
+   Timeseries of the secular variation at two ground observatory stations.
 
 The same procedure can be repeated with any number of stations.
