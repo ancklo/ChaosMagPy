@@ -6,8 +6,8 @@ import scipy.interpolate as sip
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
-from chaosmagpy.plot_utils import (plot_timeseries, plot_maps, defaultkeys,
-                                   plot_power_spectrum)
+import chaosmagpy.plot_utils as pu
+from chaosmagpy.plot_utils import defaultkeys
 from datetime import datetime
 from timeit import default_timer as timer
 
@@ -17,6 +17,8 @@ R_REF = 6371.1  # mean surface radius
 
 class TimeDependentModel(object):
     """
+    Class for time-dependent (piecewise polynomial) model.
+
     Parameters
     ----------
     breaks : ndarray, shape (m+1,)
@@ -180,7 +182,7 @@ class TimeDependentModel(object):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        plot_power_spectrum(R_n, titles='power spectrum', label=units)
+        pu.plot_power_spectrum(R_n, titles='power spectrum', label=units)
 
     def plot_global_maps(self, time, radius, **kwargs):
         """
@@ -248,7 +250,7 @@ class TimeDependentModel(object):
             coeffs, radius, theta, phi, nmax=nmax, source=self.source,
             grid=True)
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
@@ -304,7 +306,7 @@ class TimeDependentModel(object):
         B_radius, B_theta, B_phi = mu.synth_values(
             coeffs, radius, theta, phi, nmax=nmax, source=self.source)
 
-        plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
+        pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
 
 
 class StaticModel(TimeDependentModel):
@@ -425,8 +427,6 @@ class CHAOS(object):
 
       # create CHAOS class instance
       model = cp.CHAOS(breaks, k, coeffs_tdep=coeffs)
-
-      model.model_tdep.nmax  # check degree of time-dependent model, equal to 1
 
     Now, plot for example the field map on January 2, 2000 0:00 UTC
 
@@ -1125,8 +1125,8 @@ class CHAOS(object):
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units)
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                     titles=titles, label=units)
 
     def save_shcfile(self, filepath, *, source=None, deriv=None):
         """

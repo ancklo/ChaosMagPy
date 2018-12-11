@@ -273,7 +273,7 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
     gauss_coeffs = PP(time) * 365.25**deriv
 
     B_radius, B_theta, B_phi = synth_values(
-        gauss_coeffs, radius, theta, phi, nmax=nmax, source=source)
+        gauss_coeffs, radius, theta, phi, nmax=nmax, source=source, grid=grid)
 
     return B_radius, B_theta, B_phi
 
@@ -661,7 +661,7 @@ def legendre_poly(nmax, theta):
     return Pnm
 
 
-def power_spectrum(coeffs, radius=None, *, nmax=None):
+def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     """
     Compute the Mauersberger-Lowes spatial powerspectrum.
 
@@ -673,6 +673,8 @@ def power_spectrum(coeffs, radius=None, *, nmax=None):
         Radius in kilometers (defaults to mean Earth's surface radius).
     nmax : int, optional
         Maximum sphercial degree (defaults to `N`).
+    source : {'internal', 'external'}
+        Source of the field model (defaults to internal).
 
     Returns
     -------
@@ -692,12 +694,64 @@ def power_spectrum(coeffs, radius=None, *, nmax=None):
               f'setting nmax to {N}.')
         nmax = N
 
+    source = 'internal' if source is None else source
+
+    if source == 'internal':
+        def factor(n, ratio):
+            return (n+1)*ratio**(2*n+4)
+    elif source == 'external':
+        def factor(n, ratio):
+            return n*ratio**(-(2*n-2))
+    else:
+        raise ValueError('Wrong source. Use `internal` or `external`.')
+
     R_n = np.empty(coeffs.shape[:-1] + (nmax,))
 
     for n in range(1, nmax+1):
         min = n**2 - 1
         max = min + (2*n + 1)
-        R_n[..., n-1] = (n+1)*ratio**(2*n+4)*np.sum(coeffs[..., min:max]**2,
-                                                    axis=-1)
+        R_n[..., n-1] = factor(n, ratio)*np.sum(coeffs[..., min:max]**2,
+                                                axis=-1)
 
     return R_n
+
+
+def degree_correlation(coeffs_1, coeffs_2):
+    """
+    Correlation per spherical harmonic degree between two models 1 and 2.
+
+    Parameters
+    ----------
+    coeffs_1, coeffs_2 : ndarray, shape (N,)
+        Two sets of coefficients of equal length `N`.
+
+    Returns
+    -------
+    C_n : ndarray, shape (nmax,)
+        Degree correlation of the two models. There are `N = nmax(nmax+2)`
+        coefficients.
+
+    """
+
+    if len(coeffs_1) is not len(coeffs_2):
+        raise ValueError(
+            'Number of coefficients is '
+            'not equal ({0} ~= {1}).'.format(len(coeffs_1), len(coeffs_2)))
+
+    nmax = np.sqrt(len(coeffs_1) + 1) - 1
+
+    C_n = np.zeros((nmax,))
+    R_n = np.zeros((nmax,))  # elements are prop. to power spectrum of coeffs_1
+    S_n = np.zeros((nmax,))  # elements are prop. to power spectrum of coeffs_2
+
+    coeffs_12 = coeffs_1*coeffs_2
+
+    for n in range(1, nmax+1):
+        min = n**2 - 1
+        max = min + (2*n + 1)
+        R_n[n-1] = np.sum(coeffs_1[min:max]**2, axis=-1)
+        S_n[n-1] = np.sum(coeffs_2[min:max]**2, axis=-1)
+        C_n[n-1] = (np.sum(coeffs_12[min:max], axis=-1) /
+                    np.sqrt(R_n[n-1]*S_n[n-1]))
+
+    return C_n
