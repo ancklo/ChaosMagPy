@@ -34,11 +34,11 @@ def example1():
     print(model)
 
     print('Computing core field.')
-    coeffs = model.synth_tdep_field(time)
+    coeffs = model.synth_coeffs_tdep(time)
     B_core = synth_values(coeffs, radius, theta, phi)
 
     print('Computing crustal field up to degree 110.')
-    coeffs = model.synth_static_field(nmax=110)
+    coeffs = model.synth_coeffs_static(nmax=110)
     B_crust = synth_values(coeffs, radius, theta, phi)
 
     # complete internal contribution
@@ -47,15 +47,15 @@ def example1():
     B_phi_int = B_core[2] + B_crust[2]
 
     print('Computing field due to external sources, incl. induced field: GSM.')
-    coeffs_ext = model.synth_gsm_field(time, source='external')  # inducing
-    coeffs_int = model.synth_gsm_field(time, source='internal')  # induced
+    coeffs_ext = model.synth_coeffs_gsm(time, source='external')  # inducing
+    coeffs_int = model.synth_coeffs_gsm(time, source='internal')  # induced
 
     B_ext_gsm = synth_values(coeffs_ext, radius, theta, phi, source='external')
     B_int_gsm = synth_values(coeffs_int, radius, theta, phi, source='internal')
 
     print('Computing field due to external sources, incl. induced field: SM.')
-    coeffs_ext = model.synth_sm_field(time, source='external')  # inducing
-    coeffs_int = model.synth_sm_field(time, source='internal')  # induced
+    coeffs_ext = model.synth_coeffs_sm(time, source='external')  # inducing
+    coeffs_int = model.synth_coeffs_sm(time, source='internal')  # induced
 
     B_ext_sm = synth_values(coeffs_ext, radius, theta, phi, source='external')
     B_int_sm = synth_values(coeffs_int, radius, theta, phi, source='internal')
@@ -150,7 +150,7 @@ def example3():
     radius = 0.53*R_REF  # radial distance in km of core-mantle boundary
     time = mjd2000(2015, 9, 1)  # year, month, day
 
-    model.plot_tdep_map(time, radius, nmax=16, deriv=1)
+    model.plot_maps_tdep(time, radius, nmax=16, deriv=1)
 
 
 def example4():
@@ -163,7 +163,7 @@ def example4():
 
     radius = R_REF
 
-    model.plot_static_map(radius, nmax=85)
+    model.plot_maps_static(radius, nmax=85)
 
 
 def example5():
@@ -195,7 +195,7 @@ def example6():
     radius = R_REF + 450
     time = mjd2000(2015, 9, 1, 12)
 
-    model.plot_external_map(time, radius, reference='all', source='all')
+    model.plot_maps_external(time, radius, reference='all', source='all')
 
 
 if __name__ == '__main__':

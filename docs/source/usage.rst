@@ -21,9 +21,9 @@ boundary) from the center of Earth and on January 1, 2000:
    radius = 3485.0  # km, here core-mantle boundary
    time = 0.0  # mjd2000, here Jan 1, 2000 0:00 UTC
 
-   model.plot_tdep_map(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
+   model.plot_maps_tdep(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
 
-.. figure:: images/plot_tdep_map.png
+.. figure:: images/plot_maps_tdep.png
    :align: center
 
    Secular variation at the core-mantle-boundary up to degree 16 in
@@ -34,7 +34,7 @@ field in shc-format to a file:
 
 .. code-block:: python
 
-   model.write_to_shc('CHAOS-6-x7_tdep.shc', source='tdep')
+   model.save_shcfile('CHAOS-6-x7_tdep.shc', source='tdep')
 
 Plotting the map of the static internal field
 ---------------------------------------------
@@ -47,9 +47,9 @@ be plotted on a map:
    import chaosmagpy as cp
 
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
-   model.plot_static_map(radius=6371.2, nmax=85)
+   model.plot_maps_static(radius=6371.2, nmax=85)
 
-.. figure:: images/plot_static_map.png
+.. figure:: images/plot_maps_static.png
   :align: center
 
   Static internal small-scale field at Earth's surface up to degree 85.
@@ -58,7 +58,7 @@ and saved
 
 .. code-block:: python
 
-   model.write_to_shc('CHAOS-6-x7_static.shc', source='static')
+   model.save_shcfile('CHAOS-6-x7_static.shc', source='static')
 
 Computing field components on a grid
 ------------------------------------
@@ -88,7 +88,7 @@ example, the time-dependent internal field:
    model = load_CHAOS_matfile('CHAOS-6-x7.mat')
 
    print('Computing core field.')
-   coeffs = model.synth_tdep_field(time, nmax=16, deriv=1)  # SV max. degree 16
+   coeffs = model.synth_coeffs_tdep(time, nmax=16, deriv=1)  # SV max. degree 16
 
    B_radius, B_theta, B_phi = synth_values(coeffs, radius_grid, theta_grid, phi_grid)
 
@@ -106,13 +106,13 @@ The same computation can be done with other sources described by the model:
 +----------+-----------------+---------------------------------------------------+
 |  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
 +==========+=================+===================================================+
-| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_tdep_field`             |
+| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_coeffs_tdep`            |
 +          +-----------------+---------------------------------------------------+
-|          | static          | :meth:`~chaos.CHAOS.synth_static_field`           |
+|          | static          | :meth:`~chaos.CHAOS.synth_coeffs_static`          |
 +----------+-----------------+---------------------------------------------------+
-| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_gsm_field`                   |
+| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_coeffs_gsm`                  |
 +          +-----------------+---------------------------------------------------+
-|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_sm_field`                    |
+|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_coeffs_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
 Computing the timeseries of field components at two ground observatories
@@ -145,7 +145,7 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
    theta = np.reshape(theta, (2, 1))  # 2 x 1
    phi = np.reshape(phi, (2, 1))  # 2 x 1
 
-   coeffs = model.synth_tdep_field(time, nmax=16, deriv=1)
+   coeffs = model.synth_coeffs_tdep(time, nmax=16, deriv=1)
 
    # compute field components of shape 2 x N
    B_radius, B_theta, B_phi = synth_values(coeffs, radius, theta, phi)

@@ -184,7 +184,7 @@ class TimeDependentModel(object):
 
         pu.plot_power_spectrum(R_n, titles='power spectrum', label=units)
 
-    def plot_global_maps(self, time, radius, **kwargs):
+    def plot_maps(self, time, radius, **kwargs):
         """
         Plot global maps of the field components.
 
@@ -317,7 +317,7 @@ class StaticModel(TimeDependentModel):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
 
-    def plot_global_maps(self, radius, **kwargs):
+    def plot_maps(self, radius, **kwargs):
 
         defaults = dict(cmap='nio',
                         vmax=200,
@@ -325,7 +325,7 @@ class StaticModel(TimeDependentModel):
 
         kwargs = defaultkeys(defaults, kwargs)
         time = 0.0  # time for 2000, irrelevant since static
-        super().plot_global_maps(time, radius, **kwargs)
+        super().plot_maps(time, radius, **kwargs)
 
     def plot_power_spectrum(self, radius=None, *, nmax=None, deriv=None):
 
@@ -432,7 +432,7 @@ class CHAOS(object):
 
     .. code-block:: python
 
-      model.plot_tdep_map(time=1, radius=6371.2)
+      model.plot_maps_tdep(time=1, radius=6371.2)
 
     Save the Gauss coefficients of the time-dependent field in shc-format to
     the current working directory.
@@ -538,7 +538,7 @@ class CHAOS(object):
                   f' up to degree {self.model_tdep.nmax}.')
 
             s = timer()
-            coeffs = self.synth_tdep_field(time)
+            coeffs = self.synth_coeffs_tdep(time)
             B_radius_new, B_theta_new, B_phi_new = mu.synth_values(
                 coeffs, radius, theta, phi)
 
@@ -557,7 +557,7 @@ class CHAOS(object):
                   f' up to degree {nmax_static}.')
 
             s = timer()
-            coeffs = self.synth_static_field(nmax=nmax_static)
+            coeffs = self.synth_coeffs_static(nmax=nmax_static)
             B_radius_new, B_theta_new, B_phi_new = mu.synth_values(
                 coeffs, radius, theta, phi)
 
@@ -573,8 +573,8 @@ class CHAOS(object):
             print(f'Computing GSM field up to degree {self.n_gsm}.')
 
             s = timer()
-            coeffs_ext = self.synth_gsm_field(time, source='external')
-            coeffs_int = self.synth_gsm_field(time, source='internal')
+            coeffs_ext = self.synth_coeffs_gsm(time, source='external')
+            coeffs_int = self.synth_coeffs_gsm(time, source='internal')
 
             B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
                 coeffs_ext, radius, theta, phi, source='external')
@@ -593,8 +593,8 @@ class CHAOS(object):
             print(f'Computing SM field up to degree {self.n_sm}.')
 
             s = timer()
-            coeffs_ext = self.synth_sm_field(time, source='external')
-            coeffs_int = self.synth_sm_field(time, source='internal')
+            coeffs_ext = self.synth_coeffs_sm(time, source='external')
+            coeffs_int = self.synth_coeffs_sm(time, source='internal')
 
             B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
                 coeffs_ext, radius, theta, phi, source='external')
@@ -620,7 +620,7 @@ class CHAOS(object):
 
         return string
 
-    def synth_tdep_field(self, time, *, nmax=None, deriv=None):
+    def synth_coeffs_tdep(self, time, *, nmax=None, deriv=None):
         """
         Compute the time-dependent internal field coefficients from the CHAOS
         model.
@@ -677,7 +677,7 @@ class CHAOS(object):
         self.model_tdep.plot_timeseries(radius, theta, phi,
                                         nmax=nmax, deriv=deriv)
 
-    def plot_tdep_map(self, time, radius, *, nmax=None, deriv=None):
+    def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None):
         """
         Plot global map of the time-dependent internal field from the CHAOS
         model.
@@ -703,9 +703,9 @@ class CHAOS(object):
 
         """
 
-        self.model_tdep.plot_global_maps(time, radius, nmax=nmax, deriv=deriv)
+        self.model_tdep.plot_maps(time, radius, nmax=nmax, deriv=deriv)
 
-    def synth_static_field(self, *, nmax=None):
+    def synth_coeffs_static(self, *, nmax=None):
         """
         Compute the static internal field coefficients from the CHAOS model.
 
@@ -724,7 +724,7 @@ class CHAOS(object):
 
         return self.model_static.synth_coeffs(time=0.0, nmax=nmax, deriv=0)
 
-    def plot_static_map(self, radius, *, nmax=None):
+    def plot_maps_static(self, radius, *, nmax=None):
         """
         Plot global map of the static internal field from the CHAOS model.
 
@@ -744,9 +744,9 @@ class CHAOS(object):
 
         """
 
-        self.model_static.plot_global_maps(radius, nmax=nmax)
+        self.model_static.plot_maps(radius, nmax=nmax)
 
-    def synth_gsm_field(self, time, *, nmax=None, source=None):
+    def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
         Compute the external GSM field coefficients from the CHAOS model.
 
@@ -820,7 +820,7 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_sm_field(self, time, *, nmax=None, source=None):
+    def synth_coeffs_sm(self, time, *, nmax=None, source=None):
         """
         Compute the external SM field from the CHAOS model.
 
@@ -984,8 +984,8 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def plot_external_map(self, time, radius, *, nmax=None, reference=None,
-                          source=None):
+    def plot_maps_external(self, time, radius, *, nmax=None, reference=None,
+                           source=None):
         """
         Plot global map of the external field from the CHAOS model.
 
@@ -1029,7 +1029,7 @@ class CHAOS(object):
         if reference == 'all' or reference == 'gsm':
 
             if source == 'all' or source == 'external':
-                coeffs_ext = self.synth_gsm_field(
+                coeffs_ext = self.synth_coeffs_gsm(
                     time, nmax=nmax, source='external')
 
                 # compute magnetic field given external GSM field coefficients
@@ -1038,7 +1038,7 @@ class CHAOS(object):
                     nmax=nmax, source='external', grid=True)
 
             if source == 'all' or source == 'internal':
-                coeffs_int = self.synth_gsm_field(
+                coeffs_int = self.synth_coeffs_gsm(
                     time, nmax=nmax, source='internal')
 
                 # compute magnetic field given external GSM field coefficients
@@ -1066,7 +1066,7 @@ class CHAOS(object):
         if reference == 'all' or reference == 'sm':
 
             if source == 'all' or source == 'external':
-                coeffs_ext = self.synth_sm_field(
+                coeffs_ext = self.synth_coeffs_sm(
                     time, nmax=nmax, source='external')
 
                 # compute magnetic field given external SM field coefficients
@@ -1075,7 +1075,7 @@ class CHAOS(object):
                     nmax=nmax, source='external', grid=True)
 
             if source == 'all' or source == 'internal':
-                coeffs_int = self.synth_sm_field(
+                coeffs_int = self.synth_coeffs_sm(
                     time, nmax=nmax, source='internal')
 
                 # compute magnetic field given external SM field coefficients
@@ -1149,7 +1149,7 @@ class CHAOS(object):
         deriv = 0 if deriv is None else deriv
 
         if source == 'tdep':
-            if self.model_tdep_coeffs is None:
+            if self.model_tdep.coeffs is None:
                 raise ValueError("Time-dependent internal field coefficients "
                                  "are missing.")
 
@@ -1180,7 +1180,8 @@ class CHAOS(object):
                 f"{nmin} {nmax} {times.size} {order} {order-1}\n"
                 )
 
-            gauss_coeffs = self.synth_tdep_field(times, nmax=nmax, deriv=deriv)
+            gauss_coeffs = self.synth_coeffs_tdep(
+                times, nmax=nmax, deriv=deriv)
 
         # output static field model coefficients
         if source == 'static':
@@ -1203,7 +1204,7 @@ class CHAOS(object):
                 f"{nmin} {nmax} {times.size} 1 0\n"
                 )
 
-            gauss_coeffs = self.synth_static_field(nmax=nmax)
+            gauss_coeffs = self.synth_coeffs_static(nmax=nmax)
             gauss_coeffs = gauss_coeffs[int(nmin**2-1):].reshape((1, -1))
 
         # compute all possible degree and orders

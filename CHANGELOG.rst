@@ -12,11 +12,18 @@ Features
 * Added functions to compute and plot the power spectrum.
 * Added flexibility to the function synth_values: now supports NumPy
   broadcasting rules.
-* Fixed CHAOS class method synth_sm_field default source parameter: now
+* Fixed CHAOS class method synth_coeffs_sm default source parameter: now
   defaults to ``'external'``.
 
 Deprecations
 ^^^^^^^^^^^^
+* ``plot_external_map`` has been renamed to ``plot_maps_external``
+* ``synth_sm_field`` has been renamed to ``synth_coeffs_sm``
+* ``synth_gsm_field`` has been renamed to ``synth_coeffs_gsm``
+* ``plot_static_map`` has been renamed to ``plot_maps_static``
+* ``synth_static_field`` has been renamed to ``synth_coeffs_static``
+* ``plot_tdep_maps`` has been renamed to ``plot_maps_tdep``
+* ``synth_tdep_field`` has been renamed to ``synth_coeffs_tdep``
 
 Version 0.1a0
 -------------
