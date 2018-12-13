@@ -180,7 +180,7 @@ def example5():
     theta = 75.69200
     phi = 343.05000
 
-    model.plot_tdep_timeseries(radius, theta, phi, nmax=16, deriv=1)
+    model.plot_timeseries_tdep(radius, theta, phi, nmax=16, deriv=1)
 
 
 def example6():

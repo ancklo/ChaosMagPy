@@ -645,7 +645,7 @@ class CHAOS(object):
 
         return self.model_tdep.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
-    def plot_tdep_timeseries(self, radius, theta, phi, *,
+    def plot_timeseries_tdep(self, radius, theta, phi, *,
                              nmax=None, deriv=None):
         """
         Plot the time series of the time-dependent internal field from the
