@@ -27,7 +27,7 @@ import numpy as np
 import os
 from numpy import degrees, radians
 from math import pi, ceil, factorial
-from datetime import datetime
+from datetime import datetime, timedelta
 from chaosmagpy.model_utils import legendre_poly
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -439,14 +439,41 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0):
 
     Returns
     -------
-    mjd : float
-        Modified Julian date in units of days.
+    time : float
+        Modified Julian date (units of days).
+
     """
 
     date = (datetime(year, month, day, hour, minute, second)
             - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
 
     return date.days + date.seconds / 86400
+
+
+def decimal_year(time):
+    """
+    Convert time in modified Julian date 2000 to decimal year while also
+    accounting for leap years.
+
+    Parameters
+    ----------
+    time : float
+        Time in modified Julian date 2000.
+
+    Returns
+    -------
+    year : float
+        Time in decimal years.
+    """
+
+    date = timedelta(days=time) + datetime(2000, 1, 1)
+    delta = date - datetime(date.year, 1, 1)
+
+    # remainder is zero = leap year
+    days = 366 if (date.year % 4) == 0 else 365
+
+    return (date.year + delta.days/days
+            + (delta.seconds + delta.microseconds/1e6)/60/60/24/days)
 
 
 def sun_position(time):
