@@ -1128,7 +1128,8 @@ class CHAOS(object):
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
                      titles=titles, label=units)
 
-    def save_shcfile(self, filepath, *, source=None, deriv=None):
+    def save_shcfile(self, filepath, *, source=None, deriv=None,
+                     leap_year=None):
         """
         Save spherical harmonic coefficients to a file in `shc`-format.
 
@@ -1147,6 +1148,8 @@ class CHAOS(object):
         source = 'tdep' if source is None else source
 
         deriv = 0 if deriv is None else deriv
+
+        leap_year = True if leap_year is None else leap_year
 
         if source == 'tdep':
             if self.model_tdep.coeffs is None:
@@ -1173,7 +1176,8 @@ class CHAOS(object):
                 f" from degree {nmin} to {nmax}.\n"
                 f"# Coefficients (nT/yr^{deriv}) are given at"
                 f" {(breaks.size-1) * (order-1) + 1} points in"
-                f" time and were extracted from order-{order}"
+                f" time (decimal years, accounting for leap years set to"
+                f" {leap_year}) and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
                 f" {order-1} steps).\n"
                 f"# Created on {datetime.utcnow()} UTC.\n"
@@ -1200,6 +1204,8 @@ class CHAOS(object):
                 f"# {self}\n"
                 f"# Spherical harmonic coefficients of the static internal"
                 f" field model from degree {nmin} to {nmax}.\n"
+                f"# Given at the first break point (decimal year, accounting"
+                f" for leap years: {leap_year})\n"
                 f"# Created on {datetime.utcnow()} UTC.\n"
                 f"{nmin} {nmax} {times.size} 1 0\n"
                 )
@@ -1223,7 +1229,8 @@ class CHAOS(object):
             # write header lines to 8 significants
             f.write('  ')  # to represent two missing values
             for time in times:
-                f.write(' {:9.4f}'.format(time / 365.25 + 2000.))
+                f.write(' {:9.4f}'.format(
+                    cu.decimal_year(time, leap_year=leap_year)))
             f.write('\n')
 
             # write coefficient table to 8 significants
