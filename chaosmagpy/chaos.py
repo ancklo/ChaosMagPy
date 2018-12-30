@@ -1142,6 +1142,9 @@ class CHAOS(object):
         deriv : int, optional
             Derivative of the time-dependent field (default is 0, ignored for
             static source).
+        leap_year : {True, False}, optional
+            Take leap years for decimal year conversion into account
+            (defaults to ``True``).
 
         """
 
@@ -1230,7 +1233,7 @@ class CHAOS(object):
             f.write('  ')  # to represent two missing values
             for time in times:
                 f.write(' {:9.4f}'.format(
-                    cu.decimal_year(time, leap_year=leap_year)))
+                    cu.mjd_to_dyear(time, leap_year=leap_year)))
             f.write('\n')
 
             # write coefficient table to 8 significants

@@ -435,7 +435,7 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0):
     minute : int, optional
         Minutes of the hour `[0, 59]` (default is 0).
     second : int, optional
-        Seconds of the hour `[0, 59]` (default is 0).
+        Seconds of the minute `[0, 59]` (default is 0).
 
     Returns
     -------
@@ -444,47 +444,96 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0):
 
     """
 
-    date = (datetime(year, month, day, hour, minute, second)
-            - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
+    delta = (datetime(year, month, day, hour, minute, second)
+             - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
 
-    return date.days + date.seconds / 86400
+    return delta.days + delta.seconds/86400
 
 
-def decimal_year(time, leap_year=None):
+def dyear_to_mjd(time, leap_year=None):
     """
-    Convert time in modified Julian date 2000 to decimal year while also
-    accounting for leap years.
+    Convert time from decimal years to modified Julian date 2000. Leap years
+    are accounted for by default.
+
+    Parameters
+    ----------
+    time : float
+        Time in decimal years.
+    leap_year : {True, False}, optional
+        Take leap years into account by using a conversion factor of 365 or 366
+        days in a year (leap year, used by default). If ``False`` a conversion
+        factor of 365.25 days in a year is used.
+
+    Returns
+    -------
+    time : float
+        Time in modified Julian date 2000.
+    """
+
+    leap_year = True if leap_year is None else leap_year
+
+    # remainder is zero = leap year
+    if leap_year is True:
+        year = int(time)
+        days = 366 if (year % 4) == 0 else 365
+        day = (time - year) * days
+        date = timedelta(days=day) + datetime(year, 1, 1)
+
+        delta = date - datetime(2000, 1, 1)
+
+        mjd = delta.days + delta.seconds/86400
+
+    elif leap_year is False:
+        days = 365.25
+
+        mjd = (time - 2000.0) * days
+
+    else:
+        raise ValueError('Wrong leap year option: use either True or False')
+
+    return mjd
+
+
+def mjd_to_dyear(time, leap_year=None):
+    """
+    Convert time in modified Julian date 2000 to decimal years. Leap years are
+    accounted for by default.
 
     Parameters
     ----------
     time : float
         Time in modified Julian date 2000.
-    leap_year : {True, False}
+    leap_year : {True, False}, optional
         Take leap years into account by using a conversion factor of 365 or 366
-        (leap year, used by default). If ``False`` a conversion factor of
-        365.25 is used.
+        days in a year (leap year, used by default). If ``False`` a conversion
+        factor of 365.25 days in a year is used.
 
     Returns
     -------
-    year : float
+    time : float
         Time in decimal years.
     """
 
     leap_year = True if leap_year is None else leap_year
 
-    date = timedelta(days=time) + datetime(2000, 1, 1)
-    delta = date - datetime(date.year, 1, 1)
-
     # remainder is zero = leap year
     if leap_year is True:
+        date = timedelta(days=time) + datetime(2000, 1, 1)
         days = 366 if (date.year % 4) == 0 else 365
+
+        delta = date - datetime(date.year, 1, 1)
+
+        dyear = date.year + delta.days/days + delta.seconds/86400/days
+
     elif leap_year is False:
         days = 365.25
+
+        dyear = time/days + 2000.0
+
     else:
         raise ValueError('Wrong leap year option: use either True or False')
 
-    return (date.year + delta.days/days
-            + (delta.seconds + delta.microseconds/1e6)/60/60/24/days)
+    return dyear
 
 
 def sun_position(time):
