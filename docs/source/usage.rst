@@ -72,7 +72,7 @@ example, the time-dependent internal field:
    import numpy as np
    from chaosmagpy import load_CHAOS_matfile
    from chaosmagpy.model_utils import synth_values
-   from chaosmagpy.coordinate_utils import mjd2000
+   from chaosmagpy.data_utils import mjd2000
 
    # create full grid
    radius = 3485.  # km, core-mantle coundary
@@ -125,7 +125,7 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 
    from chaosmagpy import load_CHAOS_matfile
    from chaosmagpy.model_utils import synth_values
-   from chaosmagpy.coordinate_utils import mjd2000
+   from chaosmagpy.data_utils import mjd2000
    from chaosmagpy.plot_utils import plot_timeseries
    import numpy as np
 
