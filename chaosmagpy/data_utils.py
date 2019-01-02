@@ -40,7 +40,7 @@ def load_RC_datfile(filepath, parse_dates=False):
     return df
 
 
-def load_shcfile(filepath):
+def load_shcfile(filepath, leap_year=None):
     """
     Load shc-file and return coefficient arrays.
 
@@ -48,6 +48,9 @@ def load_shcfile(filepath):
     ----------
     filepath : str
         File path to spherical harmonic coefficient shc-file.
+    leap_year : {True, False}, optional
+        Take leap year in time conversion into account (default). Otherwise,
+        use conversion factor of 365.25 days per year.
 
     Returns
     -------
@@ -66,6 +69,7 @@ def load_shcfile(filepath):
         piecewise polynomial with ``breaks = time[::step]``.
 
     """
+    leap_year = True if leap_year is None else leap_year
 
     with open(filepath, 'r') as f:
 
@@ -91,7 +95,9 @@ def load_shcfile(filepath):
         coeffs = data[parameters['N']:].reshape((-1, parameters['N']+2))
         coeffs = np.squeeze(coeffs[:, 2:])  # discard columns with n and m
 
-    return (time - 2000.) * 365.25, coeffs, parameters
+        mjd = np.array([dyear_to_mjd(t, leap_year=leap_year) for t in time])
+
+    return mjd, coeffs, parameters
 
 
 def mjd2000(year, month, day, hour=0, minute=0, second=0):
