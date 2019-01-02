@@ -1285,7 +1285,7 @@ class CHAOS(object):
         return load_CHAOS_matfile(filepath)
 
     @classmethod
-    def from_shc(self, filepath):
+    def from_shc(self, filepath, leap_year=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1293,6 +1293,9 @@ class CHAOS(object):
         ----------
         filepath : str
             Path to shc-file.
+        leap_year : {True, False}, optional
+            Take leap year in time conversion into account (default).
+            Otherwise, use conversion factor of 365.25 days per year.
 
         Returns
         -------
@@ -1318,7 +1321,9 @@ class CHAOS(object):
         load_CHAOS_shcfile
 
         """
-        return load_CHAOS_shcfile(filepath)
+        leap_year = True if leap_year is None else leap_year
+
+        return load_CHAOS_shcfile(filepath, leap_year=leap_year)
 
 
 def load_CHAOS_matfile(filepath):
@@ -1438,7 +1443,7 @@ def save_CHAOS_matfile(filepath):
     raise NotImplementedError
 
 
-def load_CHAOS_shcfile(filepath):
+def load_CHAOS_shcfile(filepath, leap_year=None):
     """
     Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
     should contain the coefficients or the time-dependent or static internal
@@ -1450,6 +1455,9 @@ def load_CHAOS_shcfile(filepath):
     ----------
     filepath : str
         Path to shc-file.
+    leap_year : {True, False}, optional
+        Take leap year in time conversion into account (default). Otherwise,
+        use conversion factor of 365.25 days per year.
 
     Returns
     -------
@@ -1475,17 +1483,19 @@ def load_CHAOS_shcfile(filepath):
     The piecewise polynomial of the time-dependent internal part of the CHAOS
     model is contructed from the snapshots of the model, accurately handling
     the break-points of the model. Note however that the original coefficients
-    can only be retrieved to an absolute error of around 0.01 nT, i.e.
-    small-scale field and higher derivates (>1) are not recommended if
-    accuracy is important. Use the ``load_CHAOS_matfile`` function instead.
+    can apparently only be recovered to an absolute error of around 0.01 nT,
+    i.e. this method is not recommended for small-scale field and higher
+    derivates (>1) if accuracy is important. Use the ``load_CHAOS_matfile``
+    function instead.
 
     See Also
     --------
     CHAOS, load_CHAOS_matfile
 
     """
+    leap_year = True if leap_year is None else leap_year
 
-    time, coeffs, params = du.load_shcfile(str(filepath))
+    time, coeffs, params = du.load_shcfile(str(filepath), leap_year=leap_year)
 
     if time.size == 1:  # static field
 
