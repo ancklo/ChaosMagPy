@@ -325,63 +325,30 @@ class StaticModel(TimeDependentModel):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
 
-    def synth_coeffs(self, *, nmax=None):
-        """
-        Computes the field coefficients.
-
-        See Also
-        --------
-        TimeDependentModel.synth_coeffs
-
-        """
-
-        time = self.breaks[0]
-        super().synth_coeffs(time, nmax=nmax, deriv=0)
-
-    def synth_values(self, radius, theta, phi, *, nmax=None, grid=None):
-        """
-        Computes radial, colatitude and azimuthal field components from the
-        magnetic potential field in terms of spherical harmonic coefficients.
-
-        See Also
-        --------
-        model_utils.synth_values
-
-        """
-
-        time = self.breaks[0]
-        super().synth_values(time, radius, theta, phi, nmax=nmax, deriv=0,
-                             grid=grid)
-
-    def power_spectrum(self, time, radius=None, *, nmax=None):
-        """
-        Compute the powerspectrum.
-
-        See Also
-        --------
-        TimeDependentModel.power_spectrum
-
-        """
-
-        time = self.breaks[0]
-        super().power_spectrum(time, radius, nmax=nmax, driv=0)
-
-    def plot_power_spectrum(self, radius=None, *, nmax=None):
-        """
-        Plot power spectrum.
-
-        See Also
-        --------
-        TimeDependentModel.plot_power_spectrum
-
-        """
-
-        time = self.breaks[0]
-        super().plot_power_spectrum(time, radius, nmax=nmax, deriv=0)
-
     def plot_maps(self, radius, **kwargs):
         """
         Plot global maps of the field components.
+
+        Parameters
+        ----------
+        radius : ndarray, shape (), (1,) or float
+            Array containing the radius in kilometers.
+
+        Other Parameters
+        ----------------
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        **kwargs : keywords
+            Other options to pass to :func:`plot_utils.plot_maps`
+            function.
+
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Global map of the radial, colatitude and azimuthal field
+            components.
 
         See Also
         --------
@@ -394,8 +361,21 @@ class StaticModel(TimeDependentModel):
                         vmin=-200)
 
         kwargs = defaultkeys(defaults, kwargs)
-        time = self.breaks[0]  # time of first break point
+        time = 0.0  # time for 2000, irrelevant since static
         super().plot_maps(time, radius, **kwargs)
+
+    def plot_power_spectrum(self, radius=None, *, nmax=None, deriv=None):
+        """
+        Plot power spectrum.
+
+        See Also
+        --------
+        TimeDependentModel.power_spectrum
+
+        """
+
+        time = 0.0
+        super().plot_power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
 
 class CHAOS(object):
@@ -1570,8 +1550,7 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
         coeffs_static = np.zeros((nmax*(nmax+2),))
         coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
         coeffs_static = coeffs_static.reshape((1, 1, -1))
-        model = CHAOS(breaks=time,
-                      coeffs_static=coeffs_static,
+        model = CHAOS(coeffs_static=coeffs_static,
                       version=_guess_version(filepath))
 
     else:  # time-dependent field
