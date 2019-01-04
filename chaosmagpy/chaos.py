@@ -326,6 +326,35 @@ class StaticModel(TimeDependentModel):
         super().__init__(*arg, **kwargs)
 
     def plot_maps(self, radius, **kwargs):
+        """
+        Plot global maps of the field components.
+
+        Parameters
+        ----------
+        radius : ndarray, shape (), (1,) or float
+            Array containing the radius in kilometers.
+
+        Other Parameters
+        ----------------
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        **kwargs : keywords
+            Other options to pass to :func:`plot_utils.plot_maps`
+            function.
+
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Global map of the radial, colatitude and azimuthal field
+            components.
+
+        See Also
+        --------
+        TimeDependentModel.plot_maps
+
+        """
 
         defaults = dict(cmap='nio',
                         vmax=200,
@@ -336,6 +365,14 @@ class StaticModel(TimeDependentModel):
         super().plot_maps(time, radius, **kwargs)
 
     def plot_power_spectrum(self, radius=None, *, nmax=None, deriv=None):
+        """
+        Plot power spectrum.
+
+        See Also
+        --------
+        TimeDependentModel.power_spectrum
+
+        """
 
         time = 0.0
         super().plot_power_spectrum(time, radius, nmax=nmax, deriv=deriv)

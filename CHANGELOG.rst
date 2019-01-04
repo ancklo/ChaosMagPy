@@ -8,9 +8,10 @@ Version 0.1a1
 
 Features
 ^^^^^^^^
-* Loading shc-file now converts decimal year to mjd2000 taking leap years into
-  account by default.
-* Moved time conversion functions from ``coordinate_utils`` to ``data_utils``.
+* Package now supports Matplotlib v3 and Cartopy v0.17.
+* Loading shc-file now converts decimal year to ``mjd2000`` taking leap years
+  into account by default.
+* Moved ``mjd2000`` from ``coordinate_utils`` to ``data_utils``.
 * Added function to compute degree correlation.
 * Added functions to compute and plot the power spectrum.
 * Added flexibility to the function synth_values: now supports NumPy

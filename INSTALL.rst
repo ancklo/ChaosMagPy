@@ -8,18 +8,15 @@ ChaosMagPy relies on the following:
 * scipy
 * pandas
 * cython
-* cartopy
-* matplotlib<3
+* cartopy>=0.17
+* matplotlib>=3
 * cdflib
 
 Specific installation steps using the conda/pip package managers are as follows:
 
 1. Install packages with conda:
 
-   >>> conda install python numpy scipy pandas cython cartopy matplotlib=2
-
-   (At the moment, you need matplotlib 2 as pcolormesh is not working with the
-   current cartopy release. But it will be hopefully updated soon.)
+   >>> conda install python numpy scipy pandas cython cartopy matplotlib
 
 2. Install cdflib with pip:
 

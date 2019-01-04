@@ -513,7 +513,7 @@ def cartesian_to_spherical(x, y, z):
 
     Parameters
     ----------
-    x,y,z : float or ndarray, shape (...)
+    x, y, z : float or ndarray, shape (...)
 
     Returns
     -------
