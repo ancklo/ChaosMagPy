@@ -5,8 +5,8 @@ dependencies:
 - scipy
 - pandas
 - cython
-- cartopy
-- matplotlib < 3
+- cartopy >= 0.17
+- matplotlib >= 3
 - sphinx
 - pip:
     - cdflib

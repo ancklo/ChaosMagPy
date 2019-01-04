@@ -214,6 +214,10 @@ class TimeDependentModel(object):
             Global map of the radial, colatitude and azimuthal field
             components.
 
+        See Also
+        --------
+        plot_utils.plot_maps
+
         """
 
         defaults = dict(deriv=0,
@@ -283,6 +287,10 @@ class TimeDependentModel(object):
         B_radius, B_theta, B_phi
             Time series plot of the radial, colatitude and azimuthal field
             components.
+
+        See Also
+        --------
+        plot_utils.plot_timeseries
 
         """
 
