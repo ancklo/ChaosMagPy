@@ -1188,7 +1188,8 @@ class CHAOS(object):
                 f"# Coefficients (nT/yr^{deriv}) are given at"
                 f" {(breaks.size-1) * (order-1) + 1} points in"
                 f" time (decimal years, accounting for leap years set to"
-                f" {leap_year}) and were extracted from order-{order}"
+                f" {leap_year})"
+                f"# and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
                 f" {order-1} steps).\n"
                 f"# Created on {datetime.utcnow()} UTC.\n"
@@ -1241,7 +1242,7 @@ class CHAOS(object):
             f.write('  ')  # to represent two missing values
             for time in times:
                 f.write(' {:9.4f}'.format(
-                    cu.mjd_to_dyear(time, leap_year=leap_year)))
+                    du.mjd_to_dyear(time, leap_year=leap_year)))
             f.write('\n')
 
             # write coefficient table to 8 significants
