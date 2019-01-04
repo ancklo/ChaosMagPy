@@ -186,6 +186,28 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
 
 def plot_power_spectrum(spectrum, **kwargs):
+    """
+    Plot spherical harmonic spectrum.
+
+    Parameters
+    ----------
+    spectrum : ndarray, shape (N,)
+        Spherical harmonics spectrum of degree `N`.
+
+    Returns
+    -------
+    Figure of the spectrum.
+
+    Other Parameters
+    ----------------
+    figsize : 2-tuple of floats
+        Figure dimension (width, height) in inches (defaults to (6.3, 7.5)).
+    titles : list of strings
+        Subplot titles (defaults to empty strings).
+    label : string
+        Label of the vertical axis (defaults to an empty string).
+
+    """
 
     defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
                     titles='',
