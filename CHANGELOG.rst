@@ -3,7 +3,7 @@ Changelog
 
 Version 0.1a1
 -------------
-| **Date:** January 2, 2019
+| **Date:** January 4, 2019
 | **Release:** v0.1a1
 
 Features
