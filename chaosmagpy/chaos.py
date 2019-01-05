@@ -325,60 +325,6 @@ class StaticModel(TimeDependentModel):
     def __init__(self, *arg, **kwargs):
         super().__init__(*arg, **kwargs)
 
-    def synth_coeffs(self, *, nmax=None, deriv=None):
-        """
-        Compute the field coefficients.
-
-        See Also
-        --------
-        TimeDependentModel.synth_coeffs
-
-        """
-
-        time = self.breaks[0]
-        return super().synth_coeffs(time, nmax=nmax, deriv=0)
-
-    def synth_values(self, radius, theta, phi, *, nmax=None, deriv=None,
-                     grid=None):
-        """
-        Compute the vector components of the field.
-
-        See Also
-        --------
-        TimeDependentModel.synth_values
-
-        """
-
-        time = self.breaks[0]
-        return super().synth_values(time, radius, theta, phi, nmax=nmax,
-                                    deriv=0, grid=grid)
-
-    def power_spectrum(self, radius=None, *, nmax=None, deriv=None):
-        """
-        Compute the powerspectrum.
-
-        See Also
-        --------
-        TimeDependentModel.power_spectrum
-
-        """
-
-        time = self.breaks[0]
-        return super().power_spectrum(time, radius, nmax=nmax, deriv=0)
-
-    def plot_power_spectrum(self, radius=None, *, nmax=None):
-        """
-        Plot power spectrum.
-
-        See Also
-        --------
-        TimeDependentModel.power_spectrum
-
-        """
-
-        time = self.breaks[0]
-        super().plot_power_spectrum(time, radius, nmax=nmax, deriv=0)
-
     def plot_maps(self, radius, **kwargs):
         """
         Plot global maps of the field components.
@@ -394,7 +340,7 @@ class StaticModel(TimeDependentModel):
                         vmin=-200)
 
         kwargs = defaultkeys(defaults, kwargs)
-        time = self.breaks[0]  # time at interval beginning
+        time = self.breaks[0]
         super().plot_maps(time, radius, **kwargs)
 
 
@@ -787,7 +733,8 @@ class CHAOS(object):
 
         """
 
-        return self.model_static.synth_coeffs(nmax=nmax)
+        time = self.model_static.breaks[0]
+        return self.model_static.synth_coeffs(time, nmax=nmax, deriv=0)
 
     def plot_maps_static(self, radius, *, nmax=None):
         """
@@ -809,7 +756,7 @@ class CHAOS(object):
 
         """
 
-        self.model_static.plot_maps(radius, nmax=nmax)
+        self.model_static.plot_maps(radius, nmax=nmax, deriv=0)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
@@ -1245,7 +1192,7 @@ class CHAOS(object):
                 f"# Coefficients (nT/yr^{deriv}) are given at"
                 f" {(breaks.size-1) * (order-1) + 1} points in"
                 f" time (decimal years, accounting for leap years set to"
-                f" {leap_year})"
+                f" {leap_year})\n"
                 f"# and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
                 f" {order-1} steps).\n"
@@ -1570,7 +1517,8 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
         coeffs_static = np.zeros((nmax*(nmax+2),))
         coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
         coeffs_static = coeffs_static.reshape((1, 1, -1))
-        model = CHAOS(coeffs_static=coeffs_static,
+        model = CHAOS(breaks=np.array(time),
+                      coeffs_static=coeffs_static,
                       version=_guess_version(filepath))
 
     else:  # time-dependent field
