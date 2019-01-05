@@ -220,6 +220,7 @@ def plot_power_spectrum(spectrum, **kwargs):
     label = kwargs.pop('label')
 
     degrees = np.arange(1, spectrum.shape[-1] + 1, step=1.0)
+    spectrum[spectrum <= 0] = np.nan  # remove non-positive values for log
 
     # create axis handle
     fig, ax = plt.subplots(1, 1, sharex=True, sharey=True, figsize=figsize)
@@ -230,6 +231,7 @@ def plot_power_spectrum(spectrum, **kwargs):
     ax.set(ylabel=label, xlabel='degree')
 
     plt.xticks(np.arange(0, degrees[-1] + 1, step=1.0))
+    plt.tight_layout()
     plt.show()
 
 

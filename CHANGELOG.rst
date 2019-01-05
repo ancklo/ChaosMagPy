@@ -21,7 +21,7 @@ Features
 
 Deprecations
 ^^^^^^^^^^^^
-* Optionial argument ``source`` when saving shc-file has been renamed to
+* Optional argument ``source`` when saving shc-file has been renamed to
   ``model``.
 * ``plot_external_map`` has been renamed to ``plot_maps_external``
 * ``synth_sm_field`` has been renamed to ``synth_coeffs_sm``

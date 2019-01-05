@@ -15,7 +15,7 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 R_REF = 6371.1  # mean surface radius
 
 
-class TimeDependentModel(object):
+class BaseModel(object):
     """
     Class for time-dependent (piecewise polynomial) model.
 
@@ -173,7 +173,7 @@ class TimeDependentModel(object):
 
         See Also
         --------
-        TimeDependentModel.power_spectrum
+        BaseModel.power_spectrum
 
         """
 
@@ -317,33 +317,6 @@ class TimeDependentModel(object):
         pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
 
 
-class StaticModel(TimeDependentModel):
-    """
-    Subclass of :class:`TimeDependentModel` with diffferent default settings.
-
-    """
-    def __init__(self, *arg, **kwargs):
-        super().__init__(*arg, **kwargs)
-
-    def plot_maps(self, radius, **kwargs):
-        """
-        Plot global maps of the field components.
-
-        See Also
-        --------
-        TimeDependentModel.plot_maps
-
-        """
-
-        defaults = dict(cmap='nio',
-                        vmax=200,
-                        vmin=-200)
-
-        kwargs = defaultkeys(defaults, kwargs)
-        time = self.breaks[0]
-        super().plot_maps(time, radius, **kwargs)
-
-
 class CHAOS(object):
     """
     Class for the time-dependent geomagnetic field model CHAOS. Currently only
@@ -387,7 +360,7 @@ class CHAOS(object):
     ----------
     timestamp : str
         UTC timestamp at initialization.
-    model_tdep : :class:`TimeDependentModel` instance
+    model_tdep : :class:`BaseModel` instance
         Time-dependent internal field model.
     model_static : :class:`StaticModel` instance
         Static internal field model.
@@ -469,8 +442,8 @@ class CHAOS(object):
         self.timestamp = str(datetime.utcnow())
 
         # time-dependent internal field
-        self.model_tdep = TimeDependentModel(breaks, order, coeffs_tdep)
-        self.model_static = StaticModel(breaks[[0, -1]], 1, coeffs_static)
+        self.model_tdep = BaseModel(breaks, order, coeffs_tdep)
+        self.model_static = BaseModel(breaks[[0, -1]], 1, coeffs_static)
 
         # helper for returning the degree of the provided coefficients
         def dimension(coeffs):
@@ -756,7 +729,14 @@ class CHAOS(object):
 
         """
 
-        self.model_static.plot_maps(radius, nmax=nmax, deriv=0)
+        kwargs = dict(cmap='nio',
+                      deriv=0,
+                      nmax=nmax,
+                      vmax=200,
+                      vmin=-200)
+
+        time = self.model_static.breaks[0]
+        self.model_static.plot_maps(time, radius, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
