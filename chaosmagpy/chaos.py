@@ -450,7 +450,7 @@ class CHAOS(object):
 
     .. code-block:: python
 
-      model.save_shcfile('CHAOS-6-x7_tdep.shc', source='tdep')
+      model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
 
 
     """
@@ -1140,7 +1140,7 @@ class CHAOS(object):
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
                      titles=titles, label=units)
 
-    def save_shcfile(self, filepath, *, source=None, deriv=None,
+    def save_shcfile(self, filepath, *, model=None, deriv=None,
                      leap_year=None):
         """
         Save spherical harmonic coefficients to a file in `shc`-format.
@@ -1149,7 +1149,7 @@ class CHAOS(object):
         ----------
         filepath : str
             Path and name of output file `*.shc`.
-        source : {'tdep', 'static'}, optional
+        model : {'tdep', 'static'}, optional
             Choose part of the model to save (default is 'tdep').
         deriv : int, optional
             Derivative of the time-dependent field (default is 0, ignored for
@@ -1160,13 +1160,13 @@ class CHAOS(object):
 
         """
 
-        source = 'tdep' if source is None else source
+        model = 'tdep' if model is None else model
 
         deriv = 0 if deriv is None else deriv
 
         leap_year = True if leap_year is None else leap_year
 
-        if source == 'tdep':
+        if model == 'tdep':
             if self.model_tdep.coeffs is None:
                 raise ValueError("Time-dependent internal field coefficients "
                                  "are missing.")
@@ -1204,7 +1204,7 @@ class CHAOS(object):
                 times, nmax=nmax, deriv=deriv)
 
         # output static field model coefficients
-        if source == 'static':
+        if model == 'static':
             if self.model_static.coeffs is None:
                 raise ValueError("Static internal field coefficients "
                                  "are missing.")

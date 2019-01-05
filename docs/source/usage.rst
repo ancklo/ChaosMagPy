@@ -34,7 +34,7 @@ field in shc-format to a file:
 
 .. code-block:: python
 
-   model.save_shcfile('CHAOS-6-x7_tdep.shc', source='tdep')
+   model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
 
 Plotting the map of the static internal field
 ---------------------------------------------
@@ -58,7 +58,7 @@ and saved
 
 .. code-block:: python
 
-   model.save_shcfile('CHAOS-6-x7_static.shc', source='static')
+   model.save_shcfile('CHAOS-6-x7_static.shc', model='static')
 
 Computing field components on a grid
 ------------------------------------
