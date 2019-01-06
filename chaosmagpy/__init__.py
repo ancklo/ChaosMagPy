@@ -7,4 +7,4 @@ import chaosmagpy.data_utils
 
 __all__ = ["CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile"]
 
-__version__ = "0.1a1"
+__version__ = "0.1a2"
