@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.1a2
+-------------
+| **Date:** January 16, 2019
+| **Release:** v0.1a2
+
+Features
+^^^^^^^^
+* ``mjd_to_dyear`` and ``dyear_to_mjd`` convert time with microseconds
+  precision.
+
 Version 0.1a1
 -------------
 | **Date:** January 5, 2019
