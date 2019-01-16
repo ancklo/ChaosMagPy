@@ -164,7 +164,7 @@ def dyear_to_mjd(time, leap_year=None):
 
         delta = date - datetime(2000, 1, 1)
 
-        mjd = delta.days + delta.seconds/86400
+        mjd = delta.days + (delta.seconds + delta.microseconds/1e6)/86400
 
     elif leap_year is False:
         days = 365.25
@@ -206,7 +206,8 @@ def mjd_to_dyear(time, leap_year=None):
 
         delta = date - datetime(date.year, 1, 1)
 
-        dyear = date.year + delta.days/days + delta.seconds/86400/days
+        dyear = (date.year + delta.days/days
+                 + (delta.seconds + delta.microseconds/1e6)/86400/days)
 
     elif leap_year is False:
         days = 365.25
