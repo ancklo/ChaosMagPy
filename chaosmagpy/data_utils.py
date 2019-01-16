@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import calendar
 from datetime import timedelta, datetime
 
 
@@ -157,7 +158,7 @@ def dyear_to_mjd(time, leap_year=None):
     # remainder is zero = leap year
     if leap_year is True:
         year = int(time)
-        days = 366 if (year % 4) == 0 else 365
+        days = 366 if calendar.isleap(year) else 365
         day = (time - year) * days
         date = timedelta(days=day) + datetime(year, 1, 1)
 
@@ -201,7 +202,7 @@ def mjd_to_dyear(time, leap_year=None):
     # remainder is zero = leap year
     if leap_year is True:
         date = timedelta(days=time) + datetime(2000, 1, 1)
-        days = 366 if (date.year % 4) == 0 else 365
+        days = 366 if calendar.isleap(date.year) else 365
 
         delta = date - datetime(date.year, 1, 1)
 
