@@ -1439,10 +1439,9 @@ def save_CHAOS_matfile(filepath):
 def load_CHAOS_shcfile(filepath, leap_year=None):
     """
     Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
-    should contain the coefficients or the time-dependent or static internal
+    should contain the coefficients of the time-dependent or static internal
     part of the CHAOS model. In case of the time-dependent part, a
-    reconstruction of the piecewise polynomial is performed (only accurate
-    to 0.01 nT).
+    reconstruction of the piecewise polynomial is performed.
 
     Parameters
     ----------
@@ -1470,16 +1469,6 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
 
        model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
        print(model)
-
-    Notes
-    -----
-    The piecewise polynomial of the time-dependent internal part of the CHAOS
-    model is contructed from the snapshots of the model, accurately handling
-    the break-points of the model. Note however that the original coefficients
-    can apparently only be recovered to an absolute error of around 0.01 nT,
-    i.e. this method is not recommended for small-scale field and higher
-    derivates (>1) if accuracy is important. Use the ``load_CHAOS_matfile``
-    function instead.
 
     See Also
     --------
