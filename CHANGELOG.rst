@@ -10,7 +10,7 @@ Features
 ^^^^^^^^
 * ``mjd_to_dyear`` and ``dyear_to_mjd`` convert time with microseconds
   precision to prevent round-off errors in seconds.
-* Time conversion now uses built-in ``calender`` module to identify leap year.
+* Time conversion now uses built-in ``calendar`` module to identify leap year.
 
 Bugfixes
 ^^^^^^^^
