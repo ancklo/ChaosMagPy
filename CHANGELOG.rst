@@ -3,13 +3,20 @@ Changelog
 
 Version 0.1a2
 -------------
-| **Date:** January 16, 2019
+| **Date:** January 26, 2019
 | **Release:** v0.1a2
 
 Features
 ^^^^^^^^
 * ``mjd_to_dyear`` and ``dyear_to_mjd`` convert time with microseconds
-  precision.
+  precision to prevent round-off errors in seconds.
+
+Bugfixes
+^^^^^^^^
+* Fixed wrong package requirement that caused the installation of
+  ChaosMagPy v0.1a1 to fail with ``pip``. If installation of v0.1a1 is needed,
+  use ``pip install --no-deps chaosmagpy==0.1a1`` to ignore faulty
+  requirements.
 
 Version 0.1a1
 -------------
