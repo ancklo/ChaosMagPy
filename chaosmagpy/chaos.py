@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import warnings
-import scipy.io as sio
 import scipy.interpolate as sip
+import hdf5storage as hdf
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
@@ -467,6 +467,8 @@ class CHAOS(object):
         # Euler angles
         self.breaks_euler = breaks_euler
         self.coeffs_euler = coeffs_euler
+
+        self._meta_data = None  # reserve space for meta data
 
         # set version of CHAOS model
         if version is None:
@@ -1242,6 +1244,84 @@ class CHAOS(object):
         print('Coefficients saved to {}.'.format(
             os.path.join(os.getcwd(), filepath)))
 
+    def save_matfile(self, filepath):
+        """
+        Save CHAOS model to `mat`-format.
+
+        Parameters
+        ----------
+        filepath : str
+            Path and name of `mat`-formatted file that is to be saved.
+
+        """
+
+        # write time-dependent internal field model to matfile
+        nmax = self.model_tdep.nmax
+        coeffs = self.model_tdep.coeffs
+        coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
+
+        pp = dict(
+            form='pp',
+            order=self.model_tdep.order,
+            pieces=self.model_tdep.pieces,
+            dim=int((nmax+2)*nmax),
+            breaks=self.model_tdep.breaks,
+            coefs=coefs)
+
+        hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
+
+        # write time-dependent external field model to matfile
+        q11 = np.ravel(self.coeffs_delta['q11'])
+        s11 = np.ravel(self.coeffs_delta['s11'])
+        t_break_q10 = self.breaks_delta['q10'].reshape((-1, 1)).astype(float)
+        t_break_q11 = self.breaks_delta['q11'].reshape((-1, 1)).astype(float)
+
+        model_ext = dict(
+            t_break_q10=t_break_q10,
+            q10=self.coeffs_delta['q10'].reshape((-1, 1)),
+            t_break_qs11=t_break_q11,
+            qs11=np.stack((q11, s11), axis=-1),
+            m_sm=self._meta_data['coeffs_sm_mean'].reshape((-1, 1)),
+            m_gsm=self.coeffs_gsm[[0, 3]].reshape((2, 1)),
+            m_Dst=self.coeffs_sm[:3].reshape((3, 1)))
+
+        hdf.write(model_ext, path='/model_ext', filename=filepath,
+                  matlab_compatible=True)
+
+        # write Euler angles to matfile for each satellite
+        satellites = ['oersted', 'champ', 'sac_c', 'swarm_a',
+                      'swarm_b', 'swarm_c']
+
+        t_breaks_Euler = []  # list of Euler angle breaks for each satellite
+        alpha = []  # list of alpha for each satellite
+        beta = []  # list of beta for each satellite
+        gamma = []  # list of gamma for each satellite
+        for num, satellite in enumerate(satellites):
+            t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
+                (-1, 1)).astype(float))
+            alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
+                (-1, 1)).astype(float))
+            beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
+                (-1, 1)).astype(float))
+            gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
+                (-1, 1)).astype(float))
+
+        hdf.write(t_breaks_Euler, path='/model_Euler/t_break_Euler/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(alpha, path='/model_Euler/alpha/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(beta, path='/model_Euler/beta/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(gamma, path='/model_Euler/gamma/',
+                  filename=filepath, matlab_compatible=True)
+
+        # write static internal field model to matfile
+        g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
+        hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
+
+        print('CHAOS saved to {}.'.format(
+            os.path.join(os.getcwd(), filepath)))
+
     @classmethod
     def from_mat(self, filepath):
         """
@@ -1355,20 +1435,24 @@ def load_CHAOS_matfile(filepath):
 
     version = _guess_version(filepath)
 
-    mat_contents = sio.loadmat(filepath)
-    pp = mat_contents['pp']
-    pp = pp[0, 0]
-    model_ext = mat_contents['model_ext']
-    model_ext = model_ext[0, 0]
-    model_euler = mat_contents['model_Euler']
-    model_euler = model_euler[0, 0]
+    # mat_contents = sio.loadmat(filepath)
+    # pp = mat_contents['pp']
+    # pp = pp[0, 0]
+    pp = du.load_matfile(filepath, 'pp', struct=True)
+    # model_ext = mat_contents['model_ext']
+    # model_ext = model_ext[0, 0]
+    model_ext = du.load_matfile(filepath, 'model_ext', struct=True)
+    # model_euler = mat_contents['model_Euler']
+    # model_euler = model_euler[0, 0]
+    model_euler = du.load_matfile(filepath, 'model_Euler', struct=True)
 
     order = int(pp['order'])
     pieces = int(pp['pieces'])
     dim = int(pp['dim'])
     breaks = np.ravel(pp['breaks'])  # flatten 2-D array
     coefs = pp['coefs']
-    coeffs_static = np.ravel(mat_contents['g']).reshape((1, 1, -1))
+    g = du.load_matfile(filepath, 'g', struct=False)
+    coeffs_static = np.ravel(g).reshape((1, 1, -1))
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     n_tdep = int(np.sqrt(dim+1)-1)
@@ -1379,8 +1463,9 @@ def load_CHAOS_matfile(filepath):
                 coeffs_tdep[k, l, m] = coefs[l * n_tdep * (n_tdep + 2) + m, k]
 
     # external field (SM): n=1, 2
-    coeffs_sm = np.ravel(model_ext['m_sm'])  # degree 1 are time averages!
+    coeffs_sm = np.copy(np.ravel(model_ext['m_sm']))  # deg 1 are time averages
     coeffs_sm[:3] = np.ravel(model_ext['m_Dst'])  # replace with m_Dst
+    coeffs_sm_mean = np.ravel(model_ext['m_sm'])  # save degree-1 average
 
     # external field (GSM): n=1, 2
     n_gsm = int(2)
@@ -1418,22 +1503,22 @@ def load_CHAOS_matfile(filepath):
     for num, satellite in enumerate(satellites):
         coeffs_euler[satellite] = compose_array(num)
 
-    return CHAOS(
-        breaks=breaks,
-        order=order,
-        coeffs_tdep=coeffs_tdep,
-        coeffs_static=coeffs_static,
-        coeffs_sm=coeffs_sm,
-        coeffs_gsm=coeffs_gsm,
-        breaks_delta=breaks_delta,
-        coeffs_delta=coeffs_delta,
-        breaks_euler=breaks_euler,
-        coeffs_euler=coeffs_euler,
-        version=version)
+    meta_data = dict(coeffs_sm_mean=coeffs_sm_mean)
 
+    model = CHAOS(breaks=breaks,
+                  order=order,
+                  coeffs_tdep=coeffs_tdep,
+                  coeffs_static=coeffs_static,
+                  coeffs_sm=coeffs_sm,
+                  coeffs_gsm=coeffs_gsm,
+                  breaks_delta=breaks_delta,
+                  coeffs_delta=coeffs_delta,
+                  breaks_euler=breaks_euler,
+                  coeffs_euler=coeffs_euler,
+                  version=version)
+    model._meta_data = meta_data
 
-def save_CHAOS_matfile(filepath):
-    raise NotImplementedError
+    return model
 
 
 def load_CHAOS_shcfile(filepath, leap_year=None):

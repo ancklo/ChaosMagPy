@@ -1,8 +1,45 @@
 import pandas as pd
 import numpy as np
+import hdf5storage as hdf
 import os
 import calendar
 from datetime import timedelta, datetime
+
+
+def load_matfile(filepath, variable_name, struct=False):
+    """
+    Load variable from matfile. Can handle mat-files v7.3 and before.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath to mat-file.
+    variable_name : str
+        Name of variable or struct to be loaded from mat-file.
+    struct : {False, True}, optional
+        If struct is to be loaded from mat-file, use ``True``.
+
+    Returns
+    -------
+    variable : ndarray, dict
+        Array or dictionary (if ``struct=True``) containing the values.
+
+    """
+
+    mat_contents = hdf.loadmat(str(filepath),
+                               variable_names=[str(variable_name)])
+    variable = mat_contents[str(variable_name)]
+
+    if variable.ndim == 2:
+        if struct is True:
+            return variable[0, 0]  # before v7.3
+        else:
+            return variable
+    else:
+        if struct is True:
+            return variable[0]  # hdf5 compatible v7.3
+        else:
+            return variable
 
 
 def load_RC_datfile(filepath, parse_dates=False):

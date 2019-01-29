@@ -3,8 +3,14 @@ Changelog
 
 Version 0.1a3
 -------------
-| **Date:** January 26, 2019
+| **Date:** January 28, 2019
 | **Release:** v0.1a3
+
+Features
+^^^^^^^^
+* New CHAOS class method ``save_matfile`` to output MATLAB compatible
+  files of the CHAOS model.
+
 
 Version 0.1a2
 -------------
@@ -23,6 +29,7 @@ Bugfixes
   ChaosMagPy v0.1a1 to fail with ``pip``. If installation of v0.1a1 is needed,
   use ``pip install --no-deps chaosmagpy==0.1a1`` to ignore faulty
   requirements.
+
 
 Version 0.1a1
 -------------
@@ -53,6 +60,7 @@ Deprecations
 * ``synth_static_field`` has been renamed to ``synth_coeffs_static``
 * ``plot_tdep_maps`` has been renamed to ``plot_maps_tdep``
 * ``synth_tdep_field`` has been renamed to ``synth_coeffs_tdep``
+
 
 Version 0.1a0
 -------------
