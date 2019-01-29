@@ -11,6 +11,7 @@ ChaosMagPy relies on the following:
 * cartopy>=0.17
 * matplotlib>=3
 * cdflib
+* hdf5storage
 
 Specific installation steps using the conda/pip package managers are as follows:
 
@@ -18,11 +19,11 @@ Specific installation steps using the conda/pip package managers are as follows:
 
    >>> conda install python numpy scipy pandas cython cartopy matplotlib
 
-2. Install cdflib with pip:
+2. Install packages with pip:
 
-   >>> pip install cdflib
+   >>> pip install cdflib hdf5storage
 
-3. Finally install ChaosMagPy either with pip from PyPi:
+3. Finally install ChaosMagPy either with pip from PyPI:
 
    >>> pip install chaosmagpy
 

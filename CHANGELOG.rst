@@ -9,7 +9,7 @@ Version 0.1a3
 Features
 ^^^^^^^^
 * New CHAOS class method ``save_matfile`` to output MATLAB compatible
-  files of the CHAOS model.
+  files of the CHAOS model (using the ``hdf5storage`` package).
 
 
 Version 0.1a2
