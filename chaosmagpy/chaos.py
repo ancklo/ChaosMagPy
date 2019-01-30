@@ -1455,12 +1455,7 @@ def load_CHAOS_matfile(filepath):
     coeffs_static = np.ravel(g).reshape((1, 1, -1))
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
-    n_tdep = int(np.sqrt(dim+1)-1)
-    coeffs_tdep = np.empty([order, pieces, n_tdep * (n_tdep + 2)])
-    for k in range(order):
-        for l in range(pieces):
-            for m in range(n_tdep * (n_tdep + 2)):
-                coeffs_tdep[k, l, m] = coefs[l * n_tdep * (n_tdep + 2) + m, k]
+    coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
     # external field (SM): n=1, 2
     coeffs_sm = np.copy(np.ravel(model_ext['m_sm']))  # deg 1 are time averages
