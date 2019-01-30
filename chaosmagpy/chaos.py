@@ -1265,7 +1265,7 @@ class CHAOS(object):
             order=self.model_tdep.order,
             pieces=self.model_tdep.pieces,
             dim=int((nmax+2)*nmax),
-            breaks=self.model_tdep.breaks,
+            breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
             coefs=coefs)
 
         hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
@@ -1306,13 +1306,13 @@ class CHAOS(object):
             gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
                 (-1, 1)).astype(float))
 
-        hdf.write(t_breaks_Euler, path='/model_Euler/t_break_Euler/',
+        hdf.write(np.array(t_breaks_Euler), path='/model_Euler/t_break_Euler/',
                   filename=filepath, matlab_compatible=True)
-        hdf.write(alpha, path='/model_Euler/alpha/',
+        hdf.write(np.array(alpha), path='/model_Euler/alpha/',
                   filename=filepath, matlab_compatible=True)
-        hdf.write(beta, path='/model_Euler/beta/',
+        hdf.write(np.array(beta), path='/model_Euler/beta/',
                   filename=filepath, matlab_compatible=True)
-        hdf.write(gamma, path='/model_Euler/gamma/',
+        hdf.write(np.array(gamma), path='/model_Euler/gamma/',
                   filename=filepath, matlab_compatible=True)
 
         # write static internal field model to matfile

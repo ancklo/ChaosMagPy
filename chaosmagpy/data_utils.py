@@ -17,7 +17,8 @@ def load_matfile(filepath, variable_name, struct=False):
     variable_name : str
         Name of variable or struct to be loaded from mat-file.
     struct : {False, True}, optional
-        If struct is to be loaded from mat-file, use ``True``.
+        If struct is to be loaded from mat-file, use ``True`` (only required
+        before v7.3 mat-files).
 
     Returns
     -------
@@ -28,18 +29,13 @@ def load_matfile(filepath, variable_name, struct=False):
 
     mat_contents = hdf.loadmat(str(filepath),
                                variable_names=[str(variable_name)])
+
     variable = mat_contents[str(variable_name)]
 
-    if variable.ndim == 2:
-        if struct is True:
-            return variable[0, 0]  # before v7.3
-        else:
-            return variable
+    if struct is True and '__header__' in mat_contents:
+        return variable[0, 0]  # version 5 only seems to have header
     else:
-        if struct is True:
-            return variable[0]  # hdf5 compatible v7.3
-        else:
-            return variable
+        return variable
 
 
 def load_RC_datfile(filepath, parse_dates=False):
