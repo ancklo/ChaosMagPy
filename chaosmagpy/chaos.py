@@ -1436,14 +1436,8 @@ def load_CHAOS_matfile(filepath):
     version = _guess_version(filepath)
 
     # mat_contents = sio.loadmat(filepath)
-    # pp = mat_contents['pp']
-    # pp = pp[0, 0]
     pp = du.load_matfile(filepath, 'pp', struct=True)
-    # model_ext = mat_contents['model_ext']
-    # model_ext = model_ext[0, 0]
     model_ext = du.load_matfile(filepath, 'model_ext', struct=True)
-    # model_euler = mat_contents['model_Euler']
-    # model_euler = model_euler[0, 0]
     model_euler = du.load_matfile(filepath, 'model_Euler', struct=True)
 
     order = int(pp['order'])
