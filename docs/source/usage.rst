@@ -75,7 +75,7 @@ example, the time-dependent internal field:
    from chaosmagpy.data_utils import mjd2000
 
    # create full grid
-   radius = 3485.  # km, core-mantle coundary
+   radius = 3485.  # km, core-mantle boundary
    theta = np.linspace(0., 180., num=181)  # colatitude in degrees
    phi = np.linspace(-180., 180., num=361)  # longitude in degrees
 
