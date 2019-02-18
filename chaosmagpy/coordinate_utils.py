@@ -123,7 +123,7 @@ def synth_rotate_gauss(time, frequency, spectrum):
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=False, reference=None):
+                     save_to=False, reference=None, epoch=None):
     """
     Compute Fourier components of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
@@ -151,6 +151,8 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         False).
     reference : {'gsm', 'sm'}, optional
         Time-dependent reference system (default is GSM).
+    epoch : str, optional
+        Epoch of IGRF (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -260,7 +262,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 dipole=igrf_dipole())
+                 dipole=igrf_dipole(epoch=epoch))
         print("Output saved to {:}".format(filepath))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
@@ -532,7 +534,7 @@ def cartesian_to_spherical(x, y, z):
     return radius, degrees(theta), degrees(phi)
 
 
-def basevectors_gsm(time):
+def basevectors_gsm(time, epoch=None):
     """
     Computes the unit base vectors of the gsm coordinate system with respect to
     the geocentric coordinate system.
@@ -542,6 +544,8 @@ def basevectors_gsm(time):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
+    epoch : str, optional
+        Epoch of IGRF (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -565,7 +569,7 @@ def basevectors_gsm(time):
 
     # compute second base vector of GSM using the cross product of the IGRF
     # dipole unit vector with the first unit base vector
-    IGRF = igrf_dipole()
+    IGRF = igrf_dipole(epoch=epoch)
 
     gsm_2 = np.cross(IGRF, gsm_1)  # over last dimension by default
     norm_gsm_2 = np.linalg.norm(gsm_2, axis=-1, keepdims=True)
@@ -578,7 +582,7 @@ def basevectors_gsm(time):
     return gsm_1, gsm_2, gsm_3
 
 
-def basevectors_sm(time):
+def basevectors_sm(time, epoch=None):
     """
     Computes the unit base vectors of the sm coordinate system with respect to
     the geocentric coordinate system.
@@ -588,6 +592,8 @@ def basevectors_sm(time):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
+    epoch : str, optional
+        Epoch of IGRF (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -609,7 +615,7 @@ def basevectors_sm(time):
     s[..., 2] = z_sun
 
     # set third unit base vector of SM to IGRF dipole unit vector
-    IGRF = igrf_dipole()
+    IGRF = igrf_dipole(epoch=epoch)
 
     sm_3 = np.empty(x_sun.shape + (3,))
     sm_3[..., 0] = IGRF[0]
@@ -629,11 +635,16 @@ def basevectors_sm(time):
     return sm_1, sm_2, sm_3
 
 
-def basevectors_mag():
+def basevectors_mag(epoch=None):
     """
     Computes the unit base vectors of the central-dipole coordinate system
     (sometimes referred to as MAG). The components are given with respect to
     the geocentric coordinate system.
+
+    Parameters
+    ----------
+    epoch : str, optional
+        Epoch of IGRF (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -642,7 +653,7 @@ def basevectors_mag():
 
     """
 
-    mag_3 = igrf_dipole()
+    mag_3 = igrf_dipole(epoch=epoch)
 
     mag_2 = np.cross(np.array([0., 0., 1.]), mag_3)
     mag_2 = mag_2 / np.linalg.norm(mag_2)
