@@ -46,7 +46,7 @@ def igrf_dipole(epoch=None):
     Returns
     -------
     dipole : ndarray, shape (3,)
-        Unit vector pointing to magnetic South Pole.
+        Unit vector pointing to magnetic South Pole in the Northern Hemisphere.
 
     """
 
@@ -193,9 +193,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     # compute base vectors of time-dependent reference system
     if str(reference).lower() == 'gsm':
-        base_1, base_2, base_3 = basevectors_gsm(time)
+        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
     elif str(reference).lower() == 'sm':
-        base_1, base_2, base_3 = basevectors_sm(time)
+        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
     else:
         raise ValueError('Reference system must be either "GSM" or "SM".')
 
@@ -777,7 +777,8 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
     return theta_ref, phi_ref
 
 
-def transform_points(theta, phi, time=None, *, reference=None, inverse=False):
+def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
+                     epoch=None):
     """
     Transforms spherical geographic coordinates into spherical coordinates of
     the target coordinate system.
@@ -796,6 +797,8 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False):
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
+    epoch : str, optional
+        Epoch of IGRF for GSM and SM basevectors (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -815,11 +818,11 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False):
 
     if reference == 'gsm':
         # compute GSM base vectors
-        base_1, base_2, base_3 = basevectors_gsm(time)
+        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
 
     elif reference == 'sm':
         # compute SM base vectors
-        base_1, base_2, base_3 = basevectors_sm(time)
+        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
 
     elif reference == 'mag':
         # compute centered dipole base vectors
@@ -913,7 +916,7 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
 
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
-                      inverse=False):
+                      inverse=False, epoch=None):
     """
     Transforms vectors with components in USE (Up-South-East) at
     spherical geographic coordinates (theta, phi) to components in USE at the
@@ -937,6 +940,8 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
+    epoch : str, optional
+        Epoch of IGRF for GSM and SM basevectors (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -960,11 +965,11 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
 
     if reference == 'gsm':
         # compute GSM base vectors
-        base_1, base_2, base_3 = basevectors_gsm(time)
+        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
 
     elif reference == 'sm':
         # compute SM base vectors
-        base_1, base_2, base_3 = basevectors_sm(time)
+        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
 
     elif reference == 'mag':
         # compute centered dipole base vectors
