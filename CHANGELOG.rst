@@ -10,6 +10,8 @@ Features
 ^^^^^^^^
 * New CHAOS class method ``save_matfile`` to output MATLAB compatible
   files of the CHAOS model (using the ``hdf5storage`` package).
+* Added ``epoch`` keyword to basevector input arguments of GSM, SM and MAG
+  coordinate systems. 
 
 
 Version 0.1a2
