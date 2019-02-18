@@ -279,7 +279,7 @@ def gauss_units(deriv):
     if deriv == 0:
         units = 'nT'
     else:
-        units = '$\mathrm{{nT}}\cdot \mathrm{{yr}}^{{{:}}}$'.format(-deriv)
+        units = '$\\mathrm{{nT}}\\cdot \\mathrm{{yr}}^{{{:}}}$'.format(-deriv)
 
     return units
 

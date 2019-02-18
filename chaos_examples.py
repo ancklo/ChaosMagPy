@@ -132,8 +132,8 @@ def example2():
                 s=0.5, c='r', label='dayside')
     plt.scatter(theta_gsm[index_night], F_swarm[index_night]-F[index_night],
                 s=0.5, c='b', label='nightside')
-    plt.xlabel('GSM colatitude ($^\circ$)')
-    plt.ylabel('$\Delta F$ (nT)')
+    plt.xlabel('GSM colatitude ($^\\circ$)')
+    plt.ylabel('$\\Delta F$ (nT)')
     plt.legend(loc=2)
     plt.show()
 
