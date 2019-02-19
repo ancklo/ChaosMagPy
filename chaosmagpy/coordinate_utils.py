@@ -35,8 +35,8 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 def igrf_dipole(epoch=None):
     """
     Unit vector that is anti-parallel to the IGRF dipole, i.e. pointing towards
-    the dipole's South Pole (located in the Northern Hemisphere). Epoch 2015 of
-    IGRF-12 is used by default.
+    the geomagnetic North pole (located in the Northern Hemisphere). Epoch 2015
+    of IGRF-12 is used by default.
 
     Parameters
     ----------
@@ -46,7 +46,8 @@ def igrf_dipole(epoch=None):
     Returns
     -------
     dipole : ndarray, shape (3,)
-        Unit vector pointing to magnetic South Pole in the Northern Hemisphere.
+        Unit vector pointing to geomagnetic North pole (located in Northern
+        Hemisphere).
 
     """
 
@@ -54,7 +55,7 @@ def igrf_dipole(epoch=None):
     epoch = '2015' if epoch is None else str(epoch)
 
     if epoch == '2015':
-        # IGRF-12 dipole coefficients, epoch 2015: theta = 9.69, phi = 279.68
+        # IGRF-12 dipole coefficients, epoch 2015: theta = 9.69, phi = 287.37
         dipole = np.array([-1501.0, 4797.1, -29442.0])  # g11, h11, g10: dipole
         # unit vector, opposite to dipole
         dipole = -dipole/np.linalg.norm(dipole)
