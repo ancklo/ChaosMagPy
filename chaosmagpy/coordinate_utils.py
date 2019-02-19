@@ -54,7 +54,7 @@ def igrf_dipole(epoch=None):
     epoch = '2015' if epoch is None else str(epoch)
 
     if epoch == '2015':
-        # IGRF-12 dipole coefficients, epoch 2015
+        # IGRF-12 dipole coefficients, epoch 2015: theta = 9.69, phi = 279.68
         dipole = np.array([-1501.0, 4797.1, -29442.0])  # g11, h11, g10: dipole
         # unit vector, opposite to dipole
         dipole = -dipole/np.linalg.norm(dipole)
@@ -66,6 +66,14 @@ def igrf_dipole(epoch=None):
         dipole = np.array([np.sin(theta)*np.cos(phi),
                            np.sin(theta)*np.sin(phi),
                            np.cos(theta)])
+
+    # elif epoch == '2010b':
+    #     # dipole as used in original chaos software (IGRF-10)?, epoch 2010
+    #     theta = radians(9.92)
+    #     phi = radians(287.78)
+    #     dipole = np.array([np.sin(theta)*np.cos(phi),
+    #                        np.sin(theta)*np.sin(phi),
+    #                        np.cos(theta)])
 
     else:
         raise ValueError('Only epoch "2010" (IGRF-11) and'
