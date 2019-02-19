@@ -3,7 +3,7 @@ Changelog
 
 Version 0.1a3
 -------------
-| **Date:** February 18, 2019
+| **Date:** February 19, 2019
 | **Release:** v0.1a3
 
 Features
@@ -13,6 +13,10 @@ Features
 * Added ``epoch`` keyword to basevector input arguments of GSM, SM and MAG
   coordinate systems.
 
+Bugfixes
+^^^^^^^^
+* Fixed problem of the setup configuration for ``pip`` which caused importing
+  the package to fail although installation was indicated as successful.
 
 Version 0.1a2
 -------------
