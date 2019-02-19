@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.1a4
+-------------
+| **Date:** February 19, 2019
+| **Release:** v0.1a4
+
 Version 0.1a3
 -------------
 | **Date:** February 19, 2019
