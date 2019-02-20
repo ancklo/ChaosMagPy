@@ -415,7 +415,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     try:
         b = np.broadcast(radius, theta, phi,
                          np.broadcast_to(0, coeffs.shape[:-1]))
-    except ValueError as err:
+    except ValueError:
         print('Cannot broadcast grid shapes (excl. last dimension of coeffs):')
         print(f'radius: {radius.shape}')
         print(f'theta:  {theta.shape}')
