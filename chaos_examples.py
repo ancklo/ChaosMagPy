@@ -100,7 +100,7 @@ def example2():
 
     cdf_file = cdflib.CDF('data/SW_OPER_MAGA_LR_1B_'
                           '20140502T000000_20140502T235959'
-                          '_0505_MDR_MAG_LR.cdf')
+                          '_PT15S.cdf')
     # print(cdf_file.cdf_info())  # print cdf info/contents
 
     radius = cdf_file.varget('Radius') / 1000  # km
@@ -110,10 +110,6 @@ def example2():
     time = (time - time[0]) / (1e3*3600*24) + mjd2000(2014, 5, 2)
     F_swarm = cdf_file.varget('F')
     cdf_file.close()
-
-    step = 15  # down-sample data to 15 sec
-    radius, theta, phi = radius[::step], theta[::step], phi[::step]
-    time, F_swarm = time[::step], F_swarm[::step]
 
     theta_gsm, phi_gsm = transform_points(theta, phi,
                                           time=time, reference='gsm')
