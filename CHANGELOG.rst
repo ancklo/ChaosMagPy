@@ -3,8 +3,13 @@ Changelog
 
 Version 0.1a4
 -------------
-| **Date:** February 19, 2019
+| **Date:** February 21, 2019
 | **Release:** v0.1a4
+
+Bugfixes
+^^^^^^^^
+* Changed the date conversion to include hours and seconds not just the day
+  when plotting the timeseries.
 
 Version 0.1a3
 -------------

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import cartopy.crs as ccrs
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
 
 plt.rc('font', **{'family': 'serif', 'sans-serif': ['Helvetica'], 'size': 8})
@@ -62,7 +62,7 @@ def plot_timeseries(time, *args, **kwargs):
                          'produced subplots.')
 
     date_time = np.array(  # generate list of datetime objects
-        [timedelta(days=dt) + date(2000, 1, 1) for dt in np.ravel(time)])
+        [timedelta(days=dt) + datetime(2000, 1, 1) for dt in np.ravel(time)])
 
     fig, axes = plt.subplots(layout[0], layout[1], sharex='all',
                              figsize=figsize)
@@ -76,7 +76,7 @@ def plot_timeseries(time, *args, **kwargs):
         ax.grid()
         ax.set(ylabel=label, xlabel='time')
         fig.autofmt_xdate()
-        ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d')
+        ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d-%h')
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     plt.show()
