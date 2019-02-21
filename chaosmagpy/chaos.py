@@ -39,7 +39,7 @@ class BaseModel(object):
     ----------
     breaks : ndarray, shape (m+1,)
         Break points for piecewise-polynomial representation of the
-        time-dependent internal field in modified Julian date format.
+        magnetic field in modified Julian date format.
     pieces : int, positive
         Number `m` of intervals given by break points in ``breaks``.
     order : int, positive
@@ -63,7 +63,7 @@ class BaseModel(object):
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
         self.order = None if order is None else int(order)
-        self.coeffs = coeffs
+        self.coeffs = coeffs[-self.order:]
 
         if coeffs is None:
             self.nmax = None
@@ -72,7 +72,7 @@ class BaseModel(object):
 
         self.source = 'internal' if source is None else source
 
-    def synth_coeffs(self, time, *, nmax=None, deriv=None):
+    def synth_coeffs(self, time, *, nmax=None, deriv=None, extrapolate=None):
         """
         Compute the field coefficients at points in time.
 
@@ -86,6 +86,21 @@ class BaseModel(object):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
+        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
+            Extrapolate to times outside of the model bounds. Defaults to
+            ``'linear'``.
+
+             +------------+---------------------------------------------------+
+             | Value      | Description                                       |
+             +============+===================================================+
+             | 'linear'   | Use degree zero and one polynomials.              |
+             +------------+---------------------------------------------------+
+             | 'spline'   | Use all degree polynomials.                       |
+             +------------+---------------------------------------------------+
+             | 'constant' | Use degree zero polynomial only.                  |
+             +------------+---------------------------------------------------+
+             | 'off'      | No extrapolation. Return NaN outside model bounds.|
+             +------------+---------------------------------------------------+
 
         Returns
         -------
@@ -110,15 +125,48 @@ class BaseModel(object):
         if deriv is None:
             deriv = 0
 
-        if np.amin(time) < self.breaks[0] or np.amax(time) > self.breaks[-1]:
-            warnings.warn("Requested coefficients are "
-                          "outside of the modelled period from "
-                          f"{self.breaks[0]} to {self.breaks[-1]}. "
-                          "Returning nan's.")
+        if extrapolate is None:
+            extrapolate = 'linear'
+        elif extrapolate not in ['linear', 'spline', 'constant', 'off']:
+            raise ValueError(
+                f'Unknown extrapolation method "{extrapolate}". Use '
+                '"linear" (default), "constant", "spline" or "off"')
 
+        # setting spline interpolation
         PP = sip.PPoly.construct_fast(
             self.coeffs[..., :nmax*(nmax+2)].astype(float),
-            self.breaks.astype(float), extrapolate=False)
+            self.breaks.astype(float), extrapolate=True)
+
+        start = self.breaks[0]
+        end = self.breaks[-1]
+
+        if np.amin(time) < start or np.amax(time) > end:
+            message = 'no' if extrapolate == 'off' else extrapolate
+            warnings.warn("Requested coefficients are "
+                          "outside of the modelled period from "
+                          f"{start} to {end}. Doing {message} extrapolation.")
+
+            if extrapolate == 'linear':
+                bin = np.zeros((self.coeffs.shape[0], 1,
+                                self.coeffs.shape[-1]))
+
+                for x in [start, end]:  # left and right
+                    bin[-1] = PP(x)  # offset
+                    if self.coeffs.shape[0] >= 2:
+                        bin[-2] = PP(x, nu=1)  # slope
+
+                    PP.extend(bin, np.array([x]))
+
+            elif extrapolate == 'constant':
+                bin = np.zeros((self.coeffs.shape[0], 1,
+                                self.coeffs.shape[-1]))
+
+                for x in [start, end]:  # left and right
+                    bin[-1] = PP(x)  # offset
+                    PP.extend(bin, np.array([x]))
+
+            elif extrapolate == 'off':
+                PP.extrapolate = False
 
         PP = PP.derivative(nu=deriv)
         coeffs = PP(time) * 365.25**deriv
@@ -126,14 +174,15 @@ class BaseModel(object):
         return coeffs
 
     def synth_values(self, time, radius, theta, phi, *, nmax=None, deriv=None,
-                     grid=None):
+                     grid=None, extrapolate=None):
 
-        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv,
+                                   extrapolate=extrapolate)
 
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
+    def power_spectrum(self, time, radius=None, **kwargs):
         """
         Compute the powerspectrum.
 
@@ -143,11 +192,9 @@ class BaseModel(object):
             Time in modified Julian date.
         radius : float
             Radius in kilometers (defaults to mean Earth's surface).
-        nmax : int, optional
-            Maximum spherical harmonic degree (defaults to available
-            coefficients).
-        deriv : int, optional
-            Derivative with respect to time (defaults to 0).
+        **kwargs : keywords
+            Other options to pass to :meth:`synth_coeffs`
+            function.
 
         Returns
         -------
@@ -161,9 +208,8 @@ class BaseModel(object):
         """
 
         radius = R_REF if radius is None else radius
-        deriv = 0 if deriv is None else deriv
 
-        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+        coeffs = self.synth_coeffs(time, **kwargs)
 
         return mu.power_spectrum(coeffs, radius)
 
