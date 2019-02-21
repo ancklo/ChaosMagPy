@@ -182,7 +182,7 @@ class BaseModel(object):
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, radius=None, **kwargs):
+    def power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
         """
         Compute the powerspectrum.
 
@@ -192,9 +192,12 @@ class BaseModel(object):
             Time in modified Julian date.
         radius : float
             Radius in kilometers (defaults to mean Earth's surface).
-        **kwargs : keywords
-            Other options to pass to :meth:`synth_coeffs`
-            function.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
 
         Returns
         -------
@@ -209,7 +212,7 @@ class BaseModel(object):
 
         radius = R_REF if radius is None else radius
 
-        coeffs = self.synth_coeffs(time, **kwargs)
+        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
 
         return mu.power_spectrum(coeffs, radius)
 
@@ -294,11 +297,9 @@ class BaseModel(object):
         theta = np.linspace(1, 179, num=320)
         phi = np.linspace(-180, 180, num=721)
 
-        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
-
-        B_radius, B_theta, B_phi = mu.synth_values(
-            coeffs, radius, theta, phi, nmax=nmax, source=self.source,
-            grid=True)
+        B_radius, B_theta, B_phi = self.synth_values(
+            time, radius, theta, phi, nmax=nmax, deriv=deriv,
+            grid=True, extrapolate=None)
 
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
@@ -324,6 +325,9 @@ class BaseModel(object):
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
+            Extrapolate to times outside of the model bounds. Defaults to
+            ``'linear'``.
         **kwargs : keywords
             Other options to pass to :func:`plot_utils.plot_timeseries`
             function.
@@ -349,16 +353,16 @@ class BaseModel(object):
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
         deriv = kwargs.pop('deriv')
+        extrapolate = kwargs.pop('extrapolate')
 
         # add plot_maps options to dictionary
         kwargs.setdefault('label', du.gauss_units(deriv))
 
         time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
 
-        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
-
-        B_radius, B_theta, B_phi = mu.synth_values(
-            coeffs, radius, theta, phi, nmax=nmax, source=self.source)
+        B_radius, B_theta, B_phi = self.synth_values(
+            time, radius, theta, phi, nmax=nmax, deriv=deriv,
+            extrapolate=extrapolate)
 
         pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
 
@@ -652,7 +656,7 @@ class CHAOS(object):
 
         return string
 
-    def synth_coeffs_tdep(self, time, *, nmax=None, deriv=None):
+    def synth_coeffs_tdep(self, time, **kwargs):
         """
         Compute the time-dependent internal field coefficients from the CHAOS
         model.
@@ -675,10 +679,9 @@ class CHAOS(object):
 
         """
 
-        return self.model_tdep.synth_coeffs(time, nmax=nmax, deriv=deriv)
+        return self.model_tdep.synth_coeffs(time, **kwargs)
 
-    def plot_timeseries_tdep(self, radius, theta, phi, *,
-                             nmax=None, deriv=None):
+    def plot_timeseries_tdep(self, radius, theta, phi, **kwargs):
         """
         Plot the time series of the time-dependent internal field from the
         CHAOS model at a specific location.
@@ -706,10 +709,9 @@ class CHAOS(object):
 
         """
 
-        self.model_tdep.plot_timeseries(radius, theta, phi,
-                                        nmax=nmax, deriv=deriv)
+        self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
-    def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None):
+    def plot_maps_tdep(self, time, radius, **kwargs):
         """
         Plot global map of the time-dependent internal field from the CHAOS
         model.
@@ -735,9 +737,9 @@ class CHAOS(object):
 
         """
 
-        self.model_tdep.plot_maps(time, radius, nmax=nmax, deriv=deriv)
+        self.model_tdep.plot_maps(time, radius, **kwargs)
 
-    def synth_coeffs_static(self, *, nmax=None):
+    def synth_coeffs_static(self, **kwargs):
         """
         Compute the static internal field coefficients from the CHAOS model.
 
@@ -755,7 +757,7 @@ class CHAOS(object):
         """
 
         time = self.model_static.breaks[0]
-        return self.model_static.synth_coeffs(time, nmax=nmax, deriv=0)
+        return self.model_static.synth_coeffs(time, **kwargs)
 
     def plot_maps_static(self, radius, *, nmax=None):
         """
@@ -827,6 +829,16 @@ class CHAOS(object):
         # ensure ndarray input
         time = np.array(time, dtype=np.float)
 
+        # use static part to define modelled period
+        start = self.model_static.breaks[0]
+        end = self.model_static.breaks[-1]
+
+        if np.amin(time) < start or np.amax(time) > end:
+            warnings.warn("Requested coefficients are "
+                          "outside of the modelled period from "
+                          f"{start} to {end}. Doing linear extrapolation in "
+                          "GSM reference frame.")
+
         # build rotation matrix from file
         filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_gsm.npz')
         frequency_spectrum = np.load(filepath)
@@ -860,7 +872,8 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_coeffs_sm(self, time, *, nmax=None, source=None):
+    def synth_coeffs_sm(self, time, *, nmax=None, source=None,
+                        extrapolate=None):
         """
         Compute the external SM field from the CHAOS model.
 
@@ -873,6 +886,10 @@ class CHAOS(object):
             coefficients, but can also be smaller, if specified).
         source : {'external', 'internal'}, optional
             Choose source either external or internal (default is 'external').
+        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
+            Extrapolate to times outside of the model bounds. Defaults to
+            ``'linear'``. Note that first three methods are identical since
+            SM coefficients are piecewise constant.
 
         Returns
         -------
@@ -898,6 +915,16 @@ class CHAOS(object):
         if source is None:
             source = 'external'
 
+        if extrapolate in [None, 'linear', 'spline', 'constant']:
+            extrapolate = True  # here spline is identical to linear
+        elif extrapolate is 'off':
+            extrapolate = False
+        else:
+            raise ValueError(
+                f'Unknown extrapolation method "{extrapolate}". Use '
+                '"linear" (default), "constant", "spline" or "off". '
+                '')
+
         # find smallest overlapping time period for breaks_delta
         start = np.amax([self.breaks_delta['q10'][0],
                          self.breaks_delta['q11'][0],
@@ -905,13 +932,16 @@ class CHAOS(object):
         end = np.amin([self.breaks_delta['q10'][-1],
                        self.breaks_delta['q11'][-1],
                        self.breaks_delta['s11'][-1]])
-        if np.amin(time) < start or np.amax(time) > end:
-            warnings.warn("Requested external coefficients in SM are "
-                          "outside of the modelled period from "
-                          f"{start} to {end}. Returning nan's.")
 
         # ensure ndarray input
         time = np.array(time, dtype=np.float)
+
+        if np.amin(time) < start or np.amax(time) > end:
+            message = 'no' if not extrapolate else extrapolate
+            warnings.warn(f"""
+                Requested coefficients are outside of the modelled period
+                from {start} to {end}. Doing {message} extrapolation in SM
+                reference frame.""")
 
         # build rotation matrix from file
         filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_sm.npz')
@@ -938,15 +968,15 @@ class CHAOS(object):
         # use piecewise polynomials to evaluate baseline correction in bins
         delta_q10 = sip.PPoly.construct_fast(
             self.coeffs_delta['q10'].astype(float),
-            self.breaks_delta['q10'].astype(float), extrapolate=False)
+            self.breaks_delta['q10'].astype(float), extrapolate=extrapolate)
 
         delta_q11 = sip.PPoly.construct_fast(
             self.coeffs_delta['q11'].astype(float),
-            self.breaks_delta['q11'].astype(float), extrapolate=False)
+            self.breaks_delta['q11'].astype(float), extrapolate=extrapolate)
 
         delta_s11 = sip.PPoly.construct_fast(
             self.coeffs_delta['s11'].astype(float),
-            self.breaks_delta['s11'].astype(float), extrapolate=False)
+            self.breaks_delta['s11'].astype(float), extrapolate=extrapolate)
 
         # unpack file: oscillations per day, complex spectrum
         frequency = frequency_spectrum['frequency']
