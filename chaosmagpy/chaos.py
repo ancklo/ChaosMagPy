@@ -147,8 +147,7 @@ class BaseModel(object):
                           f"{start} to {end}. Doing {message} extrapolation.")
 
             if extrapolate == 'linear':
-                bin = np.zeros((self.coeffs.shape[0], 1,
-                                self.coeffs.shape[-1]))
+                bin = np.zeros((self.coeffs.shape[0], 1, nmax*(nmax+2)))
 
                 for x in [start, end]:  # left and right
                     bin[-1] = PP(x)  # offset
@@ -158,8 +157,7 @@ class BaseModel(object):
                     PP.extend(bin, np.array([x]))
 
             elif extrapolate == 'constant':
-                bin = np.zeros((self.coeffs.shape[0], 1,
-                                self.coeffs.shape[-1]))
+                bin = np.zeros((self.coeffs.shape[0], 1, nmax*(nmax+2)))
 
                 for x in [start, end]:  # left and right
                     bin[-1] = PP(x)  # offset
@@ -562,7 +560,18 @@ class CHAOS(object):
 
         source_list = np.ravel(np.array(source_list))
 
-        grid_shape = max(radius.shape, theta.shape, phi.shape)
+        # get shape of broadcasted result
+        try:
+            b = np.broadcast(time, radius, theta, phi)
+        except ValueError:
+            print('Cannot broadcast grid shapes:')
+            print(f'time:   {time.shape}')
+            print(f'radius: {radius.shape}')
+            print(f'theta:  {theta.shape}')
+            print(f'phi:    {phi.shape}')
+            raise
+
+        grid_shape = b.shape
 
         B_radius = np.zeros(grid_shape)
         B_theta = np.zeros(grid_shape)
