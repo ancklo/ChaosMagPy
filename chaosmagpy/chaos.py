@@ -146,24 +146,22 @@ class BaseModel(object):
                           "outside of the modelled period from "
                           f"{start} to {end}. Doing {message} extrapolation.")
 
-            if extrapolate == 'linear':
-                bin = np.zeros((self.coeffs.shape[0], 1, nmax*(nmax+2)))
+            bin = np.zeros((self.order, 1, nmax*(nmax+2)))
 
+            dkey = {'linear': 2,
+                    'constant': 1,
+                    'spline': self.order,
+                    'off': 0}
+
+            key = min(dkey[extrapolate], self.order)
+
+            if key > 0:
                 for x in [start, end]:  # left and right
-                    bin[-1] = PP(x)  # offset
-                    if self.coeffs.shape[0] >= 2:
-                        bin[-2] = PP(x, nu=1)  # slope
-
+                    for k in range(key):
+                        bin[-1-k] = PP(x, nu=k)
                     PP.extend(bin, np.array([x]))
 
-            elif extrapolate == 'constant':
-                bin = np.zeros((self.coeffs.shape[0], 1, nmax*(nmax+2)))
-
-                for x in [start, end]:  # left and right
-                    bin[-1] = PP(x)  # offset
-                    PP.extend(bin, np.array([x]))
-
-            elif extrapolate == 'off':
+            else:  # no extrapolation
                 PP.extrapolate = False
 
         PP = PP.derivative(nu=deriv)
