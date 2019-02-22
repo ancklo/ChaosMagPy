@@ -146,8 +146,6 @@ class BaseModel(object):
                           "outside of the modelled period from "
                           f"{start} to {end}. Doing {message} extrapolation.")
 
-            bin = np.zeros((self.order, 1, nmax*(nmax+2)))
-
             dkey = {'linear': 2,
                     'constant': 1,
                     'spline': self.order,
@@ -157,6 +155,7 @@ class BaseModel(object):
 
             if key > 0:
                 for x in [start, end]:  # left and right
+                    bin = np.zeros((self.order, 1, nmax*(nmax+2)))
                     for k in range(key):
                         bin[-1-k] = PP(x, nu=k)
                     PP.extend(bin, np.array([x]))
