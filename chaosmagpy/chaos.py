@@ -86,20 +86,26 @@ class BaseModel(object):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
-        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
-            Extrapolate to times outside of the model bounds. Defaults to
-            ``'linear'``.
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
+            Extrapolate to times outside of the model bounds. Specify
+            polynomial degree as string or any order as integer. Defaults to
+            ``'linear'`` (equiv. to order 2 polynomials).
 
              +------------+---------------------------------------------------+
              | Value      | Description                                       |
              +============+===================================================+
-             | 'linear'   | Use degree zero and one polynomials.              |
+             | 'linear'   | Use degree-1 polynomials (extrapolate=2).         |
+             +------------+---------------------------------------------------+
+             | 'quadratic'| Use degree-2 polynomials (extrapolate=3).         |
+             +------------+---------------------------------------------------+
+             | 'cubic'    | Use degree-3 polynomials (extrapolate=4).         |
              +------------+---------------------------------------------------+
              | 'spline'   | Use all degree polynomials.                       |
              +------------+---------------------------------------------------+
-             | 'constant' | Use degree zero polynomial only.                  |
+             | 'constant' | Use degree zero polynomial only (extrapolate=1).  |
              +------------+---------------------------------------------------+
-             | 'off'      | No extrapolation. Return NaN outside model bounds.|
+             | 'off'      | Return NaN outside model bounds (extrapolate=0).  |
              +------------+---------------------------------------------------+
 
         Returns
@@ -126,11 +132,7 @@ class BaseModel(object):
             deriv = 0
 
         if extrapolate is None:
-            extrapolate = 'linear'
-        elif extrapolate not in ['linear', 'spline', 'constant', 'off']:
-            raise ValueError(
-                f'Unknown extrapolation method "{extrapolate}". Use '
-                '"linear" (default), "constant", "spline" or "off"')
+            extrapolate = 'linear'  # linear extrapolation
 
         # setting spline interpolation
         PP = sip.PPoly.construct_fast(
@@ -141,17 +143,28 @@ class BaseModel(object):
         end = self.breaks[-1]
 
         if np.amin(time) < start or np.amax(time) > end:
+            if isinstance(extrapolate, str):  # convert string to integer
+                dkey = {'linear': 2,
+                        'quadratic': 3,
+                        'cubic': 4,
+                        'constant': 1,
+                        'spline': self.order,
+                        'off': 0}
+                try:
+                    key = min(dkey[extrapolate], self.order)
+                except KeyError:
+                    string = '", "'.join([k for k, _ in dkey.items()])
+                    raise ValueError(
+                        f'Unknown extrapolation method "{extrapolate}". Use '
+                        f'one of {{"{string}"}}.')
+
+            else:
+                key = min(extrapolate, self.order)
+
             message = 'no' if extrapolate == 'off' else extrapolate
             warnings.warn("Requested coefficients are "
                           "outside of the modelled period from "
                           f"{start} to {end}. Doing {message} extrapolation.")
-
-            dkey = {'linear': 2,
-                    'constant': 1,
-                    'spline': self.order,
-                    'off': 0}
-
-            key = min(dkey[extrapolate], self.order)
 
             if key > 0:
                 for x in [start, end]:  # left and right
@@ -662,7 +675,7 @@ class CHAOS(object):
 
         return string
 
-    def synth_coeffs_tdep(self, time, **kwargs):
+    def synth_coeffs_tdep(self, time, *, nmax=None, **kwargs):
         """
         Compute the time-dependent internal field coefficients from the CHAOS
         model.
@@ -674,9 +687,9 @@ class CHAOS(object):
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
-        deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
-            choose ``deriv=1``.
+        **kwargs : keywords
+            Other options to pass to :meth:`BaseModel.synth_coeffs`
+            method.
 
         Returns
         -------
@@ -685,7 +698,7 @@ class CHAOS(object):
 
         """
 
-        return self.model_tdep.synth_coeffs(time, **kwargs)
+        return self.model_tdep.synth_coeffs(time, nmax=nmax, **kwargs)
 
     def plot_timeseries_tdep(self, radius, theta, phi, **kwargs):
         """
@@ -745,7 +758,7 @@ class CHAOS(object):
 
         self.model_tdep.plot_maps(time, radius, **kwargs)
 
-    def synth_coeffs_static(self, **kwargs):
+    def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
         Compute the static internal field coefficients from the CHAOS model.
 
@@ -754,6 +767,9 @@ class CHAOS(object):
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
+        **kwargs : keywords
+            Other options to pass to :meth:`BaseModel.synth_coeffs`
+            method.
 
         Returns
         -------
@@ -763,7 +779,7 @@ class CHAOS(object):
         """
 
         time = self.model_static.breaks[0]
-        return self.model_static.synth_coeffs(time, **kwargs)
+        return self.model_static.synth_coeffs(time, nmax=nmax, **kwargs)
 
     def plot_maps_static(self, radius, *, nmax=None):
         """
@@ -892,10 +908,6 @@ class CHAOS(object):
             coefficients, but can also be smaller, if specified).
         source : {'external', 'internal'}, optional
             Choose source either external or internal (default is 'external').
-        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
-            Extrapolate to times outside of the model bounds. Defaults to
-            ``'linear'``. Note that first three methods are identical since
-            SM coefficients are piecewise constant.
 
         Returns
         -------
@@ -921,16 +933,6 @@ class CHAOS(object):
         if source is None:
             source = 'external'
 
-        if extrapolate in [None, 'linear', 'spline', 'constant']:
-            extrapolate = True  # here spline is identical to linear
-        elif extrapolate is 'off':
-            extrapolate = False
-        else:
-            raise ValueError(
-                f'Unknown extrapolation method "{extrapolate}". Use '
-                '"linear" (default), "constant", "spline" or "off". '
-                '')
-
         # find smallest overlapping time period for breaks_delta
         start = np.amax([self.breaks_delta['q10'][0],
                          self.breaks_delta['q11'][0],
@@ -943,11 +945,10 @@ class CHAOS(object):
         time = np.array(time, dtype=np.float)
 
         if np.amin(time) < start or np.amax(time) > end:
-            message = 'no' if not extrapolate else extrapolate
-            warnings.warn(f"""
-                Requested coefficients are outside of the modelled period
-                from {start} to {end}. Doing {message} extrapolation in SM
-                reference frame.""")
+            warnings.warn(
+                'Requested coefficients are outside of the '
+                f'modelled period from {start} to {end}. Doing linear '
+                'extrapolation in SM reference frame.')
 
         # build rotation matrix from file
         filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_sm.npz')
@@ -963,26 +964,28 @@ class CHAOS(object):
         if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                f'{start} and {end}, but found {np.amin(time)}')
+                '{:.2f} and {:.2f}, but found {:.2f}.'.format(start, end,
+                                                              np.amax(time)))
 
         # check RC index time and inputs time
         if np.amax(time) > end:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                f'{start} and {end}, but found {np.amax(time)}.')
+                '{:.2f} and {:.2f}, but found {:.2f}.'.format(start, end,
+                                                              np.amax(time)))
 
         # use piecewise polynomials to evaluate baseline correction in bins
         delta_q10 = sip.PPoly.construct_fast(
             self.coeffs_delta['q10'].astype(float),
-            self.breaks_delta['q10'].astype(float), extrapolate=extrapolate)
+            self.breaks_delta['q10'].astype(float), extrapolate=True)
 
         delta_q11 = sip.PPoly.construct_fast(
             self.coeffs_delta['q11'].astype(float),
-            self.breaks_delta['q11'].astype(float), extrapolate=extrapolate)
+            self.breaks_delta['q11'].astype(float), extrapolate=True)
 
         delta_s11 = sip.PPoly.construct_fast(
             self.coeffs_delta['s11'].astype(float),
-            self.breaks_delta['s11'].astype(float), extrapolate=extrapolate)
+            self.breaks_delta['s11'].astype(float), extrapolate=True)
 
         # unpack file: oscillations per day, complex spectrum
         frequency = frequency_spectrum['frequency']
