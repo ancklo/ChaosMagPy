@@ -95,6 +95,8 @@ class BaseModel(object):
              +------------+---------------------------------------------------+
              | Value      | Description                                       |
              +============+===================================================+
+             | 'constant' | Use degree zero polynomial only (extrapolate=1).  |
+             +------------+---------------------------------------------------+
              | 'linear'   | Use degree-1 polynomials (extrapolate=2).         |
              +------------+---------------------------------------------------+
              | 'quadratic'| Use degree-2 polynomials (extrapolate=3).         |
@@ -102,8 +104,6 @@ class BaseModel(object):
              | 'cubic'    | Use degree-3 polynomials (extrapolate=4).         |
              +------------+---------------------------------------------------+
              | 'spline'   | Use all degree polynomials.                       |
-             +------------+---------------------------------------------------+
-             | 'constant' | Use degree zero polynomial only (extrapolate=1).  |
              +------------+---------------------------------------------------+
              | 'off'      | Return NaN outside model bounds (extrapolate=0).  |
              +------------+---------------------------------------------------+
