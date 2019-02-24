@@ -62,12 +62,14 @@ class BaseModel(object):
 
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
-        self.order = None if order is None else int(order)
-        self.coeffs = coeffs[-self.order:]
 
         if coeffs is None:
+            self.coeffs = coeffs
+            self.order = None if order is None else int(order)
             self.nmax = None
         else:
+            self.order = coeffs.shape[0] if order is None else int(order)
+            self.coeffs = coeffs[-self.order:]
             self.nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
 
         self.source = 'internal' if source is None else source
