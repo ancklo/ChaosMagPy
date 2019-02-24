@@ -361,7 +361,8 @@ class BaseModel(object):
 
         defaults = dict(deriv=0,
                         nmax=self.nmax,
-                        titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'])
+                        titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'],
+                        extrapolate=None)
 
         kwargs = defaultkeys(defaults, kwargs)
 
