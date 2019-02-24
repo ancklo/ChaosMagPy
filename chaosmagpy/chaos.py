@@ -190,7 +190,7 @@ class BaseModel(object):
         return mu.synth_values(coeffs, radius, theta, phi, nmax=nmax,
                                source=self.source, grid=grid)
 
-    def power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
+    def power_spectrum(self, time, radius=None, **kwargs):
         """
         Compute the powerspectrum.
 
@@ -200,12 +200,17 @@ class BaseModel(object):
             Time in modified Julian date.
         radius : float
             Radius in kilometers (defaults to mean Earth's surface).
+
+        Other Parameters
+        ----------------
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
-            choose ``deriv=1``.
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+        **kwargs : keywords
+            Other options to pass to :meth:`BaseModel.synth_coeffs` method.
 
         Returns
         -------
@@ -220,7 +225,7 @@ class BaseModel(object):
 
         radius = R_REF if radius is None else radius
 
-        coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv)
+        coeffs = self.synth_coeffs(time, **kwargs)
 
         return mu.power_spectrum(coeffs, radius)
 
