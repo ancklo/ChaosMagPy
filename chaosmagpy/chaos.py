@@ -68,7 +68,11 @@ class BaseModel(object):
             self.order = None if order is None else int(order)
             self.nmax = None
         else:
-            self.order = coeffs.shape[0] if order is None else int(order)
+            if order is None:
+                self.order = coeffs.shape[0]
+            else:
+                self.order = min(int(order), coeffs.shape[0])
+
             self.coeffs = coeffs[-self.order:]
             self.nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
 
