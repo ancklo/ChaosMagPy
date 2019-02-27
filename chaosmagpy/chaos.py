@@ -974,7 +974,7 @@ class CHAOS(object):
                 os.path.join(filepath, 'RC_latest.dat'), parse_dates=False)
 
         except Exception as err:
-            print(f'Using built-in RC index file. Error using latest {err}.')
+            print(f'Handling error: {err}. Using built-in RC file instead.')
             df_RC = du.load_RC_datfile(
                 os.path.join(filepath, 'RC_builtin.dat'), parse_dates=False)
 
@@ -1702,12 +1702,13 @@ def _RC_updater():
         RC_files_url = "http://www.spacecenter.dk/files/magnetic-models/\
 RC/current/RC_1997-2019_augmented.dat"
 
-        print(f'Requesting latest RC index file from {RC_files_url}')
+        print(f'Downloading latest RC index file from {RC_files_url}')
 
         page = urllib.request.urlopen(RC_files_url)
 
         with open(os.path.join(ROOT, 'lib', 'RC_latest.dat'), "wb") as RC_file:
             RC_file.write(page.read())
+            print(f'Successfully saved to {RC_file.name}.')
 
     except Exception as err:
         print(f"Can't download new RC file. Raised exception: {err}.")
