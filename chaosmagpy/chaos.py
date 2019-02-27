@@ -967,8 +967,16 @@ class CHAOS(object):
         frequency_spectrum = np.load(filepath)
 
         # load RC-index into date frame
-        filepath = os.path.join(ROOT, 'lib', 'RC_1997-2018.dat')
-        df_RC = du.load_RC_datfile(filepath)
+        filepath = os.path.join(ROOT, 'lib')
+
+        try:
+            df_RC = du.load_RC_datfile(
+                os.path.join(filepath, 'RC_latest.dat'), parse_dates=False)
+
+        except Exception as err:
+            print(f'Using built-in RC index file. Error using latest {err}.')
+            df_RC = du.load_RC_datfile(
+                os.path.join(filepath, 'RC_builtin.dat'), parse_dates=False)
 
         # check RC index time and input times
         start = df_RC['time'].iloc[0]
@@ -1684,6 +1692,25 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
                       version=_guess_version(filepath))
 
     return model
+
+
+def _RC_updater():
+
+    import urllib.request
+
+    try:
+        RC_files_url = "http://www.spacecenter.dk/files/magnetic-models/\
+RC/current/RC_1997-2019_augmented.dat"
+
+        print(f'Requesting latest RC index file from {RC_files_url}')
+
+        page = urllib.request.urlopen(RC_files_url)
+
+        with open(os.path.join(ROOT, 'lib', 'RC_latest.dat'), "wb") as RC_file:
+            RC_file.write(page.read())
+
+    except Exception as err:
+        print(f"Can't download new RC file. Raised exception: {err}.")
 
 
 def _guess_version(filepath):
