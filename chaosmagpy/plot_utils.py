@@ -8,7 +8,7 @@ from matplotlib.colors import LinearSegmentedColormap
 
 plt.rc('font', **{'family': 'serif', 'sans-serif': ['Helvetica'], 'size': 8})
 
-DEFAULT_WIDTH = 16 / 2.54  # default figure width: 25cm
+DEFAULT_WIDTH = 16 / 2.54  # default figure width
 
 
 def plot_timeseries(time, *args, **kwargs):
