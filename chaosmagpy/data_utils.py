@@ -62,7 +62,7 @@ def load_RC_datfile(filepath, parse_dates=False):
     column_types = {'time': 'float64', 'RC': 'float64', 'RC_e': 'float64',
                     'RC_i': 'float64', 'flag': 'category'}
 
-    df = pd.read_csv(str(filepath),  delim_whitespace=True, comment='#',
+    df = pd.read_csv(filepath,  delim_whitespace=True, comment='#',
                      dtype=column_types, names=column_names)
 
     # set datetime as index

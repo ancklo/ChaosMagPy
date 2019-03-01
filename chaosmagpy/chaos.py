@@ -3,6 +3,7 @@ import os
 import warnings
 import scipy.interpolate as sip
 import hdf5storage as hdf
+import h5py
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
@@ -974,7 +975,8 @@ class CHAOS(object):
                 os.path.join(filepath, 'RC_latest.dat'), parse_dates=False)
 
         except Exception as err:
-            print(f'Handling error: {err}. Using built-in RC file instead.')
+            warnings.warn(
+                f'Handling error: {err}. Using built-in RC file instead.')
             df_RC = du.load_RC_datfile(
                 os.path.join(filepath, 'RC_builtin.dat'), parse_dates=False)
 
@@ -1694,24 +1696,30 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
     return model
 
 
-def _RC_updater():
-
-    import urllib.request
+def _update_rc_index():
 
     try:
-        RC_files_url = "http://www.spacecenter.dk/files/magnetic-models/\
+        rc_index_url = "http://www.spacecenter.dk/files/magnetic-models/\
 RC/current/RC_1997-2019_augmented.dat"
 
-        print(f'Downloading latest RC index file from {RC_files_url}')
+        print(f'Downloading latest RC index file from {rc_index_url}')
+        df_rc = du.load_RC_datfile(rc_index_url, parse_dates=False)
 
-        page = urllib.request.urlopen(RC_files_url)
+        with h5py.File(os.path.join(ROOT, 'lib', 'RC_latest.hdf5'), 'w') as f:
 
-        with open(os.path.join(ROOT, 'lib', 'RC_latest.dat'), "wb") as RC_file:
-            RC_file.write(page.read())
-            print(f'Successfully saved to {RC_file.name}.')
+            for column in df_rc.columns:
+                variable = df_rc[column].values
+                if column == 'flag':
+                    dset = f.create_dataset(column, variable.shape, dtype="S1")
+                    dset[:] = variable.astype('bytes')
+
+                else:
+                    f.create_dataset(column, data=variable)
+
+            print(f'Successfully saved to {f.filename}.')
 
     except Exception as err:
-        print(f"Can't download new RC file. Raised exception: {err}.")
+        warnings.warn(f"Can't save new RC index. Raised exception: {err}.")
 
 
 def _guess_version(filepath):
