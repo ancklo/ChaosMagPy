@@ -1,9 +1,13 @@
 import pandas as pd
 import numpy as np
 import hdf5storage as hdf
+import warnings
+import h5py
 import os
 import calendar
 from datetime import timedelta, datetime
+
+ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
 def load_matfile(filepath, variable_name, struct=False):
@@ -72,6 +76,56 @@ def load_RC_datfile(filepath, parse_dates=False):
         df.drop(['time'], axis=1, inplace=True)  # delete redundant time column
 
     return df
+
+
+def save_RC_h5file(filepath=None, save_to=None):
+    """
+    Return h5-file of the RC index.
+
+    Parameters
+    ----------
+    filepath : str, optional
+        Filepath of RC index (``*.dat`` or ``*.csv``). If ``None``, the RC
+        index will be fetched from `here <http://www.spacecenter.dk/files/\
+magnetic-models/RC/current/>`_.
+    save_to : str, optional
+        Filepath and name of `*.h5` output file. Defaults to
+        ``chaosmagpy/lib/RC_latest.h5``.
+
+    Returns
+    -------
+    Outputs an h5-file of the RC index with keywords
+    ['time', 'RC', 'RC_e', 'RC_i', 'flag']. Time is given in modified Julian
+    dates 2000.
+
+    """
+
+    if filepath is None:
+        filepath = "http://www.spacecenter.dk/files/magnetic-models/\
+RC/current/RC_1997-2019_augmented.dat"
+
+    if save_to is None:
+        save_to = os.path.join(ROOT, 'lib', 'RC_latest.h5')
+
+    try:
+        print(f'Loading RC index file from {filepath}')
+        df_rc = load_RC_datfile(filepath, parse_dates=False)
+
+        with h5py.File(save_to, 'w') as f:
+
+            for column in df_rc.columns:
+                variable = df_rc[column].values
+                if column == 'flag':
+                    dset = f.create_dataset(column, variable.shape, dtype="S1")
+                    dset[:] = variable.astype('bytes')
+
+                else:
+                    f.create_dataset(column, data=variable)  # just save floats
+
+            print(f'Successfully saved to {f.filename}.')
+
+    except Exception as err:
+        warnings.warn(f"Can't save new RC index. Raised exception: '{err}'.")
 
 
 def load_shcfile(filepath, leap_year=None):
