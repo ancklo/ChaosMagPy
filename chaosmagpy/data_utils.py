@@ -86,15 +86,15 @@ def save_RC_h5file(filepath=None, save_to=None):
     ----------
     filepath : str, optional
         Filepath of RC index (``*.dat`` or ``*.csv``). If ``None``, the RC
-        index will be fetched from `here <http://www.spacecenter.dk/files/\
-magnetic-models/RC/current/>`_.
+        index will be fetched from `spacecenter.dk <http://www.spacecenter.dk/\
+        files/magnetic-models/RC/current/>`_.
     save_to : str, optional
         Filepath and name of `*.h5` output file. Defaults to
         ``chaosmagpy/lib/RC_latest.h5``.
 
-    Returns
-    -------
-    Outputs an h5-file of the RC index with keywords
+    Notes
+    -----
+    Saves an h5-file of the RC index with keywords
     ['time', 'RC', 'RC_e', 'RC_i', 'flag']. Time is given in modified Julian
     dates 2000.
 
