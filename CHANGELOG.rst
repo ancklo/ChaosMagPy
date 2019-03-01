@@ -3,8 +3,12 @@ Changelog
 
 Version 0.1a4
 -------------
-| **Date:** February 21, 2019
+| **Date:** March 1, 2019
 | **Release:** v0.1a4
+
+Features
+^^^^^^^^
+* RC index file now stored in HDF5 format.
 
 Bugfixes
 ^^^^^^^^

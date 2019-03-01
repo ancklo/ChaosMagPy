@@ -971,18 +971,15 @@ class CHAOS(object):
         filepath = os.path.join(ROOT, 'lib')
 
         try:
-            df_RC = du.load_RC_datfile(
-                os.path.join(filepath, 'RC_latest.dat'), parse_dates=False)
+            df_RC = h5py.File(os.path.join(filepath, 'RC_latest.h5'), 'r')
 
         except Exception as err:
-            warnings.warn(
-                f'Handling error: {err}. Using built-in RC file instead.')
-            df_RC = du.load_RC_datfile(
-                os.path.join(filepath, 'RC_builtin.dat'), parse_dates=False)
+            warnings.warn(f'{err}. Using default RC file instead.')
+            df_RC = h5py.File(os.path.join(filepath, 'RC_default.h5'), 'r')
 
         # check RC index time and input times
-        start = df_RC['time'].iloc[0]
-        end = df_RC['time'].iloc[-1]
+        start = df_RC['time'][0]
+        end = df_RC['time'][-1]
         if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
@@ -1018,8 +1015,7 @@ class CHAOS(object):
 
         if source == 'external':
             # interpolate RC (linear) at input times: RC_ext is callable
-            RC_ext = sip.interp1d(
-                df_RC['time'].values, df_RC['RC_e'].values, kind='linear')
+            RC_ext = sip.interp1d(df_RC['time'], df_RC['RC_e'], kind='linear')
 
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
 
@@ -1041,8 +1037,7 @@ class CHAOS(object):
 
         elif source == 'internal':
             # interpolate RC (linear) at input times: RC_int is callable
-            RC_int = sip.interp1d(
-                df_RC['time'].values, df_RC['RC_i'].values, kind='linear')
+            RC_int = sip.interp1d(df_RC['time'], df_RC['RC_i'], kind='linear')
 
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']
@@ -1082,6 +1077,8 @@ class CHAOS(object):
         else:
             raise ValueError("Wrong source parameter, use "
                              "'external' or 'internal'")
+
+        df_RC.close()  # close h5-file
 
         return coeffs[..., :nmax*(nmax+2)]
 
@@ -1694,32 +1691,6 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
                       version=_guess_version(filepath))
 
     return model
-
-
-def _update_rc_index():
-
-    try:
-        rc_index_url = "http://www.spacecenter.dk/files/magnetic-models/\
-RC/current/RC_1997-2019_augmented.dat"
-
-        print(f'Downloading latest RC index file from {rc_index_url}')
-        df_rc = du.load_RC_datfile(rc_index_url, parse_dates=False)
-
-        with h5py.File(os.path.join(ROOT, 'lib', 'RC_latest.hdf5'), 'w') as f:
-
-            for column in df_rc.columns:
-                variable = df_rc[column].values
-                if column == 'flag':
-                    dset = f.create_dataset(column, variable.shape, dtype="S1")
-                    dset[:] = variable.astype('bytes')
-
-                else:
-                    f.create_dataset(column, data=variable)
-
-            print(f'Successfully saved to {f.filename}.')
-
-    except Exception as err:
-        warnings.warn(f"Can't save new RC index. Raised exception: {err}.")
 
 
 def _guess_version(filepath):
