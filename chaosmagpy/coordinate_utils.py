@@ -124,7 +124,7 @@ def synth_rotate_gauss(time, frequency, spectrum):
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=False, reference=None, epoch=None):
+                     save_to=None, reference=None, epoch=None):
     """
     Compute Fourier components of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
@@ -146,10 +146,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     filter : int, optional
         Set filter length, i.e. number of Fourier components to be saved
         (default is ``N``).
-    save_to : bool, optional
-        File to store output in npz-format in
-        ``chaosmagpy/lib/frequency_spectrum_{reference}.npz`` (default is
-        False).
+    save_to : str, optional
+        Path and file name to store output in npz-format. Defaults to
+        ``False``, i.e. no file is written.
     reference : {'gsm', 'sm'}, optional
         Time-dependent reference system (default is GSM).
     epoch : str, optional
@@ -168,11 +167,11 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     Notes
     -----
-    If ``save_to=True``, then an ``*.npz``-file is written with the following
+    If ``save_to=<filepath>``, then an ``*.npz``-file is written with the
     keywords {'frequency', 'spectrum', 'frequency_ind', 'spectrum_ind',
     'step', 'N', 'filter', 'reference', 'dipole'}. ``'dipole'`` means the three
     geographic components of the unit vector that is anti-parallel to the
-    IGRF-dipole.
+    IGRF-dipole moment.
 
     """
 
@@ -189,6 +188,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     if filter is None:  # number of significant Fourier components to be saved
         filter = int(N/2 + 1)
     filter = int(filter)
+
+    if save_to is None:
+        save_to = False  # do not write output file
 
     time = np.arange(N) * step / 24  # time in days
 
@@ -256,15 +258,13 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         spectrum_ind[:, k, l] = element_ind[sort_ind]
 
     # save several arrays to binary
-    if save_to is True:
-        filepath = os.path.join(
-            ROOT, 'lib', 'frequency_spectrum_{:}.npz'.format(reference))
-        np.savez(filepath,
+    if save_to:
+        np.savez(str(save_to),
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
                  dipole=igrf_dipole(epoch=epoch))
-        print("Output saved to {:}".format(filepath))
+        print("Output saved to {:}".format(save_to))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
 
