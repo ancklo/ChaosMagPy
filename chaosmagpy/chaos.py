@@ -9,11 +9,30 @@ import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 import chaosmagpy.plot_utils as pu
 from chaosmagpy.plot_utils import defaultkeys
+from chaosmagpy.config_utils import default_config
 from datetime import datetime
 from timeit import default_timer as timer
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 R_REF = 6371.1  # mean surface radius
+
+
+class Config(dict):
+
+    tests_dict = {key: test for key, (_, test) in default_config.items()}
+
+    def __init__(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        try:
+            try:
+                cval = self.tests_dict[key](value)
+            except ValueError as err:
+                raise ValueError(f'Key "{key}": {err}')
+            super().__setitem__(key, cval)
+        except KeyError:
+            raise KeyError(f'{key} is not a valid parameter.')
 
 
 class BaseModel(object):
