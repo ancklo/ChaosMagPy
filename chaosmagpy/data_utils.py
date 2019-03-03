@@ -78,19 +78,18 @@ def load_RC_datfile(filepath, parse_dates=False):
     return df
 
 
-def save_RC_h5file(filepath=None, save_to=None):
+def save_RC_h5file(filepath, read_from=None):
     """
     Return h5-file of the RC index.
 
     Parameters
     ----------
-    filepath : str, optional
+    filepath : str
+        Filepath and name of `*.h5` output file.
+    read_from : str, optional
         Filepath of RC index (``*.dat`` or ``*.csv``). If ``None``, the RC
         index will be fetched from `spacecenter.dk <http://www.spacecenter.dk/\
         files/magnetic-models/RC/current/>`_.
-    save_to : str, optional
-        Filepath and name of `*.h5` output file. Defaults to
-        ``chaosmagpy/lib/RC_latest.h5``.
 
     Notes
     -----
@@ -100,18 +99,15 @@ def save_RC_h5file(filepath=None, save_to=None):
 
     """
 
-    if filepath is None:
-        filepath = "http://www.spacecenter.dk/files/magnetic-models/\
+    if read_from is None:
+        read_from = "http://www.spacecenter.dk/files/magnetic-models/\
 RC/current/RC_1997-2019_augmented.dat"
 
-    if save_to is None:
-        save_to = os.path.join(ROOT, 'lib', 'RC_latest.h5')
-
     try:
-        print(f'Loading RC index file from {filepath}')
-        df_rc = load_RC_datfile(filepath, parse_dates=False)
+        print(f'Loading RC index file from {read_from}')
+        df_rc = load_RC_datfile(read_from, parse_dates=False)
 
-        with h5py.File(save_to, 'w') as f:
+        with h5py.File(filepath, 'w') as f:
 
             for column in df_rc.columns:
                 variable = df_rc[column].values
