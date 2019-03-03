@@ -3,6 +3,7 @@ import chaosmagpy.model_utils
 import chaosmagpy.plot_utils
 import chaosmagpy.coordinate_utils
 import chaosmagpy.data_utils
+import chaosmagpy.config_utils
 
 
 __all__ = ["CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile"]

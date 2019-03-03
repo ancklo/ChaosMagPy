@@ -8,31 +8,12 @@ import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 import chaosmagpy.plot_utils as pu
+from chaosmagpy.config_utils import configCHAOS
 from chaosmagpy.plot_utils import defaultkeys
-from chaosmagpy.config_utils import default_config
 from datetime import datetime
 from timeit import default_timer as timer
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-R_REF = 6371.1  # mean surface radius
-
-
-class Config(dict):
-
-    tests_dict = {key: test for key, (_, test) in default_config.items()}
-
-    def __init__(self, *args, **kwargs):
-        super().update(*args, **kwargs)
-
-    def __setitem__(self, key, value):
-        try:
-            try:
-                cval = self.tests_dict[key](value)
-            except ValueError as err:
-                raise ValueError(f'Key "{key}": {err}')
-            super().__setitem__(key, cval)
-        except KeyError:
-            raise KeyError(f'{key} is not a valid parameter.')
 
 
 class BaseModel(object):
@@ -249,7 +230,7 @@ class BaseModel(object):
 
         """
 
-        radius = R_REF if radius is None else radius
+        radius = configCHAOS['r_surf'] if radius is None else radius
 
         coeffs = self.synth_coeffs(time, **kwargs)
 
@@ -894,8 +875,7 @@ class CHAOS(object):
                           "GSM reference frame.")
 
         # build rotation matrix from file
-        filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_gsm.npz')
-        frequency_spectrum = np.load(filepath)
+        frequency_spectrum = np.load(configCHAOS['file.GSM_spectrum'])
 
         if source == 'external':
             # unpack file: oscillations per day, complex spectrum
@@ -983,18 +963,10 @@ class CHAOS(object):
                 'extrapolation in SM reference frame.')
 
         # build rotation matrix from file
-        filepath = os.path.join(ROOT, 'lib', 'frequency_spectrum_sm.npz')
-        frequency_spectrum = np.load(filepath)
+        frequency_spectrum = np.load(configCHAOS['file.SM_spectrum'])
 
         # load RC-index into date frame
-        filepath = os.path.join(ROOT, 'lib')
-
-        try:
-            df_RC = h5py.File(os.path.join(filepath, 'RC_latest.h5'), 'r')
-
-        except Exception as err:
-            warnings.warn(f'{err}. Using default RC file instead.')
-            df_RC = h5py.File(os.path.join(filepath, 'RC_default.h5'), 'r')
+        df_RC = h5py.File(configCHAOS['file.RC_index'], 'r')
 
         # check RC index time and input times
         start = df_RC['time'][0]
