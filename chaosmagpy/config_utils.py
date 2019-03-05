@@ -27,7 +27,7 @@ default_config = {
     'params.r_surf': [6371.2, check_float],
 
     # location of coefficient files
-    'file.RC_index': [os.path.join(LIB, 'RC_default.h5'),
+    'file.RC_index': [os.path.join(LIB, 'RC_index.h5'),
                       check_path_exists],
     'file.GSM_spectrum': [os.path.join(LIB, 'frequency_spectrum_gsm.npz'),
                           check_path_exists],
