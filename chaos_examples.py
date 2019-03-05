@@ -13,8 +13,8 @@ R_REF = 6371.2
 
 def main():
 
-    example1()
-    # example2()
+    # example1()
+    example2()
     # example3()
     # example4()
     # example5()
@@ -99,15 +99,15 @@ def example2():
     print(model)
 
     cdf_file = cdflib.CDF('data/SW_OPER_MAGA_LR_1B_'
-                          '20140502T000000_20140502T235959'
-                          '_PT15S.cdf')
+                          '20180801T000000_20180801T235959'
+                          '_PT15S.cdf', 'r')
     # print(cdf_file.cdf_info())  # print cdf info/contents
 
     radius = cdf_file.varget('Radius') / 1000  # km
     theta = 90. - cdf_file.varget('Latitude')  # colat deg
     phi = cdf_file.varget('Longitude')  # deg
     time = cdf_file.varget('Timestamp')  # milli seconds since year 1
-    time = (time - time[0]) / (1e3*3600*24) + mjd2000(2014, 5, 2)
+    time = (time - time[0]) / (1e3*3600*24) + mjd2000(2018, 8, 1)
     F_swarm = cdf_file.varget('F')
     cdf_file.close()
 
@@ -128,8 +128,8 @@ def example2():
                 s=0.5, c='r', label='dayside')
     plt.scatter(theta_gsm[index_night], F_swarm[index_night]-F[index_night],
                 s=0.5, c='b', label='nightside')
-    plt.xlabel('GSM colatitude ($^\\circ$)')
-    plt.ylabel('$\\Delta F$ (nT)')
+    plt.xlabel('dipole colatitude ($^\\circ$)')
+    plt.ylabel('$\\mathrm{d} F$ (nT)')
     plt.legend(loc=2)
     plt.show()
 
