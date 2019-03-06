@@ -543,8 +543,9 @@ class CHAOS(object):
 
         # set version of CHAOS model
         if version is None:
-            print('Setting default CHAOS version to "6.x7".')
-            self.version = '6.x7'
+            version = configCHAOS['params.version']
+            print(f'Setting default CHAOS version to {version}.')
+            self.version = version
         else:
             self.version = str(version)
 
