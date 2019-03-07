@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 LIB = os.path.join(ROOT, 'lib')
@@ -31,8 +32,23 @@ def check_string(s):
         raise ValueError(f'Could not convert {s} to string.')
 
 
+def check_vector(s, len=None):
+    """Check that input is vector with required length."""
+    try:
+        s = np.array(s)
+        assert s.ndim == 1
+        if len is not None:
+            if s.size != len:
+                raise ValueError(f'Wrong length: {s.size} != {len}.')
+        return s
+    except Exception as err:
+        raise ValueError(f'Not a valid vector. {err}')
+
+
 DEFAULTS = {
     'params.r_surf': [6371.2, check_float],
+    'params.igrf_dipole': [np.array([-29442.0, -1501.0, 4797.1]),
+                           lambda x: check_vector(x, len=3)],
     'params.version': ['6.x7', check_string],
 
     # location of coefficient files
@@ -73,10 +89,17 @@ class ConfigCHAOS(dict):
     def load(self, filepath):
         with open(filepath, 'r') as f:
             for line in f.readlines():
+                # skip comment lines
                 if line[0] == '#':
                     continue
+
                 key, value = line.split(' = ')
                 value = value.split('#')[0].rstrip()  # remove comments and \n
+
+                # check list input and convert to array
+                if value[0] == '[' and value[-1] == ']':
+                    value = np.fromstring(value[1:-1], sep=' ')
+
                 self.__setitem__(key, value)
         f.close()
 
