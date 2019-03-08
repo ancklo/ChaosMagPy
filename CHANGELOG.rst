@@ -3,12 +3,14 @@ Changelog
 
 Version 0.1a4
 -------------
-| **Date:** March 1, 2019
+| **Date:** March 9, 2019
 | **Release:** v0.1a4
 
 Features
 ^^^^^^^^
 * RC index file now stored in HDF5 format.
+* Filepaths and other parameters are now handled by ``configCHAOS``.
+* Added extrapolation keyword to ``synth_coeffs``, linear by default.
 
 Bugfixes
 ^^^^^^^^
