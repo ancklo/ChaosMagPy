@@ -47,8 +47,8 @@ def check_vector(s, len=None):
 
 DEFAULTS = {
     'params.r_surf': [6371.2, check_float],
-    'params.igrf_dipole': [np.array([-29442.0, -1501.0, 4797.1]),
-                           lambda x: check_vector(x, len=3)],
+    'params.dipole': [np.array([-29442.0, -1501.0, 4797.1]),
+                      lambda x: check_vector(x, len=3)],
     'params.version': ['6.x7', check_string],
 
     # location of coefficient files

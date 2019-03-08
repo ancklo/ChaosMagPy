@@ -13,13 +13,13 @@ GSM : geocentric solar magnetic, orthogonal coordinate system
     With x-axis pointing towards the sun, y-axis perpendicular to plane spanned
     by Eart-Sun line and dipole axis and z-axis completing right-handed system.
 SM : solar magnetic, orthogonal coordinate system
-    With z-axis along dipole axis, y-axis perpendicular to plane containing the
-    dipole axis and the Earth-Sun line, and x-axis completing the right-handed
-    system.
+    With z-axis along dipole axis pointing to the geomagnetic North pole,
+    y-axis perpendicular to plane containing the dipole axis and the Earth-Sun
+    line, and x-axis completing the right-handed system.
 MAG : magnetic orthogonal coordinate system (centered dipole)
-    With z-axis anti-parallel to IGRF dipole, x-axis in the plane spanned by
-    the dipole axis and Earth's rotation axis, and y-axis completing the
-    right-handed system.
+    With z-axis pointing to the geomagnetic North pole, x-axis in the plane
+    spanned by the dipole axis and Earth's rotation axis, and y-axis completing
+    the right-handed system.
 
 """
 
@@ -28,6 +28,7 @@ import os
 from numpy import degrees, radians
 from math import pi, ceil, factorial
 from chaosmagpy.model_utils import legendre_poly
+from chaosmagpy.config_utils import configCHAOS
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -56,23 +57,55 @@ def igrf_dipole(epoch=None):
 
     if epoch == '2015':
         # IGRF-12 dipole coefficients, epoch 2015: theta = 9.69, phi = 287.37
-        dipole = np.array([-1501.0, 4797.1, -29442.0])  # g11, h11, g10: dipole
-        # unit vector, opposite to dipole
-        dipole = -dipole/np.linalg.norm(dipole)
+        dipole = _dipole_to_unit(np.array([-29442.0, -1501.0, 4797.1]))
 
     elif epoch == '2010':
         # dipole as used in original chaos software (IGRF-11), epoch 2010
-        theta = radians(11.32)
-        phi = radians(289.59)
-        dipole = np.array([np.sin(theta)*np.cos(phi),
-                           np.sin(theta)*np.sin(phi),
-                           np.cos(theta)])
+        dipole = _dipole_to_unit(11.32, 289.59)
 
     else:
         raise ValueError('Only epoch "2010" (IGRF-11) and'
                          '"2015" (IGRF-12) supported.')
 
     return dipole
+
+
+def _dipole_to_unit(*args):
+    """
+    Convert degree-1 SH coefficients or geomagnetic North pole position to
+    unit vector.
+
+    Parameters
+    ----------
+    *args
+        Takes ``theta``, ``phi`` in degrees, ``[g10, g11, h11]`` or
+        ``g10``, ``g11``, ``h11`` as input.
+
+    Returns
+    -------
+    vector : ndarray, shape (3,)
+        Unit vector pointing to geomagnetic North pole.
+    """
+
+    if len(args) == 1:
+        vector = np.roll(args[0], -1)  # g11, h11, g10: dipole
+        # unit vector, opposite to dipole
+        vector = -vector/np.linalg.norm(vector)
+    elif len(args) == 2:
+        theta = radians(args[0])
+        phi = radians(args[1])
+        vector = np.array([np.sin(theta)*np.cos(phi),
+                           np.sin(theta)*np.sin(phi),
+                           np.cos(theta)])
+    elif len(args) == 3:
+        vector = np.array([args[1], args[2], args[0]])  # g11, h11, g10: dipole
+        # unit vector, opposite to dipole
+        vector = -vector/np.linalg.norm(vector)
+    else:
+        raise ValueError('Only 1, 2 or 3 inputs accepted '
+                         f'but {len(args)} given.')
+
+    return vector
 
 
 def synth_rotate_gauss(time, frequency, spectrum):
@@ -124,7 +157,7 @@ def synth_rotate_gauss(time, frequency, spectrum):
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=None, reference=None, epoch=None):
+                     save_to=None, reference=None):
     """
     Compute Fourier components of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
@@ -151,8 +184,6 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         ``False``, i.e. no file is written.
     reference : {'gsm', 'sm'}, optional
         Time-dependent reference system (default is GSM).
-    epoch : str, optional
-        Epoch of IGRF (see :func:`igrf_dipole`).
 
     Returns
     -------
@@ -170,8 +201,8 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     If ``save_to=<filepath>``, then an ``*.npz``-file is written with the
     keywords {'frequency', 'spectrum', 'frequency_ind', 'spectrum_ind',
     'step', 'N', 'filter', 'reference', 'dipole'}. ``'dipole'`` means the three
-    geographic components of the unit vector that is anti-parallel to the
-    IGRF-dipole moment.
+    spherical harmonic coefficients of the dipole set in
+    ``configCHAOS['params.dipole']``.
 
     """
 
@@ -196,9 +227,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     # compute base vectors of time-dependent reference system
     if str(reference).lower() == 'gsm':
-        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_gsm(time)
     elif str(reference).lower() == 'sm':
-        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_sm(time)
     else:
         raise ValueError('Reference system must be either "GSM" or "SM".')
 
@@ -263,7 +294,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 dipole=igrf_dipole(epoch=epoch))
+                 dipole=configCHAOS['params.dipole'])
         print("Output saved to {:}".format(save_to))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
@@ -535,7 +566,7 @@ def cartesian_to_spherical(x, y, z):
     return radius, degrees(theta), degrees(phi)
 
 
-def basevectors_gsm(time, epoch=None):
+def basevectors_gsm(time, dipole=None):
     """
     Computes the unit base vectors of the gsm coordinate system with respect to
     the geocentric coordinate system.
@@ -545,8 +576,9 @@ def basevectors_gsm(time, epoch=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    epoch : str, optional
-        Epoch of IGRF (see :func:`igrf_dipole`).
+    dipole : ndarray, shape (3,), optional
+        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
+        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
 
     Returns
     -------
@@ -555,6 +587,11 @@ def basevectors_gsm(time, epoch=None):
         ``time``, while the last dimension contains the unit vector
         components in terms of the geocentric coordinate system.
     """
+
+    if dipole is None:
+        dipole = configCHAOS['params.dipole']
+
+    vec = _dipole_to_unit(dipole)
 
     # get sun's position at specified times
     theta_sun, phi_sun = sun_position(time)
@@ -568,11 +605,10 @@ def basevectors_gsm(time, epoch=None):
     gsm_1[..., 1] = y_sun
     gsm_1[..., 2] = z_sun
 
-    # compute second base vector of GSM using the cross product of the IGRF
+    # compute second base vector of GSM using the cross product of the
     # dipole unit vector with the first unit base vector
-    IGRF = igrf_dipole(epoch=epoch)
 
-    gsm_2 = np.cross(IGRF, gsm_1)  # over last dimension by default
+    gsm_2 = np.cross(vec, gsm_1)  # over last dimension by default
     norm_gsm_2 = np.linalg.norm(gsm_2, axis=-1, keepdims=True)
     gsm_2 = gsm_2 / norm_gsm_2
 
@@ -583,7 +619,7 @@ def basevectors_gsm(time, epoch=None):
     return gsm_1, gsm_2, gsm_3
 
 
-def basevectors_sm(time, epoch=None):
+def basevectors_sm(time, dipole=None):
     """
     Computes the unit base vectors of the sm coordinate system with respect to
     the geocentric coordinate system.
@@ -593,8 +629,9 @@ def basevectors_sm(time, epoch=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    epoch : str, optional
-        Epoch of IGRF (see :func:`igrf_dipole`).
+    dipole : ndarray, shape (3,), optional
+        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
+        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
 
     Returns
     -------
@@ -604,6 +641,11 @@ def basevectors_sm(time, epoch=None):
         components in terms of the geocentric coordinate system.
 
     """
+
+    if dipole is None:
+        dipole = configCHAOS['params.dipole']
+
+    vec = _dipole_to_unit(dipole)
 
     # get sun's position at specified times and convert to cartesian
     theta_sun, phi_sun = sun_position(time)
@@ -615,13 +657,11 @@ def basevectors_sm(time, epoch=None):
     s[..., 1] = y_sun
     s[..., 2] = z_sun
 
-    # set third unit base vector of SM to IGRF dipole unit vector
-    IGRF = igrf_dipole(epoch=epoch)
-
+    # set third unit base vector of SM to dipole unit vector
     sm_3 = np.empty(x_sun.shape + (3,))
-    sm_3[..., 0] = IGRF[0]
-    sm_3[..., 1] = IGRF[1]
-    sm_3[..., 2] = IGRF[2]
+    sm_3[..., 0] = vec[0]
+    sm_3[..., 1] = vec[1]
+    sm_3[..., 2] = vec[2]
 
     # compute second base vector of SM using the cross product of the IGRF
     # dipole unit vector and the sun direction vector
@@ -636,7 +676,7 @@ def basevectors_sm(time, epoch=None):
     return sm_1, sm_2, sm_3
 
 
-def basevectors_mag(epoch=None):
+def basevectors_mag(dipole=None):
     """
     Computes the unit base vectors of the central-dipole coordinate system
     (sometimes referred to as MAG). The components are given with respect to
@@ -644,8 +684,9 @@ def basevectors_mag(epoch=None):
 
     Parameters
     ----------
-    epoch : str, optional
-        Epoch of IGRF (see :func:`igrf_dipole`).
+    dipole : ndarray, shape (3,), optional
+        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
+        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
 
     Returns
     -------
@@ -654,7 +695,10 @@ def basevectors_mag(epoch=None):
 
     """
 
-    mag_3 = igrf_dipole(epoch=epoch)
+    if dipole is None:
+        dipole = configCHAOS['params.dipole']
+
+    mag_3 = _dipole_to_unit(dipole)
 
     mag_2 = np.cross(np.array([0., 0., 1.]), mag_3)
     mag_2 = mag_2 / np.linalg.norm(mag_2)
@@ -690,7 +734,7 @@ def basevectors_use(theta, phi):
     theta = np.array(radians(theta))
     phi = np.array(radians(phi))
 
-    assert (np.amin(theta) > 0 and np.amax(theta) < pi), "Excluded the poles."
+    assert np.amin(theta) > 0 and np.amax(theta) < pi, "Not defined at poles."
 
     grid_shape = max(theta.shape, phi.shape)
 
@@ -779,7 +823,7 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
 
 def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
-                     epoch=None):
+                     dipole=None):
     """
     Transforms spherical geographic coordinates into spherical coordinates of
     the target coordinate system.
@@ -798,8 +842,9 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
-    epoch : str, optional
-        Epoch of IGRF for GSM and SM basevectors (see :func:`igrf_dipole`).
+    dipole : ndarray, shape (3,), optional
+        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
+        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
 
     Returns
     -------
@@ -817,13 +862,16 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
 
     reference = str(reference).lower()
 
+    if dipole is None:
+        dipole = configCHAOS['params.dipole']
+
     if reference == 'gsm':
         # compute GSM base vectors
-        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_gsm(time, dipole=dipole)
 
     elif reference == 'sm':
         # compute SM base vectors
-        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_sm(time, dipole=dipole)
 
     elif reference == 'mag':
         # compute centered dipole base vectors
@@ -917,7 +965,7 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
 
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
-                      inverse=False, epoch=None):
+                      inverse=False, dipole=None):
     """
     Transforms vectors with components in USE (Up-South-East) at
     spherical geographic coordinates (theta, phi) to components in USE at the
@@ -941,8 +989,9 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
-    epoch : str, optional
-        Epoch of IGRF for GSM and SM basevectors (see :func:`igrf_dipole`).
+    dipole : ndarray, shape (3,), optional
+        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
+        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
 
     Returns
     -------
@@ -964,13 +1013,16 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
 
     reference = str(reference).lower()
 
+    if dipole is None:
+        dipole = configCHAOS['params.dipole']
+
     if reference == 'gsm':
         # compute GSM base vectors
-        base_1, base_2, base_3 = basevectors_gsm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_gsm(time, dipole=dipole)
 
     elif reference == 'sm':
         # compute SM base vectors
-        base_1, base_2, base_3 = basevectors_sm(time, epoch=epoch)
+        base_1, base_2, base_3 = basevectors_sm(time, dipole=dipole)
 
     elif reference == 'mag':
         # compute centered dipole base vectors
@@ -1027,7 +1079,7 @@ def conducting_sphere(periods, sigma, radius, n):
     C : ndarray, shape (...,)
         C-response, complex.
     rho_a : ndarray, shape (...,)
-        Electrical surface resistance in (Omega*m).
+        Electrical surface resistance in (:math:`\Omega m`).
     phi : ndarray, shape (...,)
         Proportional to phase angle of response in degrees.
     Q : ndarray, shape (...,)
@@ -1167,7 +1219,7 @@ def conducting_sphere(periods, sigma, radius, n):
     print('')
 
     # if nargout > 1
-    rho_a = 1.25663706143592e-6*2*pi / periods * np.abs(C*1000)**2
+    rho_a = 1e-7*8*pi**2 / periods * np.abs(C*1000)**2
     phi = 90 + 57.3*np.angle(C)
     Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
 
@@ -1178,7 +1230,7 @@ def q_response(frequency, nmax):
     """
     Computes the Q-response given a conductivity model of Earth, which is
     loaded during the computation (from
-    ``chaosmagpy/lib/Earth_conductivity.dat``).
+    ``configCHAOS['file.Earth_conductivity']``).
 
     Parameters
     ----------
@@ -1197,7 +1249,7 @@ def q_response(frequency, nmax):
     """
 
     # load conductivity model
-    filepath = os.path.join(ROOT, 'lib', 'Earth_conductivity.dat')
+    filepath = configCHAOS['file.Earth_conductivity']
     sigma_model = np.loadtxt(filepath)
 
     radius_ref = 6371.2  # reference radius in km
