@@ -459,7 +459,8 @@ class CHAOS(object):
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
         ``'swarm_c'``).
     version : str
-        Version specifier (``None`` evaluates to '6.x7' by default).
+        Version specifier (``None`` evaluates to
+        ``configCHAOS['params.version']`` by default).
 
     Examples
     --------
