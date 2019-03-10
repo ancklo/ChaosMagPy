@@ -120,7 +120,7 @@ def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
 
 def colloc_matrix(x, knots, order):
     """
-    Create collocation matrix of a univariate function on `x` in terms a
+    Create collocation matrix of a univariate function on `x` in terms  of a
     B-spline representation of order `k`. The computation of the splines is
     based on the scipy-package.
 
@@ -171,7 +171,7 @@ def colloc_matrix(x, knots, order):
 
 def augment_breaks(breaks, order):
     """
-    Augments a vector of break points and returns the knot vector for a
+    Augment a vector of break points and return the knot vector for a
     B-spline representation of order `k`.
 
     Parameters
