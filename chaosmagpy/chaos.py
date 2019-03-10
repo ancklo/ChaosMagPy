@@ -928,6 +928,11 @@ class CHAOS(object):
             Coefficients of the external SM field coefficients in terms of
             geographic coordinates (GEO).
 
+        Raises
+        ------
+        ValueError
+            If values outside the RC-index time series are requested.
+
         """
 
         if self.coeffs_sm is None:
@@ -963,20 +968,20 @@ class CHAOS(object):
                 f'modelled period from {start} to {end}. Doing linear '
                 'extrapolation in SM reference frame.')
 
-        # build rotation matrix from file
+        # load rotation matrix spectrum from file
         frequency_spectrum = np.load(configCHAOS['file.SM_spectrum'])
 
-        # load RC-index into date frame
-        df_RC = h5py.File(configCHAOS['file.RC_index'], 'r')
+        # load RC-index file
+        with h5py.File(configCHAOS['file.RC_index'], 'r') as f_RC:
+            # check RC index time and input times
+            start = f_RC['time'][0]
+            end = f_RC['time'][-1]
 
-        # check RC index time and input times
-        start = df_RC['time'][0]
-        end = df_RC['time'][-1]
         if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
                 '{:.2f} and {:.2f}, but found {:.2f}.'.format(start, end,
-                                                              np.amax(time)))
+                                                              np.amin(time)))
 
         # check RC index time and inputs time
         if np.amax(time) > end:
@@ -1007,7 +1012,8 @@ class CHAOS(object):
 
         if source == 'external':
             # interpolate RC (linear) at input times: RC_ext is callable
-            RC_ext = sip.interp1d(df_RC['time'], df_RC['RC_e'], kind='linear')
+            with h5py.File(configCHAOS['file.RC_index'], 'r') as f:
+                RC_ext = sip.interp1d(f['time'], f['RC_e'], kind='linear')
 
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
 
@@ -1029,7 +1035,8 @@ class CHAOS(object):
 
         elif source == 'internal':
             # interpolate RC (linear) at input times: RC_int is callable
-            RC_int = sip.interp1d(df_RC['time'], df_RC['RC_i'], kind='linear')
+            with h5py.File(configCHAOS['file.RC_index'], 'r') as f:
+                RC_int = sip.interp1d(f['time'], f['RC_i'], kind='linear')
 
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']
@@ -1069,8 +1076,6 @@ class CHAOS(object):
         else:
             raise ValueError("Wrong source parameter, use "
                              "'external' or 'internal'")
-
-        df_RC.close()  # close h5-file
 
         return coeffs[..., :nmax*(nmax+2)]
 
