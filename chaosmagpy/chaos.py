@@ -877,6 +877,9 @@ class CHAOS(object):
 
         # build rotation matrix from file
         frequency_spectrum = np.load(configCHAOS['file.GSM_spectrum'])
+        assert np.all(
+            frequency_spectrum['dipole'] == configCHAOS['params.dipole']), \
+            "GSM rotation coefficients are not the same as the set dipole."
 
         if source == 'external':
             # unpack file: oscillations per day, complex spectrum
@@ -970,6 +973,9 @@ class CHAOS(object):
 
         # load rotation matrix spectrum from file
         frequency_spectrum = np.load(configCHAOS['file.SM_spectrum'])
+        assert np.all(
+            frequency_spectrum['dipole'] == configCHAOS['params.dipole']), \
+            "SM rotation coefficients are not the same as the set dipole."
 
         # load RC-index file
         with h5py.File(configCHAOS['file.RC_index'], 'r') as f_RC:
