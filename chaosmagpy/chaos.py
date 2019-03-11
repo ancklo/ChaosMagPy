@@ -1616,6 +1616,7 @@ def load_CHAOS_matfile(filepath):
     for num, satellite in enumerate(satellites):
         coeffs_euler[satellite] = compose_array(num)
 
+    # used for consistent mat-file, but no real use in chaosmagpy as of now
     meta_data = dict(coeffs_sm_mean=coeffs_sm_mean)
 
     model = CHAOS(breaks=breaks,
