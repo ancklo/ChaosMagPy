@@ -91,7 +91,7 @@ def example1():
 def example2():
     """
     Plot difference between modelled and observed field strength using Swarm A
-    data in May 2014 from a cdf-file.
+    data in August 2018 from a cdf-file.
 
     """
 

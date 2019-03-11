@@ -230,13 +230,13 @@ class BaseModel(object):
 
         """
 
-        radius = configCHAOS['r_surf'] if radius is None else radius
+        radius = configCHAOS['params.r_surf'] if radius is None else radius
 
         coeffs = self.synth_coeffs(time, **kwargs)
 
         return mu.power_spectrum(coeffs, radius)
 
-    def plot_power_spectrum(self, time, radius=None, *, nmax=None, deriv=None):
+    def plot_power_spectrum(self, time, **kwargs):
         """
         Plot power spectrum.
 
@@ -246,12 +246,23 @@ class BaseModel(object):
 
         """
 
-        units = du.gauss_units(deriv)
-        units = f'({units})$^2$'
+        defaults = dict(radius=None,
+                        deriv=0,
+                        nmax=self.nmax,
+                        titles='power spectrum')
+
+        kwargs = defaultkeys(defaults, kwargs)
+
+        radius = kwargs.pop('radius')
+        nmax = kwargs.pop('nmax')
+        deriv = kwargs.pop('deriv')
+
+        units = f'({du.gauss_units(deriv)})$^2$'
+        kwargs.setdefault('label', units)
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        pu.plot_power_spectrum(R_n, titles='power spectrum', label=units)
+        pu.plot_power_spectrum(R_n, **kwargs)
 
     def plot_maps(self, time, radius, **kwargs):
         """
@@ -273,7 +284,7 @@ class BaseModel(object):
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
         **kwargs : keywords
-            Other options to pass to :func:`plot_utils.plot_maps`
+            Other options are passed to :func:`plot_utils.plot_maps`
             function.
 
 
@@ -762,6 +773,9 @@ class CHAOS(object):
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+        **kwargs : keywords
+            Other options are passed to :meth:`BaseModel.plot_maps`
+            method.
 
         Returns
         -------
@@ -783,7 +797,7 @@ class CHAOS(object):
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         **kwargs : keywords
-            Other options to pass to :meth:`BaseModel.synth_coeffs`
+            Other options are passed to :meth:`BaseModel.synth_coeffs`
             method.
 
         Returns
@@ -796,7 +810,7 @@ class CHAOS(object):
         time = self.model_static.breaks[0]
         return self.model_static.synth_coeffs(time, nmax=nmax, **kwargs)
 
-    def plot_maps_static(self, radius, *, nmax=None):
+    def plot_maps_static(self, radius, **kwargs):
         """
         Plot global map of the static internal field from the CHAOS model.
 
@@ -816,13 +830,15 @@ class CHAOS(object):
 
         """
 
-        kwargs = dict(cmap='nio',
-                      deriv=0,
-                      nmax=nmax,
-                      vmax=200,
-                      vmin=-200)
+        defaults = dict(cmap='nio',
+                        deriv=0,
+                        vmax=200,
+                        vmin=-200)
+
+        kwargs = defaultkeys(defaults, kwargs)
 
         time = self.model_static.breaks[0]
+
         self.model_static.plot_maps(time, radius, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
