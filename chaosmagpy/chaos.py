@@ -872,7 +872,7 @@ class CHAOS(object):
         frequency_spectrum = np.load(filepath)
 
         # load RC-index into date frame
-        filepath = os.path.join(ROOT, 'lib', 'RC_1997-2018.dat')
+        filepath = os.path.join(ROOT, 'lib', 'RC_1997-2019.dat')
         df_RC = du.load_RC_datfile(filepath)
 
         # check RC index time and input times
