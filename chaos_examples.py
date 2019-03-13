@@ -6,7 +6,7 @@ from chaosmagpy.coordinate_utils import transform_points
 from chaosmagpy.model_utils import synth_values
 from chaosmagpy.data_utils import mjd2000, rsme
 
-FILEPATH_CHAOS = 'data/CHAOS-6-x7.mat'
+FILEPATH_CHAOS = 'data/CHAOS-6-x8.mat'
 
 R_REF = 6371.2
 
@@ -14,11 +14,11 @@ R_REF = 6371.2
 def main():
 
     example1()
-    # example2()
-    # example3()
-    # example4()
-    # example5()
-    # example6()
+    example2()
+    example3()
+    example4()
+    example5()
+    example6()
 
 
 def example1():
