@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.1a3.post1
+-------------------
+| **Date:** March 13, 2019
+| **Release:** v0.1a3.post1
+
+Features
+^^^^^^^^
+* Package is identical to v0.1a3 except that it uses latest RC-index file
+  (up to February 2019) and CHAOS-6 model (CHAOS-6-x8).
+
 Version 0.1a3
 -------------
 | **Date:** February 19, 2019

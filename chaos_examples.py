@@ -14,11 +14,11 @@ R_REF = 6371.2
 def main():
 
     example1()
-    example2()
-    example3()
-    example4()
-    example5()
-    example6()
+    # example2()
+    # example3()
+    # example4()
+    # example5()
+    # example6()
 
 
 def example1():
