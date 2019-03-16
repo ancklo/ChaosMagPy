@@ -8,6 +8,7 @@ import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 import chaosmagpy.plot_utils as pu
+import matplotlib.pyplot as plt
 from chaosmagpy.config_utils import configCHAOS
 from chaosmagpy.plot_utils import defaultkeys
 from datetime import datetime
@@ -263,6 +264,7 @@ class BaseModel(object):
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
         pu.plot_power_spectrum(R_n, **kwargs)
+        plt.show()
 
     def plot_maps(self, time, radius, **kwargs):
         """
@@ -333,6 +335,7 @@ class BaseModel(object):
             grid=True, extrapolate=None)
 
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
+        plt.show()
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
@@ -388,7 +391,7 @@ class BaseModel(object):
         extrapolate = kwargs.pop('extrapolate')
 
         # add plot_maps options to dictionary
-        kwargs.setdefault('label', du.gauss_units(deriv))
+        kwargs.setdefault('ylabel', du.gauss_units(deriv))
 
         time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
 
@@ -397,6 +400,7 @@ class BaseModel(object):
             extrapolate=extrapolate)
 
         pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
+        plt.show()
 
 
 class CHAOS(object):
@@ -1245,6 +1249,7 @@ class CHAOS(object):
 
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
                      titles=titles, label=units)
+        plt.show()
 
     def save_shcfile(self, filepath, *, model=None, deriv=None,
                      leap_year=None):

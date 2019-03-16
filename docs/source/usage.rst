@@ -127,6 +127,7 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
    from chaosmagpy.model_utils import synth_values
    from chaosmagpy.data_utils import mjd2000
    from chaosmagpy.plot_utils import plot_timeseries
+   import matplotlib.pyplot as plt
    import numpy as np
 
    model = load_CHAOS_matfile('CHAOS-6-x7.mat')
@@ -156,7 +157,8 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
                  ' $dB_\\theta/dt$ at ' + station,
                  ' $dB_\\phi/dt$ at ' + station]
        plot_timeseries(time, B_radius[idx], B_theta[idx], B_phi[idx],
-                       label='nT/yr', titles=titles)
+                       ylabel='nT/yr', titles=titles)
+   plt.show()
 
 .. figure:: images/plot_timeseries.png
    :align: left

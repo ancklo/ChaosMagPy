@@ -25,7 +25,10 @@ def plot_timeseries(time, *args, **kwargs):
 
     Returns
     -------
-    Plot of the input arguments.
+    fig : :class:`matplotlib.figure.Figure`
+        Matplotlib figure.
+    axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
+        Two dimensional array of axes.
 
     Other Parameters
     ----------------
@@ -33,7 +36,7 @@ def plot_timeseries(time, *args, **kwargs):
         Figure dimension (width, height) in inches (defaults to (6.3, 1.7)).
     titles : list of strings
         Subplot titles (defaults to empty strings).
-    label : string
+    ylabel : string
         Label of the vertical axis (defaults to an empty string).
     layout : 2-tuple of int
         Layout of the subplots (defaults to vertically stacked subplots).
@@ -46,7 +49,7 @@ def plot_timeseries(time, *args, **kwargs):
 
     defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
                     titles=n*[''],
-                    label='',
+                    ylabel='',
                     layout=(n, 1))
 
     kwargs = defaultkeys(defaults, kwargs)
@@ -55,7 +58,7 @@ def plot_timeseries(time, *args, **kwargs):
     figsize = kwargs.pop('figsize')
     layout = kwargs.pop('layout')
     titles = kwargs.pop('titles')
-    label = kwargs.pop('label')
+    ylabel = kwargs.pop('ylabel')
 
     if layout[0]*layout[1] != n:
         raise ValueError('Plot layout is not compatible with the number of '
@@ -65,21 +68,19 @@ def plot_timeseries(time, *args, **kwargs):
         [timedelta(days=dt) + datetime(2000, 1, 1) for dt in np.ravel(time)])
 
     fig, axes = plt.subplots(layout[0], layout[1], sharex='all',
-                             figsize=figsize)
-
-    if n == 1:  # ensure iterable axis even if only one plot
-        axes = np.array([axes])
+                             figsize=figsize, squeeze=False)
 
     for ax, component, title in zip(axes.flat, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
         ax.grid()
-        ax.set(ylabel=label, xlabel='time')
+        ax.set(ylabel=ylabel, xlabel='time')
         fig.autofmt_xdate()
         ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d-%h')
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
-    plt.show()
+
+    return fig, axes
 
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
@@ -98,7 +99,10 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     Returns
     -------
-    Global map of the input arguments.
+    fig : :class:`matplotlib.figure.Figure`
+        Matplotlib figure.
+    axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
+        Two dimensional array of axes.
 
     Other Parameters
     ----------------
@@ -107,7 +111,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     titles : list of strings
         Subplot titles (defaults to empty strings).
     label : string
-        Label of the vertical axis (defaults to an empty string).
+        Colorbar label (defaults to an empty string).
     layout : 2-tuple of int
         Layout of the subplots (defaults to vertically stacked subplots).
     cmap : str
@@ -154,10 +158,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     # create axis handle
     fig, axes = plt.subplots(layout[0], layout[1], sharex=True, sharey=True,
                              subplot_kw=dict(projection=projection),
-                             figsize=figsize)
-
-    if n == 1:  # ensure iterable axis even if only one plot
-        axes = np.array([axes])
+                             figsize=figsize, squeeze=False)
 
     # make subplots
     for ax, component, title in zip(axes.flat, args, titles):
@@ -181,8 +182,9 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
         ax.set_global()
         ax.set_title(title)
 
-    plt.tight_layout()
-    plt.show()
+    fig.tight_layout()
+
+    return fig, axes
 
 
 def plot_power_spectrum(spectrum, **kwargs):
@@ -196,7 +198,10 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     Returns
     -------
-    Figure of the spectrum.
+    fig : :class:`matplotlib.figure.Figure`
+        Matplotlib figure.
+    axes : :class:`matplotlib.axes.Axes`
+        A single axes instance.
 
     Other Parameters
     ----------------
@@ -204,20 +209,20 @@ def plot_power_spectrum(spectrum, **kwargs):
         Figure dimension (width, height) in inches (defaults to (6.3, 7.5)).
     titles : list of strings
         Subplot titles (defaults to empty strings).
-    label : string
+    ylabel : string
         Label of the vertical axis (defaults to an empty string).
 
     """
 
     defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
                     titles='',
-                    label='')
+                    ylabel='')
 
     kwargs = defaultkeys(defaults, kwargs)
 
     figsize = kwargs.pop('figsize')
     titles = kwargs.pop('titles')
-    label = kwargs.pop('label')
+    ylabel = kwargs.pop('ylabel')
 
     degrees = np.arange(1, spectrum.shape[-1] + 1, step=1.0)
     xticks = np.arange(0, degrees[-1] + 1, step=1.0)
@@ -229,12 +234,13 @@ def plot_power_spectrum(spectrum, **kwargs):
     ax.semilogy(degrees, spectrum, **kwargs)
     ax.set_title(titles)
     ax.grid()
-    ax.set(ylabel=label, xlabel='degree')
+    ax.set(ylabel=ylabel, xlabel='degree')
 
     plt.xticks(xticks)
     plt.xlim((xticks[0], xticks[-1]))
     plt.tight_layout()
-    plt.show()
+
+    return fig, ax
 
 
 def fmt(x, pos):
