@@ -51,3 +51,10 @@ Data utilities (`data_utils`)
     :special-members:
     :inherited-members:
     :show-inheritance:
+
+Configuration utilities (`config_utils`)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: config_utils
+    :members:
+    :show-inheritance:

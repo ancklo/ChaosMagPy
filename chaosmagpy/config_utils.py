@@ -1,3 +1,35 @@
+"""
+Parameters and options in ChaosMagPy are stored in a dictionary and can be
+modified as desired. The following list gives an overview of the possible
+keywords.
+
+**Parameters**
+
+    params.r_surf : float
+        Reference radius in kilometers (defaults to Earth's surface radius
+        6371.2 km).
+    params.dipole : list, ndarray, shape (3,)
+        Coefficients of the dipole (used for GSM/SM coordinate
+        transformations).
+    params.version : str
+        Default version of the CHAOS model, e.g. ``'6.x7'``.
+
+**Files**
+
+    files.RC_index : h5-file
+        RC-index file (used for external field computation). See also
+        :func:`data_utils.save_RC_h5file`.
+    files.GSM_spectrum : npz-file
+        GSM transformation coefficients. See also
+        :func:`coordinate_utils.rotate_gauss_fft`.
+    files.SM_spectrum : npz-file
+        SM transformation coefficients. See also
+        :func:`coordinate_utils.rotate_gauss_fft`.
+    files.Earth_conductivity : txt-file
+        Conductivity model of a layered Earth (used for induced fields).
+
+"""
+
 import os
 import numpy as np
 
@@ -7,7 +39,7 @@ LIB = os.path.join(ROOT, 'lib')
 
 # copied/inspired by matplotlib.rcsetup
 def check_path_exists(s):
-    """Test if path to file exists."""
+    """Check that path to file exists."""
     if s is None or s == 'None':
         return None
     if os.path.exists(s):
@@ -17,7 +49,7 @@ def check_path_exists(s):
 
 
 def check_float(s):
-    """Test for a float."""
+    """Convert to float."""
     try:
         return float(s)
     except ValueError:
@@ -25,7 +57,7 @@ def check_float(s):
 
 
 def check_string(s):
-    """Conver to string."""
+    """Convert to string."""
     try:
         return str(s)
     except ValueError:
@@ -64,6 +96,7 @@ DEFAULTS = {
 
 
 class ConfigCHAOS(dict):
+    """Class for creating CHAOS configuration dictionary."""
 
     defaults = DEFAULTS
 
@@ -71,6 +104,8 @@ class ConfigCHAOS(dict):
         super().update(*args, **kwargs)
 
     def __setitem__(self, key, value):
+        """Set and check value before updating dictionary."""
+
         try:
             try:
                 cval = self.defaults[key][1](value)
@@ -83,10 +118,33 @@ class ConfigCHAOS(dict):
     def __str__(self):
         return '\n'.join(map('{0[0]}: {0[1]}'.format, sorted(self.items())))
 
-    def reset(self):
-        super().update({key: val for key, (val, _) in self.defaults.items()})
+    def reset(self, key=None):
+        """
+        Load default values.
+
+        Parameters
+        ----------
+        key : str, optional
+            Single keyword that is reset (all keywords are reset by default).
+
+        """
+        if key is None:
+            super().update(
+                {key: val for key, (val, _) in self.defaults.items()})
+        else:
+            self.__setitem__(key, self.defaults[key][0])
 
     def load(self, filepath):
+        """
+        Load configuration dictionary from file and overwrite defaults.
+
+        Parameters
+        ----------
+        filepath : str
+            Filepath and name to configuration textfile.
+
+        """
+
         with open(filepath, 'r') as f:
             for line in f.readlines():
                 # skip comment lines
@@ -104,10 +162,22 @@ class ConfigCHAOS(dict):
         f.close()
 
     def save(self, filepath):
+        """
+        Save configuration dictionary to a file.
+
+        Parameters
+        ----------
+        filepath : str
+            Filepath and name of the textfile that will be saved with the
+            configuration values.
+
+        """
+
         with open(filepath, 'w') as f:
             for key, value in self.items():
                 f.write(f'{key} = {value}\n')
         f.close()
+        print(f'Saved configuration textfile to {filepath}.')
 
 
 # load defaults
