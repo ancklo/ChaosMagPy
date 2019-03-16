@@ -42,14 +42,16 @@ def load_matfile(filepath, variable_name, struct=False):
         return variable
 
 
-def load_RC_datfile(filepath, parse_dates=False):
+def load_RC_datfile(filepath=None, parse_dates=False):
     """
     Load RC-index data file into pandas data frame.
 
     Parameters
     ----------
-    filepath : str
-        File path to RC-index dat-file.
+    filepath : str, optional
+        Filepath to RC index ``*.dat``. If ``None``, the RC
+        index will be fetched from `spacecenter.dk <http://www.spacecenter.dk/\
+        files/magnetic-models/RC/current/>`_.
     parse_dates : bool, optional
         Replace index with datetime object for time-series manipulations.
         Default is ``False``.
@@ -61,6 +63,24 @@ def load_RC_datfile(filepath, parse_dates=False):
         where ``'time'`` is given in modified Julian dates.
 
     """
+
+    if filepath is None:
+        from lxml import html
+        import requests
+
+        link = "http://www.spacecenter.dk/files/magnetic-models/RC/current/"
+
+        page = requests.get(link)
+        print(f'Accessing {page.url}.')
+
+        tree = html.fromstring(page.content)
+        file = tree.xpath('//tr[5]//td[2]//a/text()')[0]  # get name from list
+        date = tree.xpath('//tr[5]//td[3]/text()')[0]
+
+        print(f'Downloading RC-index file "{file}" '
+              f'(last modified on {date.strip()}).')
+
+        filepath = link + file
 
     column_names = ['time', 'RC', 'RC_e', 'RC_i', 'flag']
     column_types = {'time': 'float64', 'RC': 'float64', 'RC_e': 'float64',
@@ -85,9 +105,9 @@ def save_RC_h5file(filepath, read_from=None):
     Parameters
     ----------
     filepath : str
-        Filepath and name of `*.h5` output file.
+        Filepath and name of ``*.h5`` output file.
     read_from : str, optional
-        Filepath of RC index (``*.dat`` or ``*.csv``). If ``None``, the RC
+        Filepath of RC index ``*.dat``. If ``None``, the RC
         index will be fetched from `spacecenter.dk <http://www.spacecenter.dk/\
         files/magnetic-models/RC/current/>`_.
 
@@ -99,12 +119,7 @@ def save_RC_h5file(filepath, read_from=None):
 
     """
 
-    if read_from is None:
-        read_from = "http://www.spacecenter.dk/files/magnetic-models/\
-RC/current/RC_1997-2019_augmented.dat"
-
     try:
-        print(f'Loading RC index file from {read_from}')
         df_rc = load_RC_datfile(read_from, parse_dates=False)
 
         with h5py.File(filepath, 'w') as f:
@@ -184,13 +199,15 @@ def load_shcfile(filepath, leap_year=None):
     return mjd, coeffs, parameters
 
 
-def mjd2000(year, month, day, hour=0, minute=0, second=0):
+def mjd2000(*args, **kwargs):
     """
     Computes the modified Julian date as floating point number. It assigns 0 to
     0h00 January 1, 2000. Leap seconds are not accounted for.
 
     Parameters
     ----------
+    time : :class:`datetime.datetime`
+        Datetime class instance, `OR ...`
     year : int
     month : int
         Month of the year `[1, 12]`.
@@ -210,8 +227,12 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0):
 
     """
 
-    delta = (datetime(year, month, day, hour, minute, second)
-             - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
+    if isinstance(args[0], datetime):
+        time = args[0]
+    else:
+        time = datetime(*args, **kwargs)
+
+    delta = (time - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
 
     return delta.days + delta.seconds/86400
 

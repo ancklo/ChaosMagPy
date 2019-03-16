@@ -3,7 +3,7 @@ Changelog
 
 Version 0.1a4
 -------------
-| **Date:** March 9, 2019
+| **Date:** March 16, 2019
 | **Release:** v0.1a4
 
 Features
@@ -11,6 +11,9 @@ Features
 * RC index file now stored in HDF5 format.
 * Filepaths and other parameters are now handled by ``configCHAOS``.
 * Added extrapolation keyword to ``synth_coeffs``, linear by default.
+* ``mjd2000`` now also accepts datetime class instances.
+* ``load_RC_datfile`` downloads latest RC-index file from the website if no
+  file is given.
 
 Bugfixes
 ^^^^^^^^
