@@ -8,6 +8,8 @@ keywords.
     params.r_surf : float
         Reference radius in kilometers (defaults to Earth's surface radius
         6371.2 km).
+    params.r_cmb : float
+        Core-mantle boundary radius in kilometers (defaults to 3485.0 km).
     params.dipole : list, ndarray, shape (3,)
         Coefficients of the dipole (used for GSM/SM coordinate
         transformations).
@@ -79,6 +81,7 @@ def check_vector(s, len=None):
 
 DEFAULTS = {
     'params.r_surf': [6371.2, check_float],
+    'params.r_cmb': [3485.0, check_float],
     'params.dipole': [np.array([-29442.0, -1501.0, 4797.1]),
                       lambda x: check_vector(x, len=3)],
     'params.version': ['6.x7', check_string],

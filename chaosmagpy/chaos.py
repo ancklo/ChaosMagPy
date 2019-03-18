@@ -207,7 +207,8 @@ class BaseModel(object):
         time : ndarray, shape (...)
             Time in modified Julian date.
         radius : float
-            Radius in kilometers (defaults to mean Earth's surface).
+            Radius in kilometers (defaults to mean Earth's surface defined in
+            ``configCHAOS['r_surf']``).
 
         Other Parameters
         ----------------
@@ -259,7 +260,7 @@ class BaseModel(object):
         deriv = kwargs.pop('deriv')
 
         units = f'({du.gauss_units(deriv)})$^2$'
-        kwargs.setdefault('label', units)
+        kwargs.setdefault('ylabel', units)
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
