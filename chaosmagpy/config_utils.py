@@ -34,6 +34,7 @@ keywords.
 
 import os
 import numpy as np
+from contextlib import contextmanager
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 LIB = os.path.join(ROOT, 'lib')
@@ -139,7 +140,7 @@ class ConfigCHAOS(dict):
 
     def load(self, filepath):
         """
-        Load configuration dictionary from file and overwrite defaults.
+        Load configuration dictionary from file.
 
         Parameters
         ----------
@@ -182,13 +183,23 @@ class ConfigCHAOS(dict):
         f.close()
         print(f'Saved configuration textfile to {filepath}.')
 
+    @contextmanager
+    def context(self, key, value):
+        """Use contextmanager to temporarily change setting."""
+        self.__setitem__(key, value)
+        yield
+        self.reset(key)
+
 
 # load defaults
 configCHAOS = ConfigCHAOS({key: val for key, (val, _) in DEFAULTS.items()})
 
 
+@contextmanager
 def rc(key, value):
     configCHAOS[key] = value
+    yield
+    configCHAOS.reset(key)
 
 
 if __name__ == '__main__':
