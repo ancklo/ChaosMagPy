@@ -5,30 +5,35 @@ keywords.
 
 **Parameters**
 
-    params.r_surf : float
-        Reference radius in kilometers (defaults to Earth's surface radius
-        6371.2 km).
-    params.r_cmb : float
-        Core-mantle boundary radius in kilometers (defaults to 3485.0 km).
-    params.dipole : list, ndarray, shape (3,)
-        Coefficients of the dipole (used for GSM/SM coordinate
-        transformations).
-    params.version : str
-        Default version of the CHAOS model, e.g. ``'6.x7'``.
+ ====================  =============  =========================================
+ Value                 Type           Description
+ ====================  =============  =========================================
+ 'params.r_surf'       `float`        Reference radius in kilometers (defaults
+                                      to Earth's surface radius 6371.2 km).
+ 'params.r_cmb'        `float`        Core-mantle boundary radius in kilometers
+                                      (defaults to 3485.0 km).
+ 'params.dipole'       `list`,        Coefficients of the dipole (used for
+                       `ndarray`,     GSM/SM coordinate transformations).
+                       `shape (3,)`
+ 'params.version'      `str`          Default version of the CHAOS model, e.g.
+                                      ``'6.x7'``.
+ ====================  =============  =========================================
 
 **Files**
 
-    files.RC_index : h5-file
-        RC-index file (used for external field computation). See also
-        :func:`data_utils.save_RC_h5file`.
-    files.GSM_spectrum : npz-file
-        GSM transformation coefficients. See also
-        :func:`coordinate_utils.rotate_gauss_fft`.
-    files.SM_spectrum : npz-file
-        SM transformation coefficients. See also
-        :func:`coordinate_utils.rotate_gauss_fft`.
-    files.Earth_conductivity : txt-file
-        Conductivity model of a layered Earth (used for induced fields).
+ ==========================  ===========  =====================================
+ Value                       Type         Description
+ ==========================  ===========  =====================================
+ 'files.RC_index'            `h5-file`,   RC-index file (used for external
+                             `txt-file`   field computation). See also
+                                          :func:`data_utils.save_RC_h5file`.
+ 'files.GSM_spectrum'        `npz-file`   GSM transformation coefficients. See
+                                          also :func:`coordinate_utils.rotate_gauss_fft`.
+ 'files.SM_spectrum'         `npz-file`   SM transformation coefficients. See
+                                          also :func:`coordinate_utils.rotate_gauss_fft`.
+ 'files.Earth_conductivity'  `txt-file`   Conductivity model of a layered Earth
+                                          (used for induced fields).
+ ==========================  ===========  =====================================
 
 """
 
@@ -151,19 +156,20 @@ class ConfigCHAOS(dict):
 
         with open(filepath, 'r') as f:
             for line in f.readlines():
-                # skip comment lines
-                if line[0] == '#':
+                # skip comment and empty lines
+                if not line.strip():
+                    continue
+                elif line.strip()[0] == '#':
                     continue
 
-                key, value = line.split(' = ')
-                value = value.split('#')[0].rstrip()  # remove comments and \n
+                key, value = line.split(':')
+                value = value.split('#')[0].strip()  # remove comments and \n
 
                 # check list input and convert to array
                 if value[0] == '[' and value[-1] == ']':
                     value = np.fromstring(value[1:-1], sep=' ')
 
-                self.__setitem__(key, value)
-        f.close()
+                self.__setitem__(key.strip(), value)
 
     def save(self, filepath):
         """
@@ -179,27 +185,21 @@ class ConfigCHAOS(dict):
 
         with open(filepath, 'w') as f:
             for key, value in self.items():
-                f.write(f'{key} = {value}\n')
+                f.write(f'{key} : {value}\n')
         f.close()
         print(f'Saved configuration textfile to {filepath}.')
 
     @contextmanager
     def context(self, key, value):
-        """Use contextmanager to temporarily change setting."""
+        """Use context manager to temporarily change setting."""
+        old_value = self.__getitem__(key)
         self.__setitem__(key, value)
         yield
-        self.reset(key)
+        self.__setitem__(key, old_value)
 
 
 # load defaults
 configCHAOS = ConfigCHAOS({key: val for key, (val, _) in DEFAULTS.items()})
-
-
-@contextmanager
-def rc(key, value):
-    configCHAOS[key] = value
-    yield
-    configCHAOS.reset(key)
 
 
 if __name__ == '__main__':
