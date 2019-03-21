@@ -999,11 +999,22 @@ class CHAOS(object):
             frequency_spectrum['dipole'] == configCHAOS['params.dipole']), \
             "SM rotation coefficients are not the same as the set dipole."
 
-        # load RC-index file
-        with h5py.File(configCHAOS['file.RC_index'], 'r') as f_RC:
-            # check RC index time and input times
-            start = f_RC['time'][0]
-            end = f_RC['time'][-1]
+        # load RC-index file: first hdf5 then dat-file format
+        try:
+            with h5py.File(configCHAOS['file.RC_index'], 'r') as f_RC:
+                # check RC index time and input times
+                start = f_RC['time'][0]
+                end = f_RC['time'][-1]
+                # interpolate RC (linear) at input times: RC is callable
+                RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
+                                  kind='linear')
+        except OSError:  # dat file second
+            f_RC = du.load_RC_datfile(configCHAOS['file.RC_index'])
+            start = f_RC['time'].iloc[0]
+            end = f_RC['time'].iloc[-1]
+            # interpolate RC (linear) at input times: RC is callable
+            RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
+                              kind='linear')
 
         if np.amin(time) < start:
             raise ValueError(
@@ -1039,17 +1050,13 @@ class CHAOS(object):
         rotate_gauss = cu.synth_rotate_gauss(time, frequency, spectrum)
 
         if source == 'external':
-            # interpolate RC (linear) at input times: RC_ext is callable
-            with h5py.File(configCHAOS['file.RC_index'], 'r') as f:
-                RC_ext = sip.interp1d(f['time'], f['RC_e'], kind='linear')
-
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
 
-            coeffs_sm[..., 0] = (RC_ext(time)*self.coeffs_sm[0]
+            coeffs_sm[..., 0] = (RC(time)*self.coeffs_sm[0]
                                  + delta_q10(time))
-            coeffs_sm[..., 1] = (RC_ext(time)*self.coeffs_sm[1]
+            coeffs_sm[..., 1] = (RC(time)*self.coeffs_sm[1]
                                  + delta_q11(time))
-            coeffs_sm[..., 2] = (RC_ext(time)*self.coeffs_sm[2]
+            coeffs_sm[..., 2] = (RC(time)*self.coeffs_sm[2]
                                  + delta_s11(time))
             coeffs_sm[..., 3:] = self.coeffs_sm[3:]
 
@@ -1062,10 +1069,6 @@ class CHAOS(object):
             coeffs = np.sum(rotate_gauss*coeffs_sm, axis=-1)
 
         elif source == 'internal':
-            # interpolate RC (linear) at input times: RC_int is callable
-            with h5py.File(configCHAOS['file.RC_index'], 'r') as f:
-                RC_int = sip.interp1d(f['time'], f['RC_i'], kind='linear')
-
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']
             spectrum = frequency_spectrum['spectrum_ind']
@@ -1079,9 +1082,9 @@ class CHAOS(object):
 
             coeffs_sm = np.empty(time.shape + (3,))
 
-            coeffs_sm[..., 0] = RC_int(time)*self.coeffs_sm[0]
-            coeffs_sm[..., 1] = RC_int(time)*self.coeffs_sm[1]
-            coeffs_sm[..., 2] = RC_int(time)*self.coeffs_sm[2]
+            coeffs_sm[..., 0] = RC(time)*self.coeffs_sm[0]
+            coeffs_sm[..., 1] = RC(time)*self.coeffs_sm[1]
+            coeffs_sm[..., 2] = RC(time)*self.coeffs_sm[2]
 
             coeffs_sm_ind = np.empty(
                 time.shape + (self.n_sm*(self.n_sm+2),))
