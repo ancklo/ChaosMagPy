@@ -6,8 +6,6 @@ import cartopy.crs as ccrs
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
 
-plt.rc('font', **{'family': 'serif', 'sans-serif': ['Helvetica'], 'size': 8})
-
 DEFAULT_WIDTH = 16 / 2.54  # default figure width
 
 
@@ -28,7 +26,8 @@ def plot_timeseries(time, *args, **kwargs):
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
     axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
-        Two dimensional array of axes.
+        Two dimensional array if there is more than one axis, otherwise just
+        the axis is returned.
 
     Other Parameters
     ----------------
@@ -80,7 +79,10 @@ def plot_timeseries(time, *args, **kwargs):
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
 
-    return fig, axes
+    if n == 1:
+        return fig, axes[0, 0]
+    else:
+        return fig, axes
 
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
@@ -102,7 +104,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
     axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
-        Two dimensional array of axes.
+        Two dimensional array if there is more than one axis, otherwise just
+        the axis is returned.
 
     Other Parameters
     ----------------
@@ -184,7 +187,10 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     fig.tight_layout()
 
-    return fig, axes
+    if n == 1:
+        return fig, axes[0, 0]
+    else:
+        return fig, axes
 
 
 def plot_power_spectrum(spectrum, **kwargs):
@@ -211,6 +217,8 @@ def plot_power_spectrum(spectrum, **kwargs):
         Subplot titles (defaults to empty strings).
     ylabel : string
         Label of the vertical axis (defaults to an empty string).
+    **kwargs
+        Keywords passed to :func:`matplotlib.pyplot.semilogy`
 
     """
 
@@ -224,20 +232,20 @@ def plot_power_spectrum(spectrum, **kwargs):
     titles = kwargs.pop('titles')
     ylabel = kwargs.pop('ylabel')
 
-    degrees = np.arange(1, spectrum.shape[-1] + 1, step=1.0)
-    xticks = np.arange(0, degrees[-1] + 1, step=1.0)
-    spectrum[spectrum <= 0] = np.nan  # remove non-positive values for log
+    degrees = np.arange(1, spectrum.shape[0] + 1, step=1.0)
+    spectrum[spectrum == 0] = np.nan  # remove non-positive values for log
 
     # create axis handle
     fig, ax = plt.subplots(1, 1, sharex=True, sharey=True, figsize=figsize)
 
     ax.semilogy(degrees, spectrum, **kwargs)
     ax.set_title(titles)
-    ax.grid()
+    ax.grid(b=True, which='minor', linestyle=':')
+    ax.grid(b=True, which='major', linestyle='-', axis='both')
     ax.set(ylabel=ylabel, xlabel='degree')
 
-    plt.xticks(xticks)
-    plt.xlim((xticks[0], xticks[-1]))
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    plt.xlim((0, degrees[-1]))
     plt.tight_layout()
 
     return fig, ax
