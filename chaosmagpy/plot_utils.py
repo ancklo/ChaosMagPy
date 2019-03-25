@@ -105,7 +105,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 7.5)).
+        Figure dimension (width, height) in inches (defaults to (6.3, 2.5)).
     titles : list of strings
         Subplot titles (defaults to empty strings).
     label : string
@@ -205,7 +205,7 @@ def plot_power_spectrum(spectrum, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 2.5)).
+        Figure dimension (width, height) in inches (defaults to (6.3, 1.7)).
     titles : list of strings
         Subplot titles (defaults to empty strings).
     ylabel : string
