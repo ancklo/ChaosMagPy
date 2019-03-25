@@ -25,7 +25,8 @@ def plot_timeseries(time, *args, **kwargs):
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
     axes : :class:`matplotlib.axes.Axes`, ndarray
-        Array of which singleton dimenions have been squeezed out.
+        Array of which singleton dimenions have been squeezed out. Only the
+        axes instance is returned in case of a single axis.
 
     Other Parameters
     ----------------
@@ -78,7 +79,10 @@ def plot_timeseries(time, *args, **kwargs):
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
 
-    return fig, np.squeeze(axes)
+    if axes.shape == (1, 1):
+        return fig, axes[0, 0]
+    else:
+        return fig, np.squeeze(axes)
 
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
@@ -100,7 +104,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
     axes : :class:`matplotlib.axes.Axes`, ndarray
-        Array of which singleton dimenions have been squeezed out.
+        Array of which singleton dimenions have been squeezed out. Only the
+        axes instance is returned in case of a single axis.
 
     Other Parameters
     ----------------
@@ -183,7 +188,10 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     fig.tight_layout()
 
-    return fig, np.squeeze(axes)
+    if axes.shape == (1, 1):
+        return fig, axes[0, 0]
+    else:
+        return fig, np.squeeze(axes)
 
 
 def plot_power_spectrum(spectrum, **kwargs):
