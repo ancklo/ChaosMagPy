@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-
-source activate  # needed here, run script from conda environment
+# run script from conda environment
 
 # extract from __init__.py on line with __version__ the expr between ""
 latest=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
@@ -14,9 +13,20 @@ printf "%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
 
 echo Setting up fresh conda environment.
 conda env create --name $env_name -f environment.yml
+
+source activate  # needed here
 conda activate $env_name
 
 conda env list
+
+while true; do
+    read -p "Do you wish to proceed installing ChaosMagPy? y/n: " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) echo Abort.; exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 echo Installing requested version of ChaosMagPy v$latest.
 pip install dist/chaosmagpy-$version.tar.gz
