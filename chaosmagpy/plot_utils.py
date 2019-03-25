@@ -3,10 +3,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import cartopy.crs as ccrs
+from config_utils import configCHAOS
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
-
-DEFAULT_WIDTH = 16 / 2.54  # default figure width
 
 
 def plot_timeseries(time, *args, **kwargs):
@@ -25,9 +24,8 @@ def plot_timeseries(time, *args, **kwargs):
     -------
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
-    axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
-        Two dimensional array if there is more than one axis, otherwise just
-        the axis is returned.
+    axes : :class:`matplotlib.axes.Axes`, ndarray
+        Array of which singleton dimenions have been squeezed out.
 
     Other Parameters
     ----------------
@@ -46,7 +44,8 @@ def plot_timeseries(time, *args, **kwargs):
 
     n = len(args)  # number of subplots
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
+    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
+                             0.8*configCHAOS['plots.figure_width']),
                     titles=n*[''],
                     ylabel='',
                     layout=(n, 1))
@@ -79,10 +78,7 @@ def plot_timeseries(time, *args, **kwargs):
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
 
-    if n == 1:
-        return fig, axes[0, 0]
-    else:
-        return fig, axes
+    return fig, np.squeeze(axes)
 
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
@@ -103,9 +99,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     -------
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
-    axes : :class:`matplotlib.axes.Axes`, ndarray, 2-dim
-        Two dimensional array if there is more than one axis, otherwise just
-        the axis is returned.
+    axes : :class:`matplotlib.axes.Axes`, ndarray
+        Array of which singleton dimenions have been squeezed out.
 
     Other Parameters
     ----------------
@@ -136,7 +131,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 1.2 * DEFAULT_WIDTH),
+    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
+                             1.2*configCHAOS['plots.figure_width']),
                     titles=n*[''],
                     label='',
                     layout=(n, 1),
@@ -187,10 +183,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     fig.tight_layout()
 
-    if n == 1:
-        return fig, axes[0, 0]
-    else:
-        return fig, axes
+    return fig, np.squeeze(axes)
 
 
 def plot_power_spectrum(spectrum, **kwargs):
@@ -212,7 +205,7 @@ def plot_power_spectrum(spectrum, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 7.5)).
+        Figure dimension (width, height) in inches (defaults to (6.3, 2.5)).
     titles : list of strings
         Subplot titles (defaults to empty strings).
     ylabel : string
@@ -222,7 +215,8 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     """
 
-    defaults = dict(figsize=(DEFAULT_WIDTH, 0.8 * DEFAULT_WIDTH),
+    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
+                             0.8*configCHAOS['plots.figure_width']),
                     titles='',
                     ylabel='')
 

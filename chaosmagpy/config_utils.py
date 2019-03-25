@@ -28,11 +28,22 @@ keywords.
                              `txt-file`   field computation). See also
                                           :func:`data_utils.save_RC_h5file`.
  'files.GSM_spectrum'        `npz-file`   GSM transformation coefficients. See
-                                          also :func:`coordinate_utils.rotate_gauss_fft`.
+                                          also :func:`coordinate_utils.\\
+                                          rotate_gauss_fft`.
  'files.SM_spectrum'         `npz-file`   SM transformation coefficients. See
-                                          also :func:`coordinate_utils.rotate_gauss_fft`.
+                                          also :func:`coordinate_utils.\\
+                                          rotate_gauss_fft`.
  'files.Earth_conductivity'  `txt-file`   Conductivity model of a layered Earth
                                           (used for induced fields).
+ ==========================  ===========  =====================================
+
+**Plots**
+
+ ==========================  ===========  =====================================
+ Value                       Type         Description
+ ==========================  ===========  =====================================
+ 'plots.figure_width'        `float`      Plot width in inches (defaults to 6.3
+                                          or equiv. 16cm)
  ==========================  ===========  =====================================
 
 """
@@ -100,7 +111,10 @@ DEFAULTS = {
     'file.SM_spectrum': [os.path.join(LIB, 'frequency_spectrum_sm.npz'),
                          check_path_exists],
     'file.Earth_conductivity': [os.path.join(LIB, 'Earth_conductivity.dat'),
-                                check_path_exists],  # placeholder
+                                check_path_exists],
+
+    # plot related configuration
+    'plots.figure_width': [6.3, check_float],
 }
 
 
