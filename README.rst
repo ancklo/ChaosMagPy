@@ -1,3 +1,4 @@
+
 Overview
 ========
 
@@ -26,4 +27,4 @@ Documentation
 -------------
 
 The latest documentation of the package is available on
-`Read the Docs <https://chaosmagpy.readthedocs.io/en/latest/>`_. 
+`Read the Docs <https://chaosmagpy.readthedocs.io/en/latest/>`_.
