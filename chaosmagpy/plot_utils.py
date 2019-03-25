@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import cartopy.crs as ccrs
-from config_utils import configCHAOS
+from chaosmagpy.config_utils import configCHAOS
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
 
