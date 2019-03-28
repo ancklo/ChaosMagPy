@@ -1732,7 +1732,8 @@ def _guess_version(filepath):
     """
 
     # search for CHAOS-{numeral}-x{numeral}, not followed by path separator
-    match = re.search(r'CHAOS-(\d+)-(x\d+)(?![{:}])'.format(os.sep), filepath)
+    match = re.search(r'CHAOS-(\d+)-(x\d+)(?!\w*[{:}])'.format(os.sep),
+                      filepath)
     if match:
         version = '.'.join(match.group(1, 2))
     else:
