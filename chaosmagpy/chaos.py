@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import re
 import warnings
 import scipy.interpolate as sip
 import hdf5storage as hdf
@@ -1730,13 +1731,13 @@ def _guess_version(filepath):
     default '6.x7' is returned.
     """
 
-    # quick fix, not very stable: consider ntpath, imho
-    head, tail = os.path.split(filepath)
-    tail = os.path.splitext(tail or os.path.basename(head))[0]
-    version = '.'.join(tail.split('_')[0].split('-')[-2:])
-    while len(version) != 4 or version[1] != '.':
+    # search for CHAOS-{numeral}-x{numeral}, not followed by path separator
+    match = re.search(r'CHAOS-(\d+)-(x\d+)(?![{:}])'.format(os.sep), filepath)
+    if match:
+        version = '.'.join(match.group(1, 2))
+    else:
         version = input('Type in version [6.x7]: ')
-        if not version:  # default behaviour
+        if not version:
             version = '6.x7'
 
     return version

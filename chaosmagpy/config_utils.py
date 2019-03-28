@@ -49,6 +49,7 @@ keywords.
 """
 
 import os
+import re
 import numpy as np
 from contextlib import contextmanager
 
@@ -96,12 +97,24 @@ def check_vector(s, len=None):
         raise ValueError(f'Not a valid vector. {err}')
 
 
+def check_version_string(s):
+    """Check correct format of version string."""
+
+    s = check_string(s)
+
+    match = re.search(r'\d+\.x\d+', s)
+    if match:
+        return s
+    else:
+        raise ValueError(f'Not supported version format "{s}"')
+
+
 DEFAULTS = {
     'params.r_surf': [6371.2, check_float],
     'params.r_cmb': [3485.0, check_float],
     'params.dipole': [np.array([-29442.0, -1501.0, 4797.1]),
                       lambda x: check_vector(x, len=3)],
-    'params.version': ['6.x7', check_string],
+    'params.version': ['6.x7', check_version_string],
 
     # location of coefficient files
     'file.RC_index': [os.path.join(LIB, 'RC_index.h5'),
@@ -219,5 +232,5 @@ configCHAOS = ConfigCHAOS({key: val for key, (val, _) in DEFAULTS.items()})
 if __name__ == '__main__':
     # ensure default passes tests
     for key, (value, test) in DEFAULTS.items():
-        if not test(value) == value:
+        if not np.all(test(value) == value):
             print(f"{key}: {test(value)} != {value}")
