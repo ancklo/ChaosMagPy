@@ -1405,17 +1405,21 @@ class CHAOS(object):
         hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
 
         # write time-dependent external field model to matfile
+        q10 = self.coeffs_delta['q10'].reshape((-1, 1))
         q11 = np.ravel(self.coeffs_delta['q11'])
         s11 = np.ravel(self.coeffs_delta['s11'])
         t_break_q10 = self.breaks_delta['q10'].reshape((-1, 1)).astype(float)
         t_break_q11 = self.breaks_delta['q11'].reshape((-1, 1)).astype(float)
 
+        m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
+        m_sm = np.append(m_sm, self.coeffs_sm[3:])
+
         model_ext = dict(
             t_break_q10=t_break_q10,
-            q10=self.coeffs_delta['q10'].reshape((-1, 1)),
+            q10=q10,
             t_break_qs11=t_break_q11,
             qs11=np.stack((q11, s11), axis=-1),
-            m_sm=self._meta_data['coeffs_sm_mean'].reshape((-1, 1)),
+            m_sm=m_sm.reshape((-1, 1)),
             m_gsm=self.coeffs_gsm[[0, 3]].reshape((2, 1)),
             m_Dst=self.coeffs_sm[:3].reshape((3, 1)))
 
@@ -1585,10 +1589,9 @@ def load_CHAOS_matfile(filepath):
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
-    # external field (SM): n=1, 2
-    coeffs_sm = np.copy(np.ravel(model_ext['m_sm']))  # deg 1 are time averages
+    # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
+    coeffs_sm = np.copy(np.ravel(model_ext['m_sm']))
     coeffs_sm[:3] = np.ravel(model_ext['m_Dst'])  # replace with m_Dst
-    coeffs_sm_mean = np.ravel(model_ext['m_sm'])  # save degree-1 average
 
     # external field (GSM): n=1, 2
     n_gsm = int(2)
@@ -1626,9 +1629,6 @@ def load_CHAOS_matfile(filepath):
     for num, satellite in enumerate(satellites):
         coeffs_euler[satellite] = compose_array(num)
 
-    # used for consistent mat-file, but no real use in chaosmagpy as of now
-    meta_data = dict(coeffs_sm_mean=coeffs_sm_mean)
-
     model = CHAOS(breaks=breaks,
                   order=order,
                   coeffs_tdep=coeffs_tdep,
@@ -1640,7 +1640,6 @@ def load_CHAOS_matfile(filepath):
                   breaks_euler=breaks_euler,
                   coeffs_euler=coeffs_euler,
                   version=version)
-    model._meta_data = meta_data
 
     return model
 
