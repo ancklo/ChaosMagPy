@@ -1061,13 +1061,8 @@ class CHAOS(object):
                                  + delta_s11(time))
             coeffs_sm[..., 3:] = self.coeffs_sm[3:]
 
-            # insert singleton dimension before last dimension of
-            # coeffs_sm_time since this is needed for correct broadcasting
-            # and summing
-            coeffs_sm = np.expand_dims(coeffs_sm, axis=-2)
-
             # rotate external SM coefficients to GEO reference
-            coeffs = np.sum(rotate_gauss*coeffs_sm, axis=-1)
+            coeffs = np.einsum('...ij,...j', rotate_gauss, coeffs_sm)
 
         elif source == 'internal':
             # unpack file: oscillations per day, complex spectrum
@@ -1095,15 +1090,9 @@ class CHAOS(object):
             coeffs_sm_ind[..., 2] = delta_s11(time)
             coeffs_sm_ind[..., 3:] = self.coeffs_sm[3:]
 
-            # insert singleton dimension before last dimension of
-            # coeffs_sm since this is needed for correct broadcasting
-            # and summing
-            coeffs_sm = np.expand_dims(coeffs_sm, axis=-2)
-            coeffs_sm_ind = np.expand_dims(coeffs_sm_ind, axis=-2)
-
             # rotate internal SM coefficients to GEO reference
-            coeffs = np.sum(rotate_gauss_ind*coeffs_sm_ind, axis=-1)
-            coeffs[..., :3] += np.sum(rotate_gauss*coeffs_sm, axis=-1)
+            coeffs = np.einsum('...ij,...j', rotate_gauss_ind, coeffs_sm_ind)
+            coeffs[..., :3] += np.einsum('...ij,...j', rotate_gauss, coeffs_sm)
 
         else:
             raise ValueError("Wrong source parameter, use "
