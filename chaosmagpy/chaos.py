@@ -192,6 +192,41 @@ class BaseModel(object):
 
     def synth_values(self, time, radius, theta, phi, *, nmax=None, deriv=None,
                      grid=None, extrapolate=None):
+        """
+        Compute magnetic field components.
+
+        Parameters
+        ----------
+        time : ndarray, shape (...) or float
+            Array containing the time in modified Julian dates.
+        radius : ndarray, shape (...) or float
+            Radius of station in kilometers.
+        theta : ndarray, shape (...) or float
+            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        phi : ndarray, shape (...) or float
+            Longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
+        grid : bool, optional
+            If ``True``, field components are computed on a regular grid.
+            Arrays ``theta``and ``phi`` must have one dimension less than the
+            output grid since the grid will be created as their outer product.
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
+            Extrapolate to times outside of the model bounds. Specify
+            polynomial degree as string or any order as integer. Defaults to
+            ``'linear'`` (equiv. to order 2 polynomials).
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        """
 
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv,
                                    extrapolate=extrapolate)
@@ -731,6 +766,15 @@ class CHAOS(object):
         """
 
         return self.model_tdep.synth_coeffs(time, nmax=nmax, **kwargs)
+
+    def synth_values_tdep(self, *args, **kwargs):
+        """
+        Convenience method for computing magnetic components of the internal
+        time-dependent field. See :meth:`BaseModel.synth_values`.
+
+        """
+
+        return self.model_tdep.synth_values(*args, **kwargs)
 
     def plot_timeseries_tdep(self, radius, theta, phi, **kwargs):
         """
