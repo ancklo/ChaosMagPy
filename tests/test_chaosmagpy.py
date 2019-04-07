@@ -4,6 +4,7 @@ from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
 from chaosmagpy import data_utils as d
+from chaosmagpy.chaos import _guess_version, configCHAOS
 from unittest import TestCase, main
 try:
     from tests.helpers import load_matfile
@@ -24,6 +25,18 @@ class ChaosMagPyTestCase(TestCase):
     def setUp(self):
 
         print(f'\nRunning {self._testMethodName}:')
+
+    def test_guess_version(self):
+
+        self.assertEqual(_guess_version('CHAOS-6-x7.mat'), '6.x7')
+        self.assertEqual(_guess_version('CHAOS-6-x7'), '6.x7')
+        self.assertEqual(_guess_version('CHAOS/CHAOS-6-x7.mat'), '6.x7')
+        self.assertEqual(_guess_version('CHAOS-643-x788.mat'), '643.x788')
+        self.assertEqual(_guess_version('CHAOS-6-x7_2.mat'), '6.x7')
+        self.assertEqual(_guess_version('CHAOS-6.x7.mat'), '6.x7')
+
+        with self.assertWarns(Warning):
+            self.assertEqual(_guess_version(''), configCHAOS['params.version'])
 
     def test_save_matfile(self):
 
@@ -170,9 +183,8 @@ class ChaosMagPyTestCase(TestCase):
         theta = np.linspace(1, 179, num=180)
         phi = np.linspace(-180, 179, num=360)
 
-        coeffs = model.synth_coeffs_tdep(time, deriv=0)
-        B_radius, B_theta, B_phi = m.synth_values(
-            coeffs, radius, theta, phi, nmax=13, grid=True)
+        B_radius, B_theta, B_phi = model.synth_values_tdep(
+            time, radius, theta, phi, nmax=13, grid=True, deriv=0)
 
         B_radius = np.ravel(B_radius, order='F')  # ravel column-major
         B_theta = np.ravel(B_theta, order='F')
@@ -213,9 +225,8 @@ class ChaosMagPyTestCase(TestCase):
         time = np.linspace(model.model_tdep.breaks[0],
                            model.model_tdep.breaks[-1], num=1000)
 
-        coeffs = model.synth_coeffs_tdep(time, nmax=16, deriv=1)
-        B_radius, B_theta, B_phi = m.synth_values(
-            coeffs, radius, theta, phi)
+        B_radius, B_theta, B_phi = model.synth_values_tdep(
+            time, radius, theta, phi, nmax=16, deriv=1)
 
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_sv_timeseries')
@@ -257,11 +268,10 @@ class ChaosMagPyTestCase(TestCase):
         B_radius = np.zeros(time.shape)
         B_theta = np.zeros(time.shape)
         B_phi = np.zeros(time.shape)
-        for source in ['internal', 'external']:
-            coeffs = model.synth_coeffs_sm(time, source=source)
 
-            B_radius_new, B_theta_new, B_phi_new = m.synth_values(
-                coeffs, radius, theta, phi, source=source)
+        for source in ['internal', 'external']:
+            B_radius_new, B_theta_new, B_phi_new = model.synth_values_sm(
+                time, radius, theta, phi, source=source)
 
             B_radius += B_radius_new
             B_theta += B_theta_new
@@ -304,11 +314,10 @@ class ChaosMagPyTestCase(TestCase):
         B_radius = np.zeros(time.shape)
         B_theta = np.zeros(time.shape)
         B_phi = np.zeros(time.shape)
-        for source in ['internal', 'external']:
-            coeffs = model.synth_coeffs_gsm(time, source=source)
 
-            B_radius_new, B_theta_new, B_phi_new = m.synth_values(
-                coeffs, radius, theta, phi, source=source)
+        for source in ['internal', 'external']:
+            B_radius_new, B_theta_new, B_phi_new = model.synth_values_gsm(
+                time, radius, theta, phi, source=source)
 
             B_radius += B_radius_new
             B_theta += B_theta_new

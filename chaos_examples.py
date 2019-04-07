@@ -3,7 +3,6 @@ import cdflib
 import matplotlib.pyplot as plt
 from chaosmagpy import load_CHAOS_matfile
 from chaosmagpy.coordinate_utils import transform_points
-from chaosmagpy.model_utils import synth_values
 from chaosmagpy.data_utils import mjd2000, rsme
 
 FILEPATH_CHAOS = 'data/CHAOS-6-x8.mat'
@@ -34,12 +33,10 @@ def example1():
     print(model)
 
     print('Computing core field.')
-    coeffs = model.synth_coeffs_tdep(time)
-    B_core = synth_values(coeffs, radius, theta, phi)
+    B_core = model.synth_values_tdep(time, radius, theta, phi)
 
     print('Computing crustal field up to degree 110.')
-    coeffs = model.synth_coeffs_static(nmax=110)
-    B_crust = synth_values(coeffs, radius, theta, phi)
+    B_crust = model.synth_values_static(radius, theta, phi, nmax=110)
 
     # complete internal contribution
     B_radius_int = B_core[0] + B_crust[0]
@@ -47,23 +44,15 @@ def example1():
     B_phi_int = B_core[2] + B_crust[2]
 
     print('Computing field due to external sources, incl. induced field: GSM.')
-    coeffs_ext = model.synth_coeffs_gsm(time, source='external')  # inducing
-    coeffs_int = model.synth_coeffs_gsm(time, source='internal')  # induced
-
-    B_ext_gsm = synth_values(coeffs_ext, radius, theta, phi, source='external')
-    B_int_gsm = synth_values(coeffs_int, radius, theta, phi, source='internal')
+    B_gsm = model.synth_values_gsm(time, radius, theta, phi, source='all')
 
     print('Computing field due to external sources, incl. induced field: SM.')
-    coeffs_ext = model.synth_coeffs_sm(time, source='external')  # inducing
-    coeffs_int = model.synth_coeffs_sm(time, source='internal')  # induced
-
-    B_ext_sm = synth_values(coeffs_ext, radius, theta, phi, source='external')
-    B_int_sm = synth_values(coeffs_int, radius, theta, phi, source='internal')
+    B_sm = model.synth_values_sm(time, radius, theta, phi, source='all')
 
     # complete external field contribution
-    B_radius_ext = B_ext_gsm[0] + B_int_gsm[0] + B_ext_sm[0] + B_int_sm[0]
-    B_theta_ext = B_ext_gsm[1] + B_int_gsm[1] + B_ext_sm[1] + B_int_sm[1]
-    B_phi_ext = B_ext_gsm[2] + B_int_gsm[2] + B_ext_sm[2] + B_int_sm[2]
+    B_radius_ext = B_gsm[0] + B_sm[0]
+    B_theta_ext = B_gsm[1] + B_sm[1]
+    B_phi_ext = B_gsm[2] + B_sm[2]
 
     # complete forward computation
     B_radius = B_radius_int + B_radius_ext

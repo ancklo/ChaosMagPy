@@ -660,9 +660,8 @@ class CHAOS(object):
                   f' up to degree {self.model_tdep.nmax}.')
 
             s = timer()
-            coeffs = self.synth_coeffs_tdep(time)
-            B_radius_new, B_theta_new, B_phi_new = mu.synth_values(
-                coeffs, radius, theta, phi)
+            B_radius_new, B_theta_new, B_phi_new = self.synth_values_tdep(
+                time, radius, theta, phi)
 
             B_radius += B_radius_new
             B_theta += B_theta_new
@@ -679,9 +678,8 @@ class CHAOS(object):
                   f' up to degree {nmax_static}.')
 
             s = timer()
-            coeffs = self.synth_coeffs_static(nmax=nmax_static)
-            B_radius_new, B_theta_new, B_phi_new = mu.synth_values(
-                coeffs, radius, theta, phi)
+            B_radius_new, B_theta_new, B_phi_new = self.synth_values_static(
+                radius, theta, phi, nmax=nmax_static)
 
             B_radius += B_radius_new
             B_theta += B_theta_new
@@ -695,17 +693,12 @@ class CHAOS(object):
             print(f'Computing GSM field up to degree {self.n_gsm}.')
 
             s = timer()
-            coeffs_ext = self.synth_coeffs_gsm(time, source='external')
-            coeffs_int = self.synth_coeffs_gsm(time, source='internal')
+            B_radius_new, B_theta_new, B_phi_new = self.synth_values_gsm(
+                time, radius, theta, phi, source='all')
 
-            B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
-                coeffs_ext, radius, theta, phi, source='external')
-            B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
-                coeffs_int, radius, theta, phi, source='internal')
-
-            B_radius += B_radius_ext + B_radius_int
-            B_theta += B_theta_ext + B_theta_int
-            B_phi += B_phi_ext + B_phi_int
+            B_radius += B_radius_new
+            B_theta += B_theta_new
+            B_phi += B_phi_new
             e = timer()
 
             print('Finished in {:.6} seconds.'.format(e-s))
@@ -715,17 +708,12 @@ class CHAOS(object):
             print(f'Computing SM field up to degree {self.n_sm}.')
 
             s = timer()
-            coeffs_ext = self.synth_coeffs_sm(time, source='external')
-            coeffs_int = self.synth_coeffs_sm(time, source='internal')
+            B_radius_new, B_theta_new, B_phi_new = self.synth_values_sm(
+                time, radius, theta, phi, source='all')
 
-            B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
-                coeffs_ext, radius, theta, phi, source='external')
-            B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
-                coeffs_int, radius, theta, phi, source='internal')
-
-            B_radius += B_radius_ext + B_radius_int
-            B_theta += B_theta_ext + B_theta_int
-            B_phi += B_phi_ext + B_phi_int
+            B_radius += B_radius_new
+            B_theta += B_theta_new
+            B_phi += B_phi_new
             e = timer()
 
             print('Finished in {:.6} seconds.'.format(e-s))
@@ -806,7 +794,7 @@ class CHAOS(object):
 
         self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
-    def plot_maps_tdep(self, time, radius, **kwargs):
+    def plot_maps_tdep(self, time, radius, nmax=None, deriv=None, **kwargs):
         """
         Plot global map of the time-dependent internal field from the CHAOS
         model.
@@ -860,7 +848,37 @@ class CHAOS(object):
         time = self.model_static.breaks[0]
         return self.model_static.synth_coeffs(time, nmax=nmax, **kwargs)
 
-    def plot_maps_static(self, radius, **kwargs):
+    def synth_values_static(self, radius, theta, phi, *, nmax=None, **kwargs):
+        """
+        Compute magnetic field components of the internal static field.
+
+        Parameters
+        ----------
+        radius : ndarray, shape (...) or float
+            Radius of station in kilometers.
+        theta : ndarray, shape (...) or float
+            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        phi : ndarray, shape (...) or float
+            Longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        **kwargs : keywords
+            Other options are passed to :meth:`BaseModel.synth_values`
+            method.
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        """
+
+        time = self.model_static.breaks[0]
+        return self.model_static.synth_values(time, radius, theta, phi,
+                                              nmax=nmax, **kwargs)
+
+    def plot_maps_static(self, radius, *, nmax=None, **kwargs):
         """
         Plot global map of the static internal field from the CHAOS model.
 
@@ -871,6 +889,9 @@ class CHAOS(object):
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
+        **kwargs : keywords
+            Other options are passed to :meth:`BaseModel.plot_maps`
+            method.
 
         Returns
         -------
@@ -889,7 +910,7 @@ class CHAOS(object):
 
         time = self.model_static.breaks[0]
 
-        self.model_static.plot_maps(time, radius, **kwargs)
+        self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
@@ -972,13 +993,75 @@ class CHAOS(object):
             coeffs = np.matmul(rotate_gauss_ind, self.coeffs_gsm)
 
         else:
-            raise ValueError("Wrong source parameter, use "
-                             "'external' or 'internal'")
+            raise ValueError(f'Unknown source "{source}". '
+                             'Use {''external'', ''internal''}.')
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_coeffs_sm(self, time, *, nmax=None, source=None,
-                        extrapolate=None):
+    def synth_values_gsm(self, time, radius, theta, phi, nmax=None,
+                         source=None, grid=None):
+        """
+        Compute GSM magnetic field components.
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (...)
+            Time given as MJD2000 (modified Julian date).
+        radius : float or ndarray, shape (...)
+            Array containing the radius in kilometers.
+        theta : float or ndarray, shape (...)
+            Array containing the colatitude in degrees
+            :math:`[0^\\circ,180^\\circ]`.
+        phi : float or ndarray, shape (...)
+            Array containing the longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        source : {'all', 'external', 'internal'}, optional
+            Choose source to be external (inducing), internal (induced) or
+            both added (default to 'all').
+        grid : bool, optional
+            If ``True``, field components are computed on a regular grid,
+            which is created from ``theta``and ``phi`` as their outer product
+            (defaults to ``False``).
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        """
+
+        source = 'all' if source is None else source
+        grid = False if grid is None else grid
+
+        if source == 'all':
+            coeffs_ext = self.synth_coeffs_gsm(time, nmax=nmax,
+                                               source='external')
+            coeffs_int = self.synth_coeffs_gsm(time, nmax=nmax,
+                                               source='internal')
+
+            B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
+                coeffs_ext, radius, theta, phi, source='external', grid=grid)
+            B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
+                coeffs_int, radius, theta, phi, source='internal', grid=grid)
+
+            B_radius = B_radius_ext + B_radius_int
+            B_theta = B_theta_ext + B_theta_int
+            B_phi = B_phi_ext + B_phi_int
+
+        elif source in ['external', 'internal']:
+            coeffs = self.synth_coeffs_gsm(time, nmax=nmax, source=source)
+            B_radius, B_theta, B_phi = mu.synth_values(
+                coeffs, radius, theta, phi, source=source, grid=grid)
+
+        else:
+            raise ValueError(f'Unknown source "{source}". '
+                             'Use {''all'', ''external'', ''internal''}.')
+
+        return B_radius, B_theta, B_phi
+
+    def synth_coeffs_sm(self, time, *, nmax=None, source=None):
         """
         Compute the external SM field from the CHAOS model.
 
@@ -997,11 +1080,6 @@ class CHAOS(object):
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
             Coefficients of the external SM field coefficients in terms of
             geographic coordinates (GEO).
-
-        Raises
-        ------
-        ValueError
-            If values outside the RC-index time series are requested.
 
         """
 
@@ -1064,15 +1142,15 @@ class CHAOS(object):
         if np.amin(time) < start:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                '{:.2f} and {:.2f}, but found {:.2f}.'.format(start, end,
-                                                              np.amin(time)))
+                '{:.2f} and {:.2f}, but found {:.2f}.'.format(
+                    start, end, np.amin(time)))
 
         # check RC index time and inputs time
         if np.amax(time) > end:
             raise ValueError(
                 'Insufficient RC time series. Input times must be between '
-                '{:.2f} and {:.2f}, but found {:.2f}.'.format(start, end,
-                                                              np.amax(time)))
+                '{:.2f} and {:.2f}, but found {:.2f}.'.format(
+                    start, end, np.amax(time)))
 
         # use piecewise polynomials to evaluate baseline correction in bins
         delta_q10 = sip.PPoly.construct_fast(
@@ -1139,10 +1217,73 @@ class CHAOS(object):
             coeffs[..., :3] += np.einsum('...ij,...j', rotate_gauss, coeffs_sm)
 
         else:
-            raise ValueError("Wrong source parameter, use "
-                             "'external' or 'internal'")
+            raise ValueError(f'Unknown source "{source}". '
+                             'Use {external'', ''internal''}.')
 
         return coeffs[..., :nmax*(nmax+2)]
+
+    def synth_values_sm(self, time, radius, theta, phi, nmax=None,
+                        source=None, grid=None):
+        """
+        Compute SM magnetic field components.
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (...)
+            Time given as MJD2000 (modified Julian date).
+        radius : float or ndarray, shape (...)
+            Array containing the radius in kilometers.
+        theta : float or ndarray, shape (...)
+            Array containing the colatitude in degrees
+            :math:`[0^\\circ,180^\\circ]`.
+        phi : float or ndarray, shape (...)
+            Array containing the longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        source : {'all', 'external', 'internal'}, optional
+            Choose source to be external (inducing), internal (induced) or
+            both added (default to 'all').
+        grid : bool, optional
+            If ``True``, field components are computed on a regular grid,
+            which is created from ``theta``and ``phi`` as their outer product
+            (defaults to ``False``).
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        """
+
+        source = 'all' if source is None else source
+        grid = False if grid is None else grid
+
+        if source == 'all':
+            coeffs_ext = self.synth_coeffs_sm(time, nmax=nmax,
+                                              source='external')
+            coeffs_int = self.synth_coeffs_sm(time, nmax=nmax,
+                                              source='internal')
+
+            B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
+                coeffs_ext, radius, theta, phi, source='external', grid=grid)
+            B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
+                coeffs_int, radius, theta, phi, source='internal', grid=grid)
+
+            B_radius = B_radius_ext + B_radius_int
+            B_theta = B_theta_ext + B_theta_int
+            B_phi = B_phi_ext + B_phi_int
+
+        elif source in ['external', 'internal']:
+            coeffs = self.synth_coeffs_sm(time, nmax=nmax, source=source)
+            B_radius, B_theta, B_phi = mu.synth_values(
+                coeffs, radius, theta, phi, source=source, grid=grid)
+
+        else:
+            raise ValueError(f'Unknown source "{source}". '
+                             'Use {''all'', ''external'', ''internal''}.')
+
+        return B_radius, B_theta, B_phi
 
     def plot_maps_external(self, time, radius, *, nmax=None, reference=None,
                            source=None):
@@ -1154,7 +1295,7 @@ class CHAOS(object):
         time : ndarray, shape (), (1,) or float
             Time given as MJD2000 (modified Julian date).
         radius : ndarray, shape (), (1,) or float
-            Array containing the radius in kilometers.
+            Radius in kilometers.
         nmax : int, positive, optional
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
@@ -1173,12 +1314,8 @@ class CHAOS(object):
 
         """
 
-        if reference is None:
-            reference = 'all'
-        reference = reference.lower()
-
-        if source is None:
-            source = 'all'
+        reference = 'all' if reference is None else reference.lower()
+        source = 'all' if source is None else source
 
         time = np.array(time, dtype=float)
         radius = np.array(radius, dtype=float)
@@ -1188,91 +1325,31 @@ class CHAOS(object):
         # compute GSM contribution: external, internal
         if reference == 'all' or reference == 'gsm':
 
-            if source == 'all' or source == 'external':
-                coeffs_ext = self.synth_coeffs_gsm(
-                    time, nmax=nmax, source='external')
-
-                # compute magnetic field given external GSM field coefficients
-                B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
-                    coeffs_ext, radius, theta, phi,
-                    nmax=nmax, source='external', grid=True)
-
-            if source == 'all' or source == 'internal':
-                coeffs_int = self.synth_coeffs_gsm(
-                    time, nmax=nmax, source='internal')
-
-                # compute magnetic field given external GSM field coefficients
-                B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
-                    coeffs_int, radius, theta, phi,
-                    nmax=nmax, source='internal', grid=True)
-
-            if source == 'external':
-                B_radius_gsm = B_radius_ext
-                B_theta_gsm = B_theta_ext
-                B_phi_gsm = B_phi_ext
-            elif source == 'internal':
-                B_radius_gsm = B_radius_int
-                B_theta_gsm = B_theta_int
-                B_phi_gsm = B_phi_int
-            elif source == 'all':
-                B_radius_gsm = B_radius_ext + B_radius_int
-                B_theta_gsm = B_theta_ext + B_theta_int
-                B_phi_gsm = B_phi_ext + B_phi_int
-            else:
-                raise ValueError('Use source "internal", "external" or "all" '
-                                 '(for both added together)')
+            # compute magnetic field components
+            B_radius_gsm, B_theta_gsm, B_phi_gsm = self.synth_values_gsm(
+                time, radius, theta, phi, nmax=nmax, source=source, grid=True)
 
         # compute SM contribution: external, internal
         if reference == 'all' or reference == 'sm':
 
-            if source == 'all' or source == 'external':
-                coeffs_ext = self.synth_coeffs_sm(
-                    time, nmax=nmax, source='external')
-
-                # compute magnetic field given external SM field coefficients
-                B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
-                    coeffs_ext, radius, theta, phi,
-                    nmax=nmax, source='external', grid=True)
-
-            if source == 'all' or source == 'internal':
-                coeffs_int = self.synth_coeffs_sm(
-                    time, nmax=nmax, source='internal')
-
-                # compute magnetic field given external SM field coefficients
-                B_radius_int, B_theta_int, B_phi_int = mu.synth_values(
-                    coeffs_int, radius, theta, phi,
-                    nmax=nmax, source='internal', grid=True)
-
-            if source == 'external':
-                B_radius_sm = B_radius_ext
-                B_theta_sm = B_theta_ext
-                B_phi_sm = B_phi_ext
-            elif source == 'internal':
-                B_radius_sm = B_radius_int
-                B_theta_sm = B_theta_int
-                B_phi_sm = B_phi_int
-            elif source == 'all':
-                B_radius_sm = B_radius_ext + B_radius_int
-                B_theta_sm = B_theta_ext + B_theta_int
-                B_phi_sm = B_phi_ext + B_phi_int
-            else:
-                raise ValueError('Use source "internal", "external" or "all" '
-                                 '(for both added together)')
+            B_radius_sm, B_theta_sm, B_phi_sm = self.synth_values_sm(
+                time, radius, theta, phi, nmax=nmax, source=source, grid=True)
 
         if reference == 'all':
             B_radius = B_radius_gsm + B_radius_sm
             B_theta = B_theta_gsm + B_theta_sm
             B_phi = B_phi_gsm + B_phi_sm
-
-        if reference == 'gsm':
+        elif reference == 'gsm':
             B_radius = B_radius_gsm
             B_theta = B_theta_gsm
             B_phi = B_phi_gsm
-
-        if reference == 'sm':
+        elif reference == 'sm':
             B_radius = B_radius_sm
             B_theta = B_theta_sm
             B_phi = B_phi_sm
+        else:
+            raise ValueError(f'Unknown reference "{reference}". '
+                             'Use {''all'', ''external'', ''internal''}.')
 
         units = du.gauss_units(0)
 
@@ -1759,18 +1836,20 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
 def _guess_version(filepath):
     """
     Extract version from filename. For example from the file 'CHAOS-6-x7.mat',
-    it returns '6.x7'. If not successful, user input is required, otherwise
-    default '6.x7' is returned.
+    it returns '6.x7'. If not successful, version is set to default in
+    ``configCHAOS['params.version']``.
+
     """
 
     # search for CHAOS-{numeral}-x{numeral}, not followed by path separator
-    match = re.search(r'CHAOS-(\d+)-(x\d+)(?!\w*[{:}])'.format(os.sep),
+    match = re.search(r'CHAOS-(\d+)[-.](x\d+)(?!\w*[{:}])'.format(os.sep),
                       filepath)
     if match:
         version = '.'.join(match.group(1, 2))
     else:
-        version = input('Type in version [6.x7]: ')
-        if not version:
-            version = '6.x7'
+        warnings.warn(
+            'Unknown CHAOS model version. Setting version to {:}.'.format(
+                configCHAOS['params.version']))
+        version = configCHAOS['params.version']
 
     return version

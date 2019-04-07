@@ -305,7 +305,8 @@ def synth_values(coeffs, radius, theta, phi, *,
     grid : bool, optional
         If ``True``, field components are computed on a regular grid. Arrays
         ``theta``and ``phi`` must have one dimension less than the output grid
-        since the grid will be created as their outer product.
+        since the grid will be created as their outer product (defaults to
+        ``False``).
 
     Returns
     -------

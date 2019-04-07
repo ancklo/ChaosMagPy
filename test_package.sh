@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 # run script from conda environment
+if [ -f "/home/ancklo/miniconda3/etc/profile.d/conda.sh" ]; then
+    . "/home/ancklo/miniconda3/etc/profile.d/conda.sh"
+else
+    export PATH="/home/ancklo/miniconda3/bin:$PATH"
+fi
 
 # extract from __init__.py on line with __version__ the expr between ""
 latest=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
@@ -14,7 +19,6 @@ printf "%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
 echo Setting up fresh conda environment.
 conda env create --name $env_name -f environment.yml
 
-source activate  # needed here
 conda activate $env_name
 
 conda env list
