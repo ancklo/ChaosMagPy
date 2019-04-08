@@ -1,10 +1,10 @@
 Changelog
 =========
 
-Version 0.1a3.post1.1
+Version 0.1a3.post2
 ---------------------
 | **Date:** April 8, 2019
-| **Release:** v0.1a3.post1.1
+| **Release:** v0.1a3.post2
 
 Bugfixes
 ^^^^^^^^
