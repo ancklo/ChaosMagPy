@@ -733,12 +733,12 @@ def degree_correlation(coeffs_1, coeffs_2):
 
     """
 
-    if len(coeffs_1) is not len(coeffs_2):
+    if len(coeffs_1) != len(coeffs_2):
         raise ValueError(
             'Number of coefficients is '
             'not equal ({0} ~= {1}).'.format(len(coeffs_1), len(coeffs_2)))
 
-    nmax = np.sqrt(len(coeffs_1) + 1) - 1
+    nmax = int(np.sqrt(len(coeffs_1) + 1) - 1)
 
     C_n = np.zeros((nmax,))
     R_n = np.zeros((nmax,))  # elements are prop. to power spectrum of coeffs_1

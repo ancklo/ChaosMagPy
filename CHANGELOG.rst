@@ -20,6 +20,7 @@ Features
 
 Bugfixes
 ^^^^^^^^
+* Resolved issue in ``model_utils.degree_correlation``.
 * Changed the date conversion to include hours and seconds not just the day
   when plotting the timeseries.
 
