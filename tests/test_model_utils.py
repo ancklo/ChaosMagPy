@@ -27,6 +27,14 @@ class ModelUtilsTestCase(TestCase):
 
         print(f'\nRunning {self._testMethodName}:')
 
+    def test_degree_correlation(self):
+
+        nmax = 4
+        coeffs = np.random.random((int(nmax*(nmax+2)),))
+
+        self.assertIsNone(np.testing.assert_equal(
+            m.degree_correlation(coeffs, coeffs), np.ones((nmax,))))
+
     def test_power_spectrum(self):
 
         N = 3

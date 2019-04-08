@@ -733,12 +733,18 @@ def degree_correlation(coeffs_1, coeffs_2):
 
     """
 
-    if len(coeffs_1) != len(coeffs_2):
+    if coeffs_1.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed {coeffs_1.ndim} != 1')
+
+    if coeffs_2.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed {coeffs_2.ndim} != 1')
+
+    if coeffs_1.size != coeffs_2.size:
         raise ValueError(
             'Number of coefficients is '
-            'not equal ({0} ~= {1}).'.format(len(coeffs_1), len(coeffs_2)))
+            'not equal ({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
 
-    nmax = int(np.sqrt(len(coeffs_1) + 1) - 1)
+    nmax = int(np.sqrt(coeffs_1.size + 1) - 1)
 
     C_n = np.zeros((nmax,))
     R_n = np.zeros((nmax,))  # elements are prop. to power spectrum of coeffs_1
@@ -749,9 +755,8 @@ def degree_correlation(coeffs_1, coeffs_2):
     for n in range(1, nmax+1):
         min = n**2 - 1
         max = min + (2*n + 1)
-        R_n[n-1] = np.sum(coeffs_1[min:max]**2, axis=-1)
-        S_n[n-1] = np.sum(coeffs_2[min:max]**2, axis=-1)
-        C_n[n-1] = (np.sum(coeffs_12[min:max], axis=-1) /
-                    np.sqrt(R_n[n-1]*S_n[n-1]))
+        R_n[n-1] = np.sum(coeffs_1[min:max]**2)
+        S_n[n-1] = np.sum(coeffs_2[min:max]**2)
+        C_n[n-1] = (np.sum(coeffs_12[min:max]) / np.sqrt(R_n[n-1]*S_n[n-1]))
 
     return C_n
