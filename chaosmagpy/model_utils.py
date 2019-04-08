@@ -415,7 +415,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     try:
         b = np.broadcast(radius, theta, phi,
                          np.broadcast_to(0, coeffs.shape[:-1]))
-    except ValueError as err:
+    except ValueError:
         print('Cannot broadcast grid shapes (excl. last dimension of coeffs):')
         print(f'radius: {radius.shape}')
         print(f'theta:  {theta.shape}')
@@ -733,12 +733,12 @@ def degree_correlation(coeffs_1, coeffs_2):
 
     """
 
-    if len(coeffs_1) is not len(coeffs_2):
+    if len(coeffs_1) != len(coeffs_2):
         raise ValueError(
             'Number of coefficients is '
             'not equal ({0} ~= {1}).'.format(len(coeffs_1), len(coeffs_2)))
 
-    nmax = np.sqrt(len(coeffs_1) + 1) - 1
+    nmax = int(np.sqrt(len(coeffs_1) + 1) - 1)
 
     C_n = np.zeros((nmax,))
     R_n = np.zeros((nmax,))  # elements are prop. to power spectrum of coeffs_1
@@ -749,9 +749,9 @@ def degree_correlation(coeffs_1, coeffs_2):
     for n in range(1, nmax+1):
         min = n**2 - 1
         max = min + (2*n + 1)
-        R_n[n-1] = np.sum(coeffs_1[min:max]**2, axis=-1)
-        S_n[n-1] = np.sum(coeffs_2[min:max]**2, axis=-1)
-        C_n[n-1] = (np.sum(coeffs_12[min:max], axis=-1) /
+        R_n[n-1] = np.sum(coeffs_1[min:max]**2)
+        S_n[n-1] = np.sum(coeffs_2[min:max]**2)
+        C_n[n-1] = (np.sum(coeffs_12[min:max]) /
                     np.sqrt(R_n[n-1]*S_n[n-1]))
 
     return C_n
