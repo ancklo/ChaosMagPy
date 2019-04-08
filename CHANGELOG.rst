@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.1a3.post1.1
+---------------------
+| **Date:** April 8, 2019
+| **Release:** v0.1a3.post1.1
+
+Bugfixes
+^^^^^^^^
+* Corrected bug in ``model_utils.degree_correlation`` when checking input's
+  length and non-integer degree from input coefficients.
+
 Version 0.1a3.post1
 -------------------
 | **Date:** March 13, 2019
