@@ -213,7 +213,7 @@ class BaseModel(object):
             choose ``deriv=1``.
         grid : bool, optional
             If ``True``, field components are computed on a regular grid.
-            Arrays ``theta``and ``phi`` must have one dimension less than the
+            Arrays ``theta`` and ``phi`` must have one dimension less than the
             output grid since the grid will be created as their outer product.
         extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
 'off'} or int, optional
@@ -1022,7 +1022,7 @@ class CHAOS(object):
             both added (default to 'all').
         grid : bool, optional
             If ``True``, field components are computed on a regular grid,
-            which is created from ``theta``and ``phi`` as their outer product
+            which is created from ``theta`` and ``phi`` as their outer product
             (defaults to ``False``).
 
         Returns
@@ -1246,7 +1246,7 @@ class CHAOS(object):
             both added (default to 'all').
         grid : bool, optional
             If ``True``, field components are computed on a regular grid,
-            which is created from ``theta``and ``phi`` as their outer product
+            which is created from ``theta`` and ``phi`` as their outer product
             (defaults to ``False``).
 
         Returns
