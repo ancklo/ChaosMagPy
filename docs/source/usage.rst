@@ -64,7 +64,7 @@ Computing field components on a grid
 ------------------------------------
 
 Instead of plotting the field components, we can just have ChaosMagPy return
-the numerical values of the different source components in the model. For
+the numerical values of the different sources in the model. For
 example, the time-dependent internal field:
 
 .. code-block:: python
@@ -113,6 +113,22 @@ The same computation can be done with other sources described by the model:
 | external | time-dep. (GSM) | :meth:`~.CHAOS.synth_coeffs_gsm`                  |
 +          +-----------------+---------------------------------------------------+
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_coeffs_sm`                   |
++----------+-----------------+---------------------------------------------------+
+
+We can also directly calculate the magnetic field components without having to
+synthesize the spherical harmonic coefficients first. Use one of the following
+methods:
+
++----------+-----------------+---------------------------------------------------+
+|  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
++==========+=================+===================================================+
+| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_values_tdep`            |
++          +-----------------+---------------------------------------------------+
+|          | static          | :meth:`~chaos.CHAOS.synth_values_static`          |
++----------+-----------------+---------------------------------------------------+
+| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_values_gsm`                  |
++          +-----------------+---------------------------------------------------+
+|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_values_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
 Computing the timeseries of field components at two ground observatories

@@ -218,7 +218,35 @@ class ConfigCHAOS(dict):
 
     @contextmanager
     def context(self, key, value):
-        """Use context manager to temporarily change setting."""
+        """
+        Use context manager to temporarily change setting.
+
+        Parameters
+        ----------
+        key : str
+            ConfigCHAOS configuration key.
+        value
+            Value compatible with ``key``.
+
+        Examples
+        --------
+        Temporarily change the radius of Earth's surface for a computation
+        and then change it back to the original value.
+
+        .. code-block:: python
+
+          from chaosmagpy import configCHAOS
+
+          print('Before: ', configCHAOS['params.r_surf'])
+
+          # change Earth's radius to 10 km
+          with configCHAOS.context('params.r_surf', 10):
+              # do something at r_surf = 10 km ...
+              print('Inside: ', configCHAOS['params.r_surf'])
+
+          print('After: ', configCHAOS['params.r_surf'])
+
+        """
         old_value = self.__getitem__(key)
         self.__setitem__(key, value)
         yield

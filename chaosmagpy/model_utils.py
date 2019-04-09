@@ -382,6 +382,19 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     """
 
+    # ensure ndarray inputs
+    coeffs = np.array(coeffs, dtype=np.float)
+    radius = np.array(radius, dtype=np.float) / configCHAOS['params.r_surf']
+    theta = np.array(theta, dtype=np.float)
+    phi = np.array(phi, dtype=np.float)
+
+    if np.amin(theta) <= 0.0 or np.amax(theta) >= 180.0:
+        if np.amin(theta) == 0.0 or np.amax(theta) == 180.0:
+            warnings.warn('The geographic poles are included.')
+            print('here')
+        else:
+            raise ValueError('Colatitude outside bounds [0, 180].')
+
     # handle optional argument: nmax
     nmax_coeffs = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # degree for coeffs
     if nmax is None:
@@ -395,13 +408,6 @@ def synth_values(coeffs, radius, theta, phi, *,
     # handle optional argument: source
     if source is None:
         source = 'internal'
-
-    # ensure ndarray inputs
-    radius = np.array(radius, dtype=np.float) / configCHAOS['params.r_surf']
-    theta = np.array(theta, dtype=np.float)
-    phi = np.array(phi, dtype=np.float)
-
-    assert np.amin(theta) >= 0 and np.amax(theta) <= degrees(pi)
 
     # handle grid option
     grid = False if grid is None else grid
