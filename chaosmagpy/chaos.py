@@ -162,7 +162,7 @@ class BaseModel(object):
                 try:
                     key = min(dkey[extrapolate], self.order)
                 except KeyError:
-                    string = '", "'.join([k for k, _ in dkey.items()])
+                    string = '", "'.join([*dkey.keys()])
                     raise ValueError(
                         f'Unknown extrapolation method "{extrapolate}". Use '
                         f'one of {{"{string}"}}.')
@@ -503,11 +503,11 @@ class CHAOS(object):
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
     breaks_euler : dict with ndarrays, shape (:math:`m_e` +1,)
         Dictionary containing satellite name as key and corresponding break
-        vectors of Euler angles (keys are ``'oersted'``, ``'champ'``,
+        vectors of Euler angles (CHAOS-6: keys are ``'oersted'``, ``'champ'``,
         ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``).
     coeffs_euler : dict with ndarrays, shape (1, :math:`m_e`, 3)
         Dictionary containing satellite name as key and arrays of the Euler
-        angles alpha, beta and gamma as trailing dimension (keys are
+        angles alpha, beta and gamma as trailing dimension (CHAOS-6: keys are
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
         ``'swarm_c'``).
     version : str
@@ -591,8 +591,13 @@ class CHAOS(object):
         # Euler angles
         self.breaks_euler = breaks_euler
         self.coeffs_euler = coeffs_euler
+        if breaks_euler is None:
+            satellites = None
+        else:
+            satellites = tuple([*breaks_euler.keys()])
 
-        self._meta_data = None  # reserve space for meta data
+        # dictionary for meta data
+        self._meta_data = dict(satellites=satellites)
 
         # set version of CHAOS model
         if version is None:
@@ -1365,6 +1370,52 @@ class CHAOS(object):
         pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
                      titles=titles, label=units)
         plt.show()
+
+    def synth_euler_angles(self, time, satellite):
+        """
+        Extract Euler angles for specified satellite.
+
+        Parameters
+        ----------
+        time : float or ndarray, shape (...)
+            Time given as MJD2000 (modified Julian date).
+        satellite : str
+            Satellite from which to get the euler angles.
+
+        Returns
+        -------
+        angles : ndarray, shape (..., 3)
+            Euler angles alpha, beta and gamma in degrees, stored in trailing
+            dimension.
+
+        """
+
+        if satellite not in self._meta_data['satellites']:
+            string = '", "'.join(self._meta_data['satellites'])
+            raise ValueError(
+                        f'Unknown satellite "{satellite}". Use '
+                        f'one of {{"{string}"}}.')
+
+        if self.coeffs_euler[satellite] is None:
+            raise ValueError('Euler angles are missing')
+
+        # find smallest overlapping time period for breaks_delta
+        start = self.breaks_euler[satellite][0]
+        end = self.breaks_euler[satellite][-1]
+
+        # ensure ndarray input
+        time = np.array(time, dtype=np.float)
+
+        if np.amin(time) < start or np.amax(time) > end:
+            warnings.warn(
+                'Requested Euler angles are outside of the '
+                f'modelled period from {start} to {end}. Doing linear '
+                'extrapolation of the angles.')
+
+        euler = sip.PPoly(self.coeffs_euler[satellite],
+                          self.breaks_euler[satellite], extrapolate=True)
+
+        return euler(time)
 
     def save_shcfile(self, filepath, *, model=None, deriv=None,
                      leap_year=None):

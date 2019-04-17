@@ -276,7 +276,7 @@ def dyear_to_mjd(time, leap_year=None):
         mjd = (time - 2000.0) * days
 
     else:
-        raise ValueError('Wrong leap year option: use either True or False')
+        raise ValueError('Unknown leap year option: use either True or False')
 
     return mjd
 
@@ -319,7 +319,7 @@ def mjd_to_dyear(time, leap_year=None):
         dyear = time/days + 2000.0
 
     else:
-        raise ValueError('Wrong leap year option: use either True or False')
+        raise ValueError('Unknown leap year option: use either True or False')
 
     return dyear
 
