@@ -1541,7 +1541,8 @@ class CHAOS(object):
 
     def save_matfile(self, filepath):
         """
-        Save CHAOS model to `mat`-format.
+        Save CHAOS model to `mat`-format. The model must be fully specified as
+        is the case if originally loaded from a `mat`-file.
 
         Parameters
         ----------
