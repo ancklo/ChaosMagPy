@@ -26,6 +26,18 @@ class ChaosMagPyTestCase(TestCase):
 
         print(f'\nRunning {self._testMethodName}:')
 
+    def test_synth_euler_angles(self):
+
+        model = load_CHAOS_matfile(CHAOS_PATH)
+
+        test = load_matfile(MATFILE_PATH, 'test_synth_euler_angles')
+        time = np.squeeze(test['time'])
+
+        swarm_c = model.synth_euler_angles(time, 'swarm_c')
+
+        self.assertIsNone(np.testing.assert_allclose(
+            swarm_c, test['swarm_c']))
+
     def test_guess_version(self):
 
         self.assertEqual(_guess_version('CHAOS-6-x7.mat'), '6.x7')

@@ -3,11 +3,14 @@ Changelog
 
 Version 0.1a4
 -------------
-| **Date:** March 16, 2019
+| **Date:** April 18, 2019
 | **Release:** v0.1a4
 
 Features
 ^^^^^^^^
+* New CHAOS class method ``synth_euler_angles`` to compute euler angles for
+  the satellites from the CHAOS model (used to rotate vectors from
+  magnetometer frame to the satellite frame).
 * Added CHAOS class methods ``synth_values_tdep``, ``synth_values_static``,
   ``synth_values_gsm`` and ``synth_values_sm`` for field value computation.
 * RC index file now stored in HDF5 format.
