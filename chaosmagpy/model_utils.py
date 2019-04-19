@@ -391,7 +391,6 @@ def synth_values(coeffs, radius, theta, phi, *,
     if np.amin(theta) <= 0.0 or np.amax(theta) >= 180.0:
         if np.amin(theta) == 0.0 or np.amax(theta) == 180.0:
             warnings.warn('The geographic poles are included.')
-            print('here')
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 

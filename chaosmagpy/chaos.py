@@ -828,7 +828,8 @@ class CHAOS(object):
 
         """
 
-        self.model_tdep.plot_maps(time, radius, **kwargs)
+        self.model_tdep.plot_maps(time, radius,
+                                  nmax=nmax, deriv=deriv, **kwargs)
 
     def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
@@ -1552,71 +1553,101 @@ class CHAOS(object):
         """
 
         # write time-dependent internal field model to matfile
-        nmax = self.model_tdep.nmax
-        coeffs = self.model_tdep.coeffs
-        coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
+        if self.model_tdep.coeffs is None:
+            pp = None
+        else:
+            nmax = self.model_tdep.nmax
+            coeffs = self.model_tdep.coeffs
+            coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
 
-        pp = dict(
-            form='pp',
-            order=self.model_tdep.order,
-            pieces=self.model_tdep.pieces,
-            dim=int((nmax+2)*nmax),
-            breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
-            coefs=coefs)
+            pp = dict(
+                form='pp',
+                order=self.model_tdep.order,
+                pieces=self.model_tdep.pieces,
+                dim=int((nmax+2)*nmax),
+                breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
+                coefs=coefs)
 
         hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
 
         # write time-dependent external field model to matfile
-        q10 = self.coeffs_delta['q10'].reshape((-1, 1))
-        q11 = np.ravel(self.coeffs_delta['q11'])
-        s11 = np.ravel(self.coeffs_delta['s11'])
-        t_break_q10 = self.breaks_delta['q10'].reshape((-1, 1)).astype(float)
-        t_break_q11 = self.breaks_delta['q11'].reshape((-1, 1)).astype(float)
+        if self.coeffs_sm is None:
+            m_sm, m_Dst, t_break_q10, q10, t_break_q11, qs11 = None
+        else:
+            q10 = self.coeffs_delta['q10'].reshape((-1, 1))
+            q11 = np.ravel(self.coeffs_delta['q11'])
+            s11 = np.ravel(self.coeffs_delta['s11'])
+            qs11 = np.stack((q11, s11), axis=-1)
 
-        m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
-        m_sm = np.append(m_sm, self.coeffs_sm[3:])
+            t_break_q10 = self.breaks_delta['q10'].reshape(
+                (-1, 1)).astype(float)
+            t_break_q11 = self.breaks_delta['q11'].reshape(
+                (-1, 1)).astype(float)
 
-        model_ext = dict(
-            t_break_q10=t_break_q10,
-            q10=q10,
-            t_break_qs11=t_break_q11,
-            qs11=np.stack((q11, s11), axis=-1),
-            m_sm=m_sm.reshape((-1, 1)),
-            m_gsm=self.coeffs_gsm[[0, 3]].reshape((2, 1)),
-            m_Dst=self.coeffs_sm[:3].reshape((3, 1)))
+            m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
+            m_sm = np.append(m_sm, self.coeffs_sm[3:]).reshape((-1, 1))
+
+            m_Dst = self.coeffs_sm[:3].reshape((3, 1))
+
+        # process gsm coefficients
+        if self.coeffs_gsm is None:
+            m_gsm = None
+        else:
+            m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
+
+        # no external field
+        if (self.coeffs_sm is None) and (self.coeffs_gsm is None):
+            model_ext = None
+        else:
+            model_ext = dict(
+                t_break_q10=t_break_q10,
+                q10=q10,
+                t_break_qs11=t_break_q11,
+                qs11=qs11,
+                m_sm=m_sm,
+                m_gsm=m_gsm,
+                m_Dst=m_Dst)
 
         hdf.write(model_ext, path='/model_ext', filename=filepath,
                   matlab_compatible=True)
 
         # write Euler angles to matfile for each satellite
-        satellites = ['oersted', 'champ', 'sac_c', 'swarm_a',
-                      'swarm_b', 'swarm_c']
+        satellites = self._meta_data['satellites']
 
-        t_breaks_Euler = []  # list of Euler angle breaks for each satellite
-        alpha = []  # list of alpha for each satellite
-        beta = []  # list of beta for each satellite
-        gamma = []  # list of gamma for each satellite
-        for num, satellite in enumerate(satellites):
-            t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
-                (-1, 1)).astype(float))
-            alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
-                (-1, 1)).astype(float))
-            beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
-                (-1, 1)).astype(float))
-            gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
-                (-1, 1)).astype(float))
+        if satellites is None:
+            hdf.write(None, path='/model_Euler/',
+                      filename=filepath, matlab_compatible=True)
+        else:
+            t_breaks_Euler = []  # list of Euler angle breaks for satellites
+            alpha = []  # list of alpha for each satellite
+            beta = []  # list of beta for each satellite
+            gamma = []  # list of gamma for each satellite
+            for num, satellite in enumerate(satellites):
+                t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
+                    (-1, 1)).astype(float))
+                alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
+                    (-1, 1)).astype(float))
+                beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
+                    (-1, 1)).astype(float))
+                gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
+                    (-1, 1)).astype(float))
 
-        hdf.write(np.array(t_breaks_Euler), path='/model_Euler/t_break_Euler/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(alpha), path='/model_Euler/alpha/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(beta), path='/model_Euler/beta/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(gamma), path='/model_Euler/gamma/',
-                  filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(t_breaks_Euler),
+                      path='/model_Euler/t_break_Euler/', filename=filepath,
+                      matlab_compatible=True)
+            hdf.write(np.array(alpha), path='/model_Euler/alpha/',
+                      filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(beta), path='/model_Euler/beta/',
+                      filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(gamma), path='/model_Euler/gamma/',
+                      filename=filepath, matlab_compatible=True)
 
         # write static internal field model to matfile
-        g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
+        if self.model_static.coeffs is None:
+            g = None
+        else:
+            g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
+
         hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
 
         print('CHAOS saved to {}.'.format(

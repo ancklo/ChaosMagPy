@@ -31,7 +31,7 @@ def plot_timeseries(time, *args, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 1.7)).
+        Figure dimension (width, height) in inches.
     titles : list of strings
         Subplot titles (defaults to empty strings).
     ylabel : string
@@ -46,7 +46,7 @@ def plot_timeseries(time, *args, **kwargs):
     n = len(args)  # number of subplots
 
     defaults = dict(figsize=(configCHAOS['plots.figure_width'],
-                             0.8*configCHAOS['plots.figure_width']),
+                             n*0.8*configCHAOS['plots.figure_width']),
                     titles=n*[''],
                     ylabel='',
                     layout=(n, 1))
@@ -110,7 +110,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 2.5)).
+        Figure dimension (width, height) in inches.
     titles : list of strings
         Subplot titles (defaults to empty strings).
     label : string
@@ -137,7 +137,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     n = len(args)  # number of plots
 
     defaults = dict(figsize=(configCHAOS['plots.figure_width'],
-                             1.2*configCHAOS['plots.figure_width']),
+                             n*0.4*configCHAOS['plots.figure_width']),
                     titles=n*[''],
                     label='',
                     layout=(n, 1),
@@ -213,7 +213,7 @@ def plot_power_spectrum(spectrum, **kwargs):
     Other Parameters
     ----------------
     figsize : 2-tuple of floats
-        Figure dimension (width, height) in inches (defaults to (6.3, 1.7)).
+        Figure dimension (width, height) in inches.
     titles : list of strings
         Subplot titles (defaults to empty strings).
     ylabel : string
