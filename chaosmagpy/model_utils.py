@@ -684,7 +684,7 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     Returns
     -------
     R_n : ndarray, shape (..., ``nmax``)
-        Power spectrum for degrees smaller than ``nmax``
+        Power spectrum for degrees up to degree ``nmax``
 
     """
 
