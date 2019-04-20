@@ -246,6 +246,11 @@ class BaseModel(object):
             Radius in kilometers (defaults to mean Earth's surface defined in
             ``configCHAOS['r_surf']``).
 
+        Returns
+        -------
+        R_n : ndarray, shape (..., ``nmax``)
+            Power spectrum of spherical harmonics up to degree ``nmax``.
+
         Other Parameters
         ----------------
         nmax : int, positive, optional
@@ -256,11 +261,6 @@ class BaseModel(object):
             ``deriv=1``.
         **kwargs : keywords
             Other options to pass to :meth:`BaseModel.synth_coeffs` method.
-
-        Returns
-        -------
-        R_n : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
-            Power spectrum of spherical harmonics.
 
         See Also
         --------
@@ -277,6 +277,11 @@ class BaseModel(object):
     def plot_power_spectrum(self, time, **kwargs):
         """
         Plot power spectrum.
+
+        Parameters
+        ----------
+        time : float
+            Time in modified Julian date.
 
         See Also
         --------
@@ -314,6 +319,12 @@ class BaseModel(object):
         radius : ndarray, shape (), (1,) or float
             Array containing the radius in kilometers.
 
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Global map of the radial, colatitude and azimuthal field
+            components.
+
         Other Parameters
         ----------------
         nmax : int, positive, optional
@@ -325,13 +336,6 @@ class BaseModel(object):
         **kwargs : keywords
             Other options are passed to :func:`plot_utils.plot_maps`
             function.
-
-
-        Returns
-        -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
 
         See Also
         --------
@@ -388,6 +392,12 @@ class BaseModel(object):
         phi : ndarray, shape (), (1,) or float
             Longitude in degrees.
 
+        Returns
+        -------
+        B_radius, B_theta, B_phi
+            Time series plot of the radial, colatitude and azimuthal field
+            components.
+
         Other Parameters
         ----------------
         nmax : int, positive, optional
@@ -402,12 +412,6 @@ class BaseModel(object):
         **kwargs : keywords
             Other options to pass to :func:`plot_utils.plot_timeseries`
             function.
-
-        Returns
-        -------
-        B_radius, B_theta, B_phi
-            Time series plot of the radial, colatitude and azimuthal field
-            components.
 
         See Also
         --------
@@ -788,6 +792,9 @@ class CHAOS(object):
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+        **kwargs : keywords
+            Other options to pass to :meth:`BaseModel.plot_timeseries`
+            method.
 
         Returns
         -------
@@ -799,7 +806,7 @@ class CHAOS(object):
 
         self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
-    def plot_maps_tdep(self, time, radius, nmax=None, deriv=None, **kwargs):
+    def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None, **kwargs):
         """
         Plot global map of the time-dependent internal field from the CHAOS
         model.
@@ -817,8 +824,7 @@ class CHAOS(object):
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
         **kwargs : keywords
-            Other options are passed to :meth:`BaseModel.plot_maps`
-            method.
+            Other options are passed to :meth:`BaseModel.plot_maps` method.
 
         Returns
         -------
@@ -1004,7 +1010,7 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_values_gsm(self, time, radius, theta, phi, nmax=None,
+    def synth_values_gsm(self, time, radius, theta, phi, *, nmax=None,
                          source=None, grid=None):
         """
         Compute GSM magnetic field components.
@@ -1228,7 +1234,7 @@ class CHAOS(object):
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_values_sm(self, time, radius, theta, phi, nmax=None,
+    def synth_values_sm(self, time, radius, theta, phi, *, nmax=None,
                         source=None, grid=None):
         """
         Compute SM magnetic field components.
@@ -1553,60 +1559,47 @@ class CHAOS(object):
         """
 
         # write time-dependent internal field model to matfile
-        if self.model_tdep.coeffs is None:
-            pp = None
-        else:
-            nmax = self.model_tdep.nmax
-            coeffs = self.model_tdep.coeffs
-            coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
+        nmax = self.model_tdep.nmax
+        coeffs = self.model_tdep.coeffs
+        coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
 
-            pp = dict(
-                form='pp',
-                order=self.model_tdep.order,
-                pieces=self.model_tdep.pieces,
-                dim=int((nmax+2)*nmax),
-                breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
-                coefs=coefs)
+        pp = dict(
+            form='pp',
+            order=self.model_tdep.order,
+            pieces=self.model_tdep.pieces,
+            dim=int((nmax+2)*nmax),
+            breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
+            coefs=coefs)
 
         hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
 
         # write time-dependent external field model to matfile
-        if self.coeffs_sm is None:
-            m_sm, m_Dst, t_break_q10, q10, t_break_q11, qs11 = None
-        else:
-            q10 = self.coeffs_delta['q10'].reshape((-1, 1))
-            q11 = np.ravel(self.coeffs_delta['q11'])
-            s11 = np.ravel(self.coeffs_delta['s11'])
-            qs11 = np.stack((q11, s11), axis=-1)
+        q10 = self.coeffs_delta['q10'].reshape((-1, 1))
+        q11 = np.ravel(self.coeffs_delta['q11'])
+        s11 = np.ravel(self.coeffs_delta['s11'])
+        qs11 = np.stack((q11, s11), axis=-1)
 
-            t_break_q10 = self.breaks_delta['q10'].reshape(
-                (-1, 1)).astype(float)
-            t_break_q11 = self.breaks_delta['q11'].reshape(
-                (-1, 1)).astype(float)
+        t_break_q10 = self.breaks_delta['q10'].reshape(
+            (-1, 1)).astype(float)
+        t_break_q11 = self.breaks_delta['q11'].reshape(
+            (-1, 1)).astype(float)
 
-            m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
-            m_sm = np.append(m_sm, self.coeffs_sm[3:]).reshape((-1, 1))
+        m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
+        m_sm = np.append(m_sm, self.coeffs_sm[3:]).reshape((-1, 1))
 
-            m_Dst = self.coeffs_sm[:3].reshape((3, 1))
+        m_Dst = self.coeffs_sm[:3].reshape((3, 1))
 
         # process gsm coefficients
-        if self.coeffs_gsm is None:
-            m_gsm = None
-        else:
-            m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
+        m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
 
-        # no external field
-        if (self.coeffs_sm is None) and (self.coeffs_gsm is None):
-            model_ext = None
-        else:
-            model_ext = dict(
-                t_break_q10=t_break_q10,
-                q10=q10,
-                t_break_qs11=t_break_q11,
-                qs11=qs11,
-                m_sm=m_sm,
-                m_gsm=m_gsm,
-                m_Dst=m_Dst)
+        model_ext = dict(
+            t_break_q10=t_break_q10,
+            q10=q10,
+            t_break_qs11=t_break_q11,
+            qs11=qs11,
+            m_sm=m_sm,
+            m_gsm=m_gsm,
+            m_Dst=m_Dst)
 
         hdf.write(model_ext, path='/model_ext', filename=filepath,
                   matlab_compatible=True)
@@ -1614,39 +1607,31 @@ class CHAOS(object):
         # write Euler angles to matfile for each satellite
         satellites = self._meta_data['satellites']
 
-        if satellites is None:
-            hdf.write(None, path='/model_Euler/',
-                      filename=filepath, matlab_compatible=True)
-        else:
-            t_breaks_Euler = []  # list of Euler angle breaks for satellites
-            alpha = []  # list of alpha for each satellite
-            beta = []  # list of beta for each satellite
-            gamma = []  # list of gamma for each satellite
-            for num, satellite in enumerate(satellites):
-                t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
-                    (-1, 1)).astype(float))
-                alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
-                    (-1, 1)).astype(float))
-                beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
-                    (-1, 1)).astype(float))
-                gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
-                    (-1, 1)).astype(float))
+        t_breaks_Euler = []  # list of Euler angle breaks for satellites
+        alpha = []  # list of alpha for each satellite
+        beta = []  # list of beta for each satellite
+        gamma = []  # list of gamma for each satellite
+        for num, satellite in enumerate(satellites):
+            t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
+                (-1, 1)).astype(float))
+            alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
+                (-1, 1)).astype(float))
+            beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
+                (-1, 1)).astype(float))
+            gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
+                (-1, 1)).astype(float))
 
-            hdf.write(np.array(t_breaks_Euler),
-                      path='/model_Euler/t_break_Euler/', filename=filepath,
-                      matlab_compatible=True)
-            hdf.write(np.array(alpha), path='/model_Euler/alpha/',
-                      filename=filepath, matlab_compatible=True)
-            hdf.write(np.array(beta), path='/model_Euler/beta/',
-                      filename=filepath, matlab_compatible=True)
-            hdf.write(np.array(gamma), path='/model_Euler/gamma/',
-                      filename=filepath, matlab_compatible=True)
+        hdf.write(np.array(t_breaks_Euler), path='/model_Euler/t_break_Euler/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(np.array(alpha), path='/model_Euler/alpha/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(np.array(beta), path='/model_Euler/beta/',
+                  filename=filepath, matlab_compatible=True)
+        hdf.write(np.array(gamma), path='/model_Euler/gamma/',
+                  filename=filepath, matlab_compatible=True)
 
         # write static internal field model to matfile
-        if self.model_static.coeffs is None:
-            g = None
-        else:
-            g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
+        g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
 
         hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
 
@@ -1689,7 +1674,7 @@ class CHAOS(object):
         return load_CHAOS_matfile(filepath)
 
     @classmethod
-    def from_shc(self, filepath, leap_year=None):
+    def from_shc(self, filepath, *, leap_year=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
