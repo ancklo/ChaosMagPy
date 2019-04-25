@@ -142,7 +142,7 @@ DEFAULTS = {
 }
 
 
-class ConfigCHAOS(dict):
+class BasicConfig(dict):
     """Class for creating CHAOS configuration dictionary."""
 
     defaults = DEFAULTS
@@ -238,7 +238,7 @@ class ConfigCHAOS(dict):
         Parameters
         ----------
         key : str
-            ConfigCHAOS configuration key.
+            BasicConfig configuration key.
         value
             Value compatible with ``key``.
 
@@ -249,16 +249,16 @@ class ConfigCHAOS(dict):
 
         .. code-block:: python
 
-          from chaosmagpy import configCHAOS
+          from chaosmagpy import basicConfig
 
-          print('Before: ', configCHAOS['params.r_surf'])
+          print('Before: ', basicConfig['params.r_surf'])
 
           # change Earth's radius to 10 km
-          with configCHAOS.context('params.r_surf', 10):
+          with basicConfig.context('params.r_surf', 10):
               # do something at r_surf = 10 km ...
-              print('Inside: ', configCHAOS['params.r_surf'])
+              print('Inside: ', basicConfig['params.r_surf'])
 
-          print('After: ', configCHAOS['params.r_surf'])
+          print('After: ', basicConfig['params.r_surf'])
 
         """
         old_value = self.__getitem__(key)
@@ -268,7 +268,7 @@ class ConfigCHAOS(dict):
 
 
 # load defaults
-configCHAOS = ConfigCHAOS({key: val for key, (val, _) in DEFAULTS.items()})
+basicConfig = BasicConfig({key: val for key, (val, _) in DEFAULTS.items()})
 
 
 if __name__ == '__main__':

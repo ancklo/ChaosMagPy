@@ -7,7 +7,7 @@ import numpy as np
 import warnings
 from numpy import radians, degrees
 from math import pi
-from chaosmagpy.config_utils import configCHAOS
+from chaosmagpy.config_utils import basicConfig
 from scipy.interpolate import BSpline, PPoly
 
 
@@ -384,7 +384,7 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     # ensure ndarray inputs
     coeffs = np.array(coeffs, dtype=np.float)
-    radius = np.array(radius, dtype=np.float) / configCHAOS['params.r_surf']
+    radius = np.array(radius, dtype=np.float) / basicConfig['params.r_surf']
     theta = np.array(theta, dtype=np.float)
     phi = np.array(phi, dtype=np.float)
 
@@ -527,7 +527,7 @@ def design_gauss(radius, theta, phi, nmax, source=None):
     """
 
     # ensure ndarray inputs
-    radius = np.array(radius, dtype=np.float) / configCHAOS['params.r_surf']
+    radius = np.array(radius, dtype=np.float) / basicConfig['params.r_surf']
     theta = np.array(theta, dtype=np.float)
     phi = np.array(phi, dtype=np.float)
 
@@ -688,7 +688,7 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
 
     """
 
-    ratio = 1 if radius is None else configCHAOS['params.r_surf'] / radius
+    ratio = 1 if radius is None else basicConfig['params.r_surf'] / radius
 
     N = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # maximum degree
 

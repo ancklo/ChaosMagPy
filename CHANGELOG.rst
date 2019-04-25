@@ -14,7 +14,7 @@ Features
 * Added CHAOS class methods ``synth_values_tdep``, ``synth_values_static``,
   ``synth_values_gsm`` and ``synth_values_sm`` for field value computation.
 * RC index file now stored in HDF5 format.
-* Filepaths and other parameters are now handled by ``configCHAOS``.
+* Filepaths and other parameters are now handled by ``basicConfig``.
 * Added extrapolation keyword to CHAOS class method ``synth_coeffs``, linear by
   default.
 * ``mjd2000`` now also accepts datetime class instances.

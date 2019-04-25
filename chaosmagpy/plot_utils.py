@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import cartopy.crs as ccrs
-from chaosmagpy.config_utils import configCHAOS
+from chaosmagpy.config_utils import basicConfig
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
 
@@ -45,8 +45,8 @@ def plot_timeseries(time, *args, **kwargs):
 
     n = len(args)  # number of subplots
 
-    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
-                             n*0.8*configCHAOS['plots.figure_width']),
+    defaults = dict(figsize=(basicConfig['plots.figure_width'],
+                             n*0.8*basicConfig['plots.figure_width']),
                     titles=n*[''],
                     ylabel='',
                     layout=(n, 1))
@@ -136,8 +136,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
 
-    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
-                             n*0.4*configCHAOS['plots.figure_width']),
+    defaults = dict(figsize=(basicConfig['plots.figure_width'],
+                             n*0.4*basicConfig['plots.figure_width']),
                     titles=n*[''],
                     label='',
                     layout=(n, 1),
@@ -223,8 +223,8 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     """
 
-    defaults = dict(figsize=(configCHAOS['plots.figure_width'],
-                             0.8*configCHAOS['plots.figure_width']),
+    defaults = dict(figsize=(basicConfig['plots.figure_width'],
+                             0.8*basicConfig['plots.figure_width']),
                     titles='',
                     ylabel='')
 

@@ -10,7 +10,7 @@ import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 import chaosmagpy.plot_utils as pu
 import matplotlib.pyplot as plt
-from chaosmagpy.config_utils import configCHAOS
+from chaosmagpy.config_utils import basicConfig
 from chaosmagpy.plot_utils import defaultkeys
 from datetime import datetime
 from timeit import default_timer as timer
@@ -244,7 +244,7 @@ class BaseModel(object):
             Time in modified Julian date.
         radius : float
             Radius in kilometers (defaults to mean Earth's surface defined in
-            ``configCHAOS['r_surf']``).
+            ``basicConfig['r_surf']``).
 
         Returns
         -------
@@ -268,7 +268,7 @@ class BaseModel(object):
 
         """
 
-        radius = configCHAOS['params.r_surf'] if radius is None else radius
+        radius = basicConfig['params.r_surf'] if radius is None else radius
 
         coeffs = self.synth_coeffs(time, **kwargs)
 
@@ -516,7 +516,7 @@ class CHAOS(object):
         ``'swarm_c'``).
     version : str
         Version specifier (``None`` evaluates to
-        ``configCHAOS['params.version']`` by default).
+        ``basicConfig['params.version']`` by default).
 
     Examples
     --------
@@ -605,7 +605,7 @@ class CHAOS(object):
 
         # set version of CHAOS model
         if version is None:
-            version = configCHAOS['params.version']
+            version = basicConfig['params.version']
             print(f'Setting default CHAOS version to {version}.')
             self.version = version
         else:
@@ -976,9 +976,9 @@ class CHAOS(object):
                           "GSM reference frame.")
 
         # build rotation matrix from file
-        frequency_spectrum = np.load(configCHAOS['file.GSM_spectrum'])
+        frequency_spectrum = np.load(basicConfig['file.GSM_spectrum'])
         assert np.all(
-            frequency_spectrum['dipole'] == configCHAOS['params.dipole']), \
+            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
             "GSM rotation coefficients are not the same as the set dipole."
 
         if source == 'external':
@@ -1129,14 +1129,14 @@ class CHAOS(object):
                 'extrapolation in SM reference frame.')
 
         # load rotation matrix spectrum from file
-        frequency_spectrum = np.load(configCHAOS['file.SM_spectrum'])
+        frequency_spectrum = np.load(basicConfig['file.SM_spectrum'])
         assert np.all(
-            frequency_spectrum['dipole'] == configCHAOS['params.dipole']), \
+            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
             "SM rotation coefficients are not the same as the set dipole."
 
         # load RC-index file: first hdf5 then dat-file format
         try:
-            with h5py.File(configCHAOS['file.RC_index'], 'r') as f_RC:
+            with h5py.File(basicConfig['file.RC_index'], 'r') as f_RC:
                 # check RC index time and input times
                 start = f_RC['time'][0]
                 end = f_RC['time'][-1]
@@ -1144,7 +1144,7 @@ class CHAOS(object):
                 RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
                                   kind='linear')
         except OSError:  # dat file second
-            f_RC = du.load_RC_datfile(configCHAOS['file.RC_index'])
+            f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
             start = f_RC['time'].iloc[0]
             end = f_RC['time'].iloc[-1]
             # interpolate RC (linear) at input times: RC is callable
@@ -1905,7 +1905,7 @@ def _guess_version(filepath):
     """
     Extract version from filename. For example from the file 'CHAOS-6-x7.mat',
     it returns '6.x7'. If not successful, version is set to default in
-    ``configCHAOS['params.version']``.
+    ``basicConfig['params.version']``.
 
     """
 
@@ -1917,7 +1917,7 @@ def _guess_version(filepath):
     else:
         warnings.warn(
             'Unknown CHAOS model version. Setting version to {:}.'.format(
-                configCHAOS['params.version']))
-        version = configCHAOS['params.version']
+                basicConfig['params.version']))
+        version = basicConfig['params.version']
 
     return version

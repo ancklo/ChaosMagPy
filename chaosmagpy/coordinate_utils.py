@@ -28,7 +28,7 @@ import os
 from numpy import degrees, radians
 from math import pi, ceil, factorial
 from chaosmagpy.model_utils import legendre_poly
-from chaosmagpy.config_utils import configCHAOS
+from chaosmagpy.config_utils import basicConfig
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -202,7 +202,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     keywords {'frequency', 'spectrum', 'frequency_ind', 'spectrum_ind',
     'step', 'N', 'filter', 'reference', 'dipole'}. ``'dipole'`` means the three
     spherical harmonic coefficients of the dipole set in
-    ``configCHAOS['params.dipole']``.
+    ``basicConfig['params.dipole']``.
 
     """
 
@@ -294,7 +294,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 dipole=configCHAOS['params.dipole'])
+                 dipole=basicConfig['params.dipole'])
         print("Output saved to {:}".format(save_to))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
@@ -578,7 +578,7 @@ def basevectors_gsm(time, dipole=None):
         January 1, 2000 (mjd2000).
     dipole : ndarray, shape (3,), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
+        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -589,7 +589,7 @@ def basevectors_gsm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = configCHAOS['params.dipole']
+        dipole = basicConfig['params.dipole']
 
     vec = _dipole_to_unit(dipole)
 
@@ -631,7 +631,7 @@ def basevectors_sm(time, dipole=None):
         January 1, 2000 (mjd2000).
     dipole : ndarray, shape (3,), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
+        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -643,7 +643,7 @@ def basevectors_sm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = configCHAOS['params.dipole']
+        dipole = basicConfig['params.dipole']
 
     vec = _dipole_to_unit(dipole)
 
@@ -686,7 +686,7 @@ def basevectors_mag(dipole=None):
     ----------
     dipole : ndarray, shape (3,), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
+        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -696,7 +696,7 @@ def basevectors_mag(dipole=None):
     """
 
     if dipole is None:
-        dipole = configCHAOS['params.dipole']
+        dipole = basicConfig['params.dipole']
 
     mag_3 = _dipole_to_unit(dipole)
 
@@ -844,7 +844,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
         coordinates to geographic (default is False).
     dipole : ndarray, shape (3,), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
+        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -863,7 +863,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
     reference = str(reference).lower()
 
     if dipole is None:
-        dipole = configCHAOS['params.dipole']
+        dipole = basicConfig['params.dipole']
 
     if reference == 'gsm':
         # compute GSM base vectors
@@ -991,7 +991,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
         coordinates to geographic (default is False).
     dipole : ndarray, shape (3,), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``configCHAOS['params.dipole']``.
+        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -1014,7 +1014,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     reference = str(reference).lower()
 
     if dipole is None:
-        dipole = configCHAOS['params.dipole']
+        dipole = basicConfig['params.dipole']
 
     if reference == 'gsm':
         # compute GSM base vectors
@@ -1230,7 +1230,7 @@ def q_response(frequency, nmax):
     """
     Computes the Q-response given a conductivity model of Earth, which is
     loaded during the computation (from
-    ``configCHAOS['file.Earth_conductivity']``).
+    ``basicConfig['file.Earth_conductivity']``).
 
     Parameters
     ----------
@@ -1249,7 +1249,7 @@ def q_response(frequency, nmax):
     """
 
     # load conductivity model
-    filepath = configCHAOS['file.Earth_conductivity']
+    filepath = basicConfig['file.Earth_conductivity']
     sigma_model = np.loadtxt(filepath)
 
     radius_ref = 6371.2  # reference radius in km
