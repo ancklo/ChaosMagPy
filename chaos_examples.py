@@ -96,7 +96,7 @@ def example2():
     theta = 90. - cdf_file.varget('Latitude')  # colat deg
     phi = cdf_file.varget('Longitude')  # deg
     time = cdf_file.varget('Timestamp')  # milli seconds since year 1
-    time = (time - time[0]) / (1e3*3600*24) + mjd2000(2018, 8, 1)
+    time = time / (1e3*3600*24) - 730485  # time in modified Julian date 2000
     F_swarm = cdf_file.varget('F')
     cdf_file.close()
 
