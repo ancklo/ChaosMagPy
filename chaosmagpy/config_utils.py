@@ -17,6 +17,8 @@ keywords.
                        `shape (3,)`
  'params.version'      `str`          Default version of the CHAOS model, e.g.
                                       ``'6.x7'``.
+ 'params.cdf_to_mjd'   `int`          Number of days on Jan 01, 2000 since Jan
+                                      01, 0000 (CDF start epoch)
  ====================  =============  =========================================
 
 **Files**
@@ -76,6 +78,14 @@ def check_float(s):
         raise ValueError(f'Could not convert {s} to float.')
 
 
+def check_int(s):
+    """Convert to integer."""
+    try:
+        return int(s)
+    except ValueError:
+        raise ValueError(f'Could not convert {s} to integer.')
+
+
 def check_string(s):
     """Convert to string."""
     try:
@@ -115,6 +125,7 @@ DEFAULTS = {
     'params.dipole': [np.array([-29442.0, -1501.0, 4797.1]),
                       lambda x: check_vector(x, len=3)],
     'params.version': ['6.x7', check_version_string],
+    'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files
     'file.RC_index': [os.path.join(LIB, 'RC_index.h5'),
