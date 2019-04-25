@@ -165,21 +165,24 @@ class ConfigCHAOS(dict):
     def __str__(self):
         return '\n'.join(map('{0[0]}: {0[1]}'.format, sorted(self.items())))
 
-    def reset(self, key=None):
+    def reset(self, key):
         """
         Load default values.
 
         Parameters
         ----------
-        key : str, optional
-            Single keyword that is reset (all keywords are reset by default).
+        key : str
+            Single keyword that is reset to the default.
 
         """
-        if key is None:
-            super().update(
-                {key: val for key, (val, _) in self.defaults.items()})
-        else:
-            self.__setitem__(key, self.defaults[key][0])
+        self.__setitem__(key, self.defaults[key][0])
+
+    def fullreset(self):
+        """
+        Load all default values.
+
+        """
+        super().update({key: val for key, (val, _) in self.defaults.items()})
 
     def load(self, filepath):
         """
