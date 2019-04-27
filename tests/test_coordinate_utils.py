@@ -1,7 +1,6 @@
 import numpy as np
 import os
 from unittest import TestCase, main
-from datetime import timedelta, datetime
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import data_utils as d
 from math import pi

@@ -131,7 +131,9 @@ def synth_rotate_gauss(time, frequency, spectrum):
     """
 
     time = np.array(time, dtype=np.float)
-    frequency = np.array(frequency, dtype=np.float)
+    frequency = 2*pi*np.array(frequency, dtype=np.float)
+    if frequency.ndim == 1:
+        frequency.reshape(-1, 1, 1)
     spectrum = np.array(spectrum, dtype=np.complex)
 
     # predefine array shape
@@ -141,17 +143,13 @@ def synth_rotate_gauss(time, frequency, spectrum):
     for index, day in np.ndenumerate(time):
 
         # complex exponentials evaluated at specific time (day)
-        harmonics = np.exp(1j*2*pi*frequency*day)
+        harmonics = np.exp(1j*frequency*day)
 
         # scale offset by 0.5 before synthesizing matrices
-        harmonics[frequency == 0.0] = 0.5*harmonics[frequency == 0.0]
+        harmonics = np.where(frequency == 0.0, 0.5*harmonics, harmonics)
 
-        matrix = np.zeros(spectrum[0].shape)
-        for counter, harmonic in enumerate(harmonics):
-
-            matrix += np.real(2*spectrum[counter]*harmonic)
-
-        matrix_time[index] = matrix
+        matrix = np.sum(spectrum*harmonics, axis=0)
+        matrix_time[index] = 2*np.real(matrix)
 
     return matrix_time
 
