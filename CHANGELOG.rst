@@ -1,10 +1,10 @@
 Changelog
 =========
 
-Version 0.1a4
+Version 0.1
 -------------
-| **Date:** April 18, 2019
-| **Release:** v0.1a4
+| **Date:** May 10, 2019
+| **Release:** v0.1
 
 Features
 ^^^^^^^^
