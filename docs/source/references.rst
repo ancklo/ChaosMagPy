@@ -52,6 +52,8 @@ Data utilities (`data_utils`)
     :inherited-members:
     :show-inheritance:
 
+.. _label-configuration-list:
+
 Configuration utilities (`config_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

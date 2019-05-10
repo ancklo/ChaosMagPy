@@ -446,8 +446,8 @@ class BaseModel(object):
 
 class CHAOS(object):
     """
-    Class for the time-dependent geomagnetic field model CHAOS. Currently only
-    CHAOS-6 is supported.
+    Class for the time-dependent geomagnetic field model CHAOS. Only
+    CHAOS-6 is currently supported.
 
     Parameters
     ----------
@@ -979,7 +979,7 @@ class CHAOS(object):
         frequency_spectrum = np.load(basicConfig['file.GSM_spectrum'])
         assert np.all(
             frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
-            "GSM rotation coefficients are not the same as the set dipole."
+            "GSM rotation coefficients not compatible with the chosen dipole."
 
         if source == 'external':
             # unpack file: oscillations per day, complex spectrum
@@ -1132,7 +1132,7 @@ class CHAOS(object):
         frequency_spectrum = np.load(basicConfig['file.SM_spectrum'])
         assert np.all(
             frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
-            "SM rotation coefficients are not the same as the set dipole."
+            "SM rotation coefficients not compatible with the chosen dipole."
 
         # load RC-index file: first hdf5 then dat-file format
         try:

@@ -11,6 +11,7 @@ ChaosMagPy documentation
 
    readme
    installation
+   configuration
    usage
    references
    changelog

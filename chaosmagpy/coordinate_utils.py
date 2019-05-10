@@ -187,11 +187,11 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     -------
     frequency, frequency_ind : ndarray, shape (``filter``, ``nmax`` \
 (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
-        Unsorted vector of frequencies in 1/days. (positive, excluding aliases)
+        Unsorted vector of positive frequencies in 1/days.
     spectrum, spectrum_ind : ndarray, shape (``filter``, ``nmax`` \
 (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         Complex fourier spectrum of rotation matrices to transform spherical
-        harmonic expansions. It also applies a conductivity model to derive the
+        harmonic expansions. It also uses a conductivity model to derive the
         transform for the induced field.
 
     Notes
