@@ -26,7 +26,7 @@ cp dist/chaosmagpy-$version.tar.gz $tempdir/chaosmagpy-$version.tar.gz
 cp chaos_examples.py $tempdir/chaos_examples.py
 cp example1_output.txt $tempdir/example1_output.txt
 mkdir $tempdir/data $tempdir/html
-cp data/CHAOS-6-x8.mat $tempdir/data/CHAOS-6-x8.mat
+cp data/CHAOS-6-x9.mat $tempdir/data/CHAOS-6-x9.mat
 cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf
 cp -r docs/build/html/* $tempdir/html/
 
@@ -69,7 +69,7 @@ The directory contains the files/directories:
    example 6: Calculate external and associated induced fields described in SM
               and GSM reference systems and plot maps
 
-3. "data/CHAOS-6-x8.mat": mat-file containing CHAOS-6 model (extension 8)
+3. "data/CHAOS-6-x9.mat": mat-file containing CHAOS-6 model (extension 9)
 
 4. "SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf":
    cdf-file containing Swarm A magnetic field data from August 1, 2018.
