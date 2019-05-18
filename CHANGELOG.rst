@@ -3,6 +3,16 @@ Changelog
 
 Version 0.1
 -------------
+| **Date:** May 18, 2019
+| **Release:** v0.2
+
+
+Features
+^^^^^^^^
+* automatically import ``model_utils.synth_values``.
+
+Version 0.1
+-------------
 | **Date:** May 10, 2019
 | **Release:** v0.1
 
