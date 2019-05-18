@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 0.1
+Version 0.2
 -------------
 | **Date:** May 18, 2019
 | **Release:** v0.2
