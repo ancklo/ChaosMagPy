@@ -1791,6 +1791,15 @@ def load_CHAOS_matfile(filepath):
     # define satellite names
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
 
+    # append generic satellite name if more data available
+    n = len(model_euler['t_break_Euler'][0])
+    m = len(satellites)
+    if n > m:
+        for counter in range(m+1, n+1):
+            satellites.append(f'satellite_{counter}')
+
+    print(satellites)
+
     # coefficients and breaks of euler angles
     breaks_euler = {}
     for num, satellite in enumerate(satellites):
