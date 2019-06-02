@@ -1798,8 +1798,6 @@ def load_CHAOS_matfile(filepath):
         for counter in range(m+1, n+1):
             satellites.append(f'satellite_{counter}')
 
-    print(satellites)
-
     # coefficients and breaks of euler angles
     breaks_euler = {}
     for num, satellite in enumerate(satellites):

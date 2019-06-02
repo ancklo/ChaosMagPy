@@ -3,12 +3,13 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** May 20, 2019
+| **Date:** June 2, 2019
 | **Release:** v0.2
 
 
 Features
 ^^^^^^^^
+* improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
 * automatically import ``model_utils.synth_values``.
 
 Version 0.1

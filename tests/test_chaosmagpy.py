@@ -385,5 +385,36 @@ class ChaosMagPyTestCase(TestCase):
             B_geo_1, B_geo_2, rtol=1e-5))
 
 
+def profiler_complete_forward(n_data=300):
+    """
+    Example:
+
+    .. code-block:: python
+
+        %load_ext line_profiler
+
+        import sys
+        sys.path.insert(0, <tests directory path>)
+        from test_chaosmagpy import profiler_complete_forward as profiler
+        import chaosmagpy as cp
+
+        %lprun -f cp.coordinate_utils.synth_rotate_gauss profiler(n_data=300)
+
+    """
+
+    t_start = -200.0
+    t_end = 6000.0
+    time = np.linspace(t_start, t_end, num=n_data)
+    radius = R_REF * np.ones(time.shape)
+    theta = np.linspace(1, 179, num=n_data)
+    phi = np.linspace(-180, 179, num=n_data)
+
+    model = load_CHAOS_matfile(CHAOS_PATH)
+
+    # B_radius, B_theta, B_phi = model(time, radius, theta, phi)
+    B_radius, B_theta, B_phi = model(time, radius, theta, phi)
+    print('Ran "profiler_complete_forward"')
+
+
 if __name__ == '__main__':
     main()

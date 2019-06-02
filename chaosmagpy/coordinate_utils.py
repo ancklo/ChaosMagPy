@@ -120,7 +120,7 @@ def synth_rotate_gauss(time, frequency, spectrum):
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
     frequency : ndarray, shape (k,) or (k, m, n)
-        Vector of frequencies given in oscillations per day.
+        Vector of positive frequencies given in oscillations per day.
     spectrum : ndarray, shape (k, m, n)
         Fourier components of the matrices (reside in the last two dimensions).
 
@@ -130,28 +130,25 @@ def synth_rotate_gauss(time, frequency, spectrum):
 
     """
 
-    time = np.array(time, dtype=np.float)
+    time = np.array(time[..., None, None, None], dtype=np.float)
     frequency = 2*pi*np.array(frequency, dtype=np.float)
     if frequency.ndim == 1:
         frequency.reshape(-1, 1, 1)
     spectrum = np.array(spectrum, dtype=np.complex)
 
-    # predefine array shape
-    matrix_time = np.empty(time.shape + spectrum.shape[1:])
+    # output of shape (..., k, n, m)
+    freq_t = frequency*time
 
-    # run over time index
-    for index, day in np.ndenumerate(time):
+    # compute complex exponentials
+    harmonics = np.empty(freq_t.shape, dtype=np.complex)
+    harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
-        # complex exponentials evaluated at specific time (day)
-        harmonics = np.exp(1j*frequency*day)
+    # scale offset by 0.5 before synthesizing matrices
+    harmonics = np.where(frequency == 0.0, 0.5*harmonics, harmonics)
 
-        # scale offset by 0.5 before synthesizing matrices
-        harmonics = np.where(frequency == 0.0, 0.5*harmonics, harmonics)
+    matrix = np.sum(spectrum*harmonics, axis=-3)
 
-        matrix = np.sum(spectrum*harmonics, axis=0)
-        matrix_time[index] = 2*np.real(matrix)
-
-    return matrix_time
+    return 2*np.real(matrix)
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
