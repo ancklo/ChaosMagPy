@@ -108,11 +108,11 @@ def _dipole_to_unit(*args):
     return vector
 
 
-def synth_rotate_gauss(time, frequency, spectrum):
+def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
     """
-    Compute matrices to transform sphercial harmonic expansion from
+    Compute matrices to transform sphercial harmonic expansion from a
     time-dependent reference system (e.g. GSM, SM) to GEO based on Fourier
-    components.
+    coefficients.
 
     Parameters
     ----------
@@ -123,12 +123,21 @@ def synth_rotate_gauss(time, frequency, spectrum):
         Vector of positive frequencies given in oscillations per day.
     spectrum : ndarray, shape (k, m, n)
         Fourier components of the matrices (reside in the last two dimensions).
+    scaling : bool, optional (defaults to ``True``)
+        If ``True``, Fourier coefficients corresponding to the non-bias term
+        (i.e. all non-zero frequency terms) are multiplied by a factor of 2.
+        Hence, taking the real part of the spectrum multiplied with the complex
+        exponentials results in the correctly scaled and time-shifted
+        real-valued harmonics.
 
     Returns
     -------
     matrix : ndarray, shape (..., m, n)
 
     """
+
+    if scaling is None:
+        scaling = True
 
     time = np.array(time[..., None, None, None], dtype=np.float)
     frequency = 2*pi*np.array(frequency, dtype=np.float)
@@ -143,18 +152,19 @@ def synth_rotate_gauss(time, frequency, spectrum):
     harmonics = np.empty(freq_t.shape, dtype=np.complex)
     harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
-    # scale offset by 0.5 before synthesizing matrices
-    harmonics = np.where(frequency == 0.0, 0.5*harmonics, harmonics)
+    if scaling:
+        # scale non-offset coefficients by 2 before synthesizing matrices
+        harmonics = np.where(frequency != 0.0, 2*harmonics, harmonics)
 
     matrix = np.sum(spectrum*harmonics, axis=-3)
 
-    return 2*np.real(matrix)
+    return np.real(matrix)
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=None, reference=None):
+                     save_to=None, reference=None, scaling=None):
     """
-    Compute Fourier components of the timeseries of matrices that transform
+    Compute Fourier coefficients of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
     reference system (e.g. GSM, SM) to GEO (degree ``nmax``).
 
@@ -172,13 +182,19 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         Number of samples for which to evaluate the FFT (default is
         N = 8*365.25*24 equiv. to 8 years using default sample spacing).
     filter : int, optional
-        Set filter length, i.e. number of Fourier components to be saved
+        Set filter length, i.e. number of Fourier coefficients to be saved
         (default is ``N``).
     save_to : str, optional
         Path and file name to store output in npz-format. Defaults to
         ``False``, i.e. no file is written.
     reference : {'gsm', 'sm'}, optional
         Time-dependent reference system (default is GSM).
+    scaling : bool, optional (default is ``False``)
+        If ``True``, Fourier coefficients corresponding to the non-bias term
+        (i.e. all non-zero frequency terms) are multiplied by a factor of 2.
+        Hence, taking the real part of the spectrum multiplied with the complex
+        exponentials results in the correctly scaled and time-shifted
+        real-valued harmonics.
 
     Returns
     -------
@@ -199,6 +215,34 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     spherical harmonic coefficients of the dipole set in
     ``basicConfig['params.dipole']``.
 
+    A word to the discrete Fourier transform (DFT) used here:
+
+    A discrete periodic signal :math:`x[n]` with :math:`n\\in [0, N-1]`
+    (period of `N`) is represented in terms of complex-exponentials as
+
+    .. math::
+
+       x[n] = \\sum_{k=0}^{N-1}X[k]w_N^{kn}, \\qquad w_N = \\exp(i 2\\pi/N)
+
+    Here, :math:`X[k]`, :math:`k\\in [0, N-1]` is the Fourier transform of
+    :math:`x[n]`. The DFT is defined as:
+
+    .. math::
+
+       X[k] = \\frac{1}{N}\\sum_{n=0}^{N-1}x[n]w_N^{-kn}
+
+    In ``numpy``, this operation is implemented with
+
+    .. code-block:: python
+
+       import numpy as np
+
+       X = np.fft.fft(x) / N
+
+    Finally, if ``save_to`` is ``True``, only half of the Fourier coefficients
+    ``X[0:int(N/2)+1]`` (right-exclusive) are saved (or less if ``filter`` is
+    specified).
+
     """
 
     if reference is None:
@@ -217,6 +261,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 
     if save_to is None:
         save_to = False  # do not write output file
+
+    if scaling is None:
+        scaling = False
 
     time = np.arange(N) * step / 24  # time in days
 
@@ -283,13 +330,18 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         spectrum[:, k, l] = element[sort]
         spectrum_ind[:, k, l] = element_ind[sort_ind]
 
+    if scaling:
+        # scale non-offset coefficients by 2
+        spectrum = np.where(frequency != 0.0, 2*spectrum, spectrum)
+        spectrum_ind = np.where(frequency != 0.0, 2*spectrum_ind, spectrum_ind)
+
     # save several arrays to binary
     if save_to:
         np.savez(str(save_to),
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 dipole=basicConfig['params.dipole'])
+                 scaling=scaling, dipole=basicConfig['params.dipole'])
         print("Output saved to {:}".format(save_to))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
