@@ -1302,14 +1302,11 @@ def q_response(frequency, nmax):
     radius_ref = 6371.2  # reference radius in km
 
     # unpack file: depth and layer conductivity
-    # convert depth to radius, add CMB and radius of infinitely
-    # conducting center
+    # convert depth to radius
     sigma_radius = radius_ref - sigma_model[:, 0]
-    sigma_radius = np.append(sigma_radius, [3485, 10])
 
-    # add conductivity of outer core, center conductivity is omitted
-    sigma = sigma_model[:, 1]
-    sigma = np.append(sigma, [1e5])
+    # infinite center conductivity is omitted
+    sigma = sigma_model[:-1, 1]
 
     # find all harmonic terms
     index = frequency > 0.0

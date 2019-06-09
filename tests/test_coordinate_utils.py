@@ -11,7 +11,6 @@ except ImportError:
     from helpers import load_matfile
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-PACK_PATH = c.ROOT  # path to source code in environment
 MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
 
 # check if mat-file exists in tests directory
@@ -46,17 +45,14 @@ class CoordinateUtilsTestCase(TestCase):
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_conducting_sphere')
 
-        model = np.loadtxt(
-            os.path.join(PACK_PATH, 'lib/Earth_conductivity.dat'))
+        model = np.loadtxt(c.basicConfig['file.Earth_conductivity'])
         C_n_mat = np.ravel(test['C_n'])
         rho_a_mat = np.ravel(test['rho_a'])
         phi_mat = np.ravel(test['phi'])
         Q_n_mat = np.ravel(test['Q_n'])
 
         radius = a - model[:, 0]
-        radius = np.append(radius, [3485, 10])
-        sigma = model[:, 1]
-        sigma = np.append(sigma, [1e5])
+        sigma = model[:-1, 1]  # drop perfectly conducting core
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
@@ -80,9 +76,7 @@ class CoordinateUtilsTestCase(TestCase):
             print(f'  Testing {reference.upper()} frame of reference.')
 
             # load spectrum to synthesize matrices in time-domain
-            filepath = os.path.join(
-                PACK_PATH, 'lib',
-                'frequency_spectrum_{:}.npz'.format(reference))
+            filepath = c.basicConfig[f'file.{reference.upper()}_spectrum']
 
             try:
                 data = np.load(filepath)

@@ -1,4 +1,4 @@
-# Conductivity model of Earth (Utada)
+# Conductivity model of Earth (Utada) + highly/perfectly conducting core
 # depth (km), sigma (S/m)
 1 0.00054173
 101 0.0014984
@@ -18,3 +18,5 @@
 801 1.097
 851 1.4775
 901 1.4775
+2886.2 100000.0
+6361.2 inf
