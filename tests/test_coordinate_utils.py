@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import data_utils as d
 from math import pi
@@ -37,6 +37,7 @@ class CoordinateUtilsTestCase(TestCase):
             c.igrf_dipole('2015'),
             c._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
 
+    @skip('New conductivity model uses thinlayer approximation.')
     def test_conducting_sphere(self):
 
         a = 6371.2
@@ -57,6 +58,35 @@ class CoordinateUtilsTestCase(TestCase):
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
         C_n, rho_a, phi, Q_n = c.conducting_sphere(periods, sigma, radius, n)
+
+        self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
+        self.assertIsNone(np.testing.assert_allclose(rho_a, rho_a_mat))
+        self.assertIsNone(np.testing.assert_allclose(phi, phi_mat))
+        self.assertIsNone(np.testing.assert_allclose(Q_n, Q_n_mat))
+
+    def test_conducting_sphere_thinlayer(self):
+
+        a = 6371.2
+        n = 1
+
+        # load matfile
+        test = load_matfile(MATFILE_PATH, 'test_conducting_sphere_thinlayer')
+
+        C_n_mat = np.ravel(test['C_n'])
+        rho_a_mat = np.ravel(test['rho_a'])
+        phi_mat = np.ravel(test['phi'])
+        Q_n_mat = np.ravel(test['Q_n'])
+
+        model = np.loadtxt('/home/ancklo/Documents/Python/' +
+                           'Chaos-master/data/conductivity_Grayver2017.dat')
+
+        radius = a - model[:, 0]
+        sigma = model[:, 1]
+
+        periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
+
+        C_n, rho_a, phi, Q_n = c.conducting_sphere_thinlayer(
+            periods, sigma, radius, n)
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
         self.assertIsNone(np.testing.assert_allclose(rho_a, rho_a_mat))
@@ -93,7 +123,7 @@ class CoordinateUtilsTestCase(TestCase):
             for time in np.linspace(-4*365.25, 24*365.25, 50):
 
                 matrix_time = c.synth_rotate_gauss(
-                    time, frequency, spectrum)
+                    time, frequency, spectrum, scaling=False)
 
                 nmax = int(np.sqrt(spectrum.shape[1] + 1) - 1)
                 kmax = int(np.sqrt(spectrum.shape[2] + 1) - 1)
@@ -105,10 +135,14 @@ class CoordinateUtilsTestCase(TestCase):
 
                 matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
+                stat = np.amax(np.abs(matrix-np.squeeze(matrix_time)))
                 print('  Computed year {:4.2f}, '
-                      'MAE = {:.3e}'.format(
-                          time/365.25 + 2000, np.amax(np.abs(
-                              matrix-np.squeeze(matrix_time)))))
+                      'max. abs. error = {:.3e}'.format(
+                          time/365.25 + 2000, stat), end='')
+                if stat > 0.001:
+                    print(' ' + min(int(stat/0.001), 10) * '*')
+                else:
+                    print('')
 
                 self.assertIsNone(np.testing.assert_allclose(
                     matrix, np.squeeze(matrix_time), rtol=1e-1, atol=1e-1))

@@ -987,7 +987,8 @@ class CHAOS(object):
             spectrum = frequency_spectrum['spectrum']
 
             # build rotation matrix for external field coefficients GSM -> GEO
-            rotate_gauss = cu.synth_rotate_gauss(time, frequency, spectrum)
+            rotate_gauss = cu.synth_rotate_gauss(
+                time, frequency, spectrum, scaling=False)
 
             # rotate external GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss, self.coeffs_gsm)
@@ -998,8 +999,8 @@ class CHAOS(object):
             spectrum_ind = frequency_spectrum['spectrum_ind']
 
             # build rotation matrix for external field coefficients GSM -> GEO
-            rotate_gauss_ind = cu.synth_rotate_gauss(time, frequency_ind,
-                                                     spectrum_ind)
+            rotate_gauss_ind = cu.synth_rotate_gauss(
+                time, frequency_ind, spectrum_ind, scaling=False)
 
             # rotate internal GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss_ind, self.coeffs_gsm)
@@ -1182,7 +1183,8 @@ class CHAOS(object):
         spectrum = frequency_spectrum['spectrum']
 
         # build rotation matrix for external field coefficients SM -> GEO
-        rotate_gauss = cu.synth_rotate_gauss(time, frequency, spectrum)
+        rotate_gauss = cu.synth_rotate_gauss(
+            time, frequency, spectrum, scaling=False)
 
         if source == 'external':
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
@@ -1204,7 +1206,8 @@ class CHAOS(object):
             spectrum = frequency_spectrum['spectrum_ind']
 
             # build rotation matrix for induced coefficients SM -> GEO
-            rotate_gauss_ind = cu.synth_rotate_gauss(time, frequency, spectrum)
+            rotate_gauss_ind = cu.synth_rotate_gauss(
+                time, frequency, spectrum, scaling=False)
 
             # take degree 1 matrix elements of unmodified rotation matrix
             # since induction effect will be accounted for by RC_i
