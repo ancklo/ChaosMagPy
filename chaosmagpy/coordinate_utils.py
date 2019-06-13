@@ -162,7 +162,8 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=None, reference=None, scaling=None):
+                     save_to=None, reference=None, scaling=None,
+                     start_date=None):
     """
     Compute Fourier coefficients of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
@@ -195,23 +196,24 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         Hence, taking the real part of the spectrum multiplied with the complex
         exponentials results in the correctly scaled and time-shifted
         real-valued harmonics.
+    start_date : float, optional (defaults to ``0.0``, i.e. Jan 1, 2000)
+        Time point from which to compute the time series of coefficient
+        matrices in modified Julian date.
 
     Returns
     -------
-    frequency, frequency_ind : ndarray, shape (``filter``, ``nmax`` \
-(``nmax`` + 2), ``kmax`` (``kmax`` + 2))
-        Unsorted vector of positive frequencies in 1/days.
-    spectrum, spectrum_ind : ndarray, shape (``filter``, ``nmax`` \
-(``nmax`` + 2), ``kmax`` (``kmax`` + 2))
-        Complex fourier spectrum of rotation matrices to transform spherical
-        harmonic expansions. It also uses a conductivity model to derive the
-        transform for the induced field.
+    frequency, spectrum, frequency_ind, spectrum_ind : ndarray, \
+shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
+        Unsorted vector of positive frequencies in 1/days and complex fourier
+        spectrum of rotation matrices to transform spherical
+        harmonic expansions. It uses a conductivity model to derive the
+        transform for the induced field, see :func:`q_response`.
 
     Notes
     -----
     If ``save_to=<filepath>``, then an ``*.npz``-file is written with the
-    keywords {'frequency', 'spectrum', 'frequency_ind', 'spectrum_ind',
-    'step', 'N', 'filter', 'reference', 'dipole'}. ``'dipole'`` means the three
+    keywords {'frequency', 'spectrum', 'frequency_ind', 'spectrum_ind', ...}
+    and all the possible keywords. Among them, ``'dipole'`` means the three
     spherical harmonic coefficients of the dipole set in
     ``basicConfig['params.dipole']``.
 
@@ -265,7 +267,10 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     if scaling is None:
         scaling = False
 
-    time = np.arange(N) * step / 24  # time in days
+    if start_date is None:
+        start_date = 0.0
+
+    time = np.arange(N) * step / 24 + start_date  # time in days
 
     # compute base vectors of time-dependent reference system
     if str(reference).lower() == 'gsm':
@@ -341,7 +346,8 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 scaling=scaling, dipole=basicConfig['params.dipole'])
+                 scaling=scaling, dipole=basicConfig['params.dipole'],
+                 start_date=start_date)
         print("Output saved to {:}".format(save_to))
 
     return frequency, spectrum, frequency_ind, spectrum_ind
@@ -421,8 +427,8 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
         Pnm_ref = legendre_poly(kmax, theta_ref)
 
         # compute powers of complex exponentials
-        nphi_ref = np.multiply.outer(np.arange(kmax+1), phi_ref)
-        exp_ref = np.exp(1j*radians(nphi_ref))
+        nphi_ref = radians(np.multiply.outer(np.arange(kmax+1), phi_ref))
+        exp_ref = np.cos(nphi_ref) + 1j*np.sin(nphi_ref)
 
         # loop over columns of matrix
         col = 0  # index of column
@@ -1110,7 +1116,7 @@ def conducting_sphere(periods, sigma, radius, n):
 
     Parameters
     ----------
-    periods : ndarray or float, shape (...,)
+    periods : ndarray or float, shape (m,)
         Oscillation period of the inducing field in seconds.
     sigma : ndarray, shape (nl,)
         Conductivity of spherical shells, starting with the outermost and
@@ -1123,13 +1129,13 @@ def conducting_sphere(periods, sigma, radius, n):
 
     Returns
     -------
-    C : ndarray, shape (...,)
-        C-response, complex.
-    rho_a : ndarray, shape (...,)
-        Electrical surface resistance in (:math:`\Omega m`).
-    phi : ndarray, shape (...,)
-        Proportional to phase angle of response in degrees.
-    Q : ndarray, shape (...,)
+    C : ndarray, shape (m,)
+        C-response in (km), complex.
+    rho_a : ndarray, shape (m,)
+        Electrical surface resistance in (:math:`\\Omega m`).
+    phi : ndarray, shape (m,)
+        Proportional to phase angle of C-response in degrees.
+    Q : ndarray, shape (m,)
         Q-response, complex.
 
     Notes
@@ -1140,11 +1146,10 @@ def conducting_sphere(periods, sigma, radius, n):
     | ``radius[1]`` > `r` > ``radius[2]`` : ``sigma[1]``
     | ...
     | ``radius[nl-1]`` > `r` > ``radius[nl]`` : ``sigma[nl-1]``
-    | ``radius[nl+1]`` > `r` > 0 :      :math:`\sigma` = `\inf`
+    | ``radius[nl+1]`` > `r` > 0 :      :math:`\\sigma` = `\\inf`
 
     ``nl`` is number of uniform layers (excluding a perfectly conducting core),
-    radius in km, conductivity :math:`\sigma` in (S/m)
-
+    radius in km, conductivity :math:`\\sigma` in (S/m).
 
     The program should work also for very small periods, where it
     models the response of a layered plane conductor
@@ -1273,6 +1278,104 @@ def conducting_sphere(periods, sigma, radius, n):
     return C, rho_a, phi, Q
 
 
+def conducting_sphere_thinlayer(periods, sigma, radius, n):
+
+    """
+    Computation of the response for a spherically layered conductor in an
+    inducing external field of a single spherical degree.
+
+    Parameters
+    ----------
+    periods : ndarray or float, shape (m,)
+        Oscillation period of the inducing field in seconds.
+    sigma : ndarray, shape (nl,)
+        Conductivity of spherical shells, starting with the outermost and
+        excluding the perfectly conducting innermost sphere in (S/m).
+    radius : ndarray, shape (nl+1,)
+        Radius of the interfaces in between the layers, starting with outermost
+        layer in kilometers (i.e. conductor surface, see Notes).
+    n : int
+        Spherical degree of inducing external field.
+
+    Returns
+    -------
+    C : ndarray, shape (m,)
+        C-response in (km), complex.
+    rho_a : ndarray, shape (m,)
+        Electrical surface resistance in (:math:`\\Omega m`).
+    phi : ndarray, shape (m,)
+        Proportional to phase angle of C-response in degrees.
+    Q : ndarray, shape (m,)
+        Q-response, complex.
+
+
+    Notes
+    -----
+    Not stable for short periods of less than a few seconds.
+
+    Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
+
+    """
+
+    periods = np.array(periods)  # ensure numpy array
+    if periods.ndim > 1:
+        raise ValueError("Input ``periods`` must be a vector.")
+
+    sigma = np.array(sigma)  # ensure numpy array
+    if sigma.ndim > 1:
+        raise ValueError("Conductivity ``sigma`` must be a vector.")
+
+    radius = 1e3*np.array(radius)
+
+    # constants
+    mu = 4*np.pi*1e-7
+
+    omega = 2*pi*1.0j/periods
+
+    # Number of layers
+    N = sigma.size
+    M = omega.size
+
+    # Preallocate
+    Y = np.zeros((M, N), dtype=np.complex)
+
+    # values for inner sphere, r = N (core)
+    qk = -omega*mu*radius[-1]
+    bk = np.sqrt((n+0.5)**2 - qk*sigma[-1]*radius[-1])
+    bkp = bk + 0.5
+    Y[:, -1] = -bkp/qk
+
+    # Loop over all layers above core (from core to surface)
+    # from before last (N-2) to first (0)
+    for k in range(N-2, -1, -1):
+        # Compute temporary scalars
+        qk = -omega*mu*radius[k]
+        bk = np.sqrt((n+0.5)**2 - qk*sigma[k]*radius[k])
+        bkp = bk + 0.5
+        bkm = bk - 0.5
+
+        etak = radius[k]/radius[k+1]
+        zetak = etak**(2*bk)
+        tauk = (1-zetak)/(1+zetak)
+        qk = -omega*mu*radius[k]
+        qk1 = -omega*mu*radius[k+1]
+        qY = qk1*Y[:, k+1]
+
+        # Admittance for this layer
+        Y[:, k] = 1/qk*(qY*(bk-0.5*tauk)+bkp*bkm*tauk)/(bk+tauk*(0.5+qY))
+
+    # Compute the C-response (in km)
+    C = 1/(omega*mu*Y[:, 0])/1e3
+
+    rho_a = mu*omega*np.abs(C*1000)**2  # rho_a in (Ohm*m)
+    phi = 90 + 57.3*np.angle(C)  # phase phi in degrees
+
+    # Q-response
+    Q = n/(n+1)*(1-(n+1)*C/(radius[0]/1e3))/(1+n*C/(radius[0]/1e3))
+
+    return C, rho_a, phi, Q
+
+
 def q_response(frequency, nmax):
     """
     Computes the Q-response given a conductivity model of Earth, which is
@@ -1282,7 +1385,7 @@ def q_response(frequency, nmax):
     Parameters
     ----------
     frequency : ndarray, shape (N,)
-        Vector of N frequencies (1/sec) for which to compute Q-response.
+        Vector of N frequencies (1/sec) at which to compute the Q-response.
     nmax : int
         Maximum spherical harmonic degree of inducing field.
 
@@ -1305,8 +1408,8 @@ def q_response(frequency, nmax):
     # convert depth to radius
     sigma_radius = radius_ref - sigma_model[:, 0]
 
-    # infinite center conductivity is omitted
-    sigma = sigma_model[:-1, 1]
+    # conductivity profile
+    sigma = sigma_model[:, 1]
 
     # find all harmonic terms
     index = frequency > 0.0
@@ -1317,7 +1420,7 @@ def q_response(frequency, nmax):
     for n in range(nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n
-        C_n, rho_n, phi_n, Q_n = conducting_sphere(
+        C_n, rho_n, phi_n, Q_n = conducting_sphere_thinlayer(
             periods, sigma, sigma_radius, n+1)
         q_response[n, index] = Q_n  # index 0: degree 1, index 1: degree 2, ...
 
