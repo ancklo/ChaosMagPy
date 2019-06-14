@@ -9,6 +9,7 @@ Version 0.2
 
 Features
 ^^^^^^^^
+* added keyword ``start_date`` to ``to rotate_gauss_fft``
 * improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
 * automatically import ``model_utils.synth_values``.
 
