@@ -152,9 +152,9 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
     harmonics = np.empty(freq_t.shape, dtype=np.complex)
     harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
-    if scaling:
+    if scaling is True:
         # scale non-offset coefficients by 2 before synthesizing matrices
-        harmonics = np.where(frequency != 0.0, 2*harmonics, harmonics)
+        harmonics = np.where(frequency > 0.0, 2*harmonics, harmonics)
 
     matrix = np.sum(spectrum*harmonics, axis=-3)
 
@@ -298,6 +298,10 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spectrum_full = np.fft.fft(matrix_time, axis=0) / N
     spectrum_full = spectrum_full[:int(N/2+1)]  # remove aliases
 
+    if scaling is True:
+        # scale non-offset coefficients by 2
+        spectrum_full[1:] = 2*spectrum_full[1:]
+
     # oscillations per day
     frequency_full = (np.arange(int(N/2+1)) / N) * 24 / step
 
@@ -334,11 +338,6 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         frequency_ind[:, k, l] = frequency_full[sort_ind]
         spectrum[:, k, l] = element[sort]
         spectrum_ind[:, k, l] = element_ind[sort_ind]
-
-    if scaling:
-        # scale non-offset coefficients by 2
-        spectrum = np.where(frequency != 0.0, 2*spectrum, spectrum)
-        spectrum_ind = np.where(frequency != 0.0, 2*spectrum_ind, spectrum_ind)
 
     # save several arrays to binary
     if save_to:
