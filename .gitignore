@@ -11,6 +11,7 @@ build/
 dist/
 *.egg-info/
 *.egg
+*.eggs
 MANIFEST
 
 # Sphinx documentation
