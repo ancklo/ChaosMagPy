@@ -2,10 +2,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
-import cartopy.crs as ccrs
+import warnings
 from chaosmagpy.config_utils import basicConfig
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
+
+try:  # make cartopy optional: issues when installing on Mac machines
+    import cartopy.crs as ccrs
+except ImportError:
+    warnings.warn('Could not import Cartopy package. Plotting data on maps '
+                  'is not available in chaosmagpy.')
 
 
 def plot_timeseries(time, *args, **kwargs):
