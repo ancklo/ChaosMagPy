@@ -108,7 +108,7 @@ def _dipole_to_unit(*args):
     return vector
 
 
-def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
+def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     """
     Compute matrices to transform sphercial harmonic expansion from a
     time-dependent reference system (e.g. GSM, SM) to GEO based on Fourier
@@ -123,12 +123,12 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
         Vector of positive frequencies given in oscillations per day.
     spectrum : ndarray, shape (k, m, n)
         Fourier components of the matrices (reside in the last two dimensions).
-    scaling : bool, optional (defaults to ``True``)
-        If ``True``, Fourier coefficients corresponding to the non-bias term
-        (i.e. all non-zero frequency terms) are multiplied by a factor of 2.
-        Hence, taking the real part of the spectrum multiplied with the complex
-        exponentials results in the correctly scaled and time-shifted
-        real-valued harmonics.
+    scaled : bool, optional (defaults to ``False``)
+        If ``True``, the function expects `scaled` Fourier coefficients, i.e.
+        the non-bias term (all non-zero frequency terms) have been multiplied
+        by a factor of 2. Hence, taking the real part of the spectrum
+        multiplied with the complex exponentials results in the correctly
+        scaled and time-shifted real-valued harmonics.
 
     Returns
     -------
@@ -136,8 +136,8 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
 
     """
 
-    if scaling is None:
-        scaling = True
+    if scaled is None:
+        scaled = False
 
     time = np.array(time[..., None, None, None], dtype=np.float)
     frequency = 2*pi*np.array(frequency, dtype=np.float)
@@ -152,7 +152,7 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
     harmonics = np.empty(freq_t.shape, dtype=np.complex)
     harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
-    if scaling is True:
+    if scaled is False:
         # scale non-offset coefficients by 2 before synthesizing matrices
         harmonics = np.where(frequency > 0.0, 2*harmonics, harmonics)
 
@@ -162,7 +162,7 @@ def synth_rotate_gauss(time, frequency, spectrum, scaling=None):
 
 
 def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
-                     save_to=None, reference=None, scaling=None,
+                     save_to=None, reference=None, scaled=None,
                      start_date=None):
     """
     Compute Fourier coefficients of the timeseries of matrices that transform
@@ -184,18 +184,18 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
         N = 8*365.25*24 equiv. to 8 years using default sample spacing).
     filter : int, optional
         Set filter length, i.e. number of Fourier coefficients to be saved
-        (default is ``N``).
+        (default is ``int(N/2+1)``).
     save_to : str, optional
         Path and file name to store output in npz-format. Defaults to
         ``False``, i.e. no file is written.
     reference : {'gsm', 'sm'}, optional
         Time-dependent reference system (default is GSM).
-    scaling : bool, optional (default is ``False``)
-        If ``True``, Fourier coefficients corresponding to the non-bias term
-        (i.e. all non-zero frequency terms) are multiplied by a factor of 2.
-        Hence, taking the real part of the spectrum multiplied with the complex
-        exponentials results in the correctly scaled and time-shifted
-        real-valued harmonics.
+    scaled : bool, optional (default is ``False``)
+        If ``True``, the function returns `scaled` Fourier coefficients, i.e.
+        the non-bias terms (all non-zero frequency terms) are multiplied by a
+        factor of 2. Hence, taking the real part of half the spectrum
+        multiplied with the complex exponentials results in the correctly
+        scaled and time-shifted real-valued harmonics.
     start_date : float, optional (defaults to ``0.0``, i.e. Jan 1, 2000)
         Time point from which to compute the time series of coefficient
         matrices in modified Julian date.
@@ -264,8 +264,8 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     if save_to is None:
         save_to = False  # do not write output file
 
-    if scaling is None:
-        scaling = False
+    if scaled is None:
+        scaled = False
 
     if start_date is None:
         start_date = 0.0
@@ -298,7 +298,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spectrum_full = np.fft.fft(matrix_time, axis=0) / N
     spectrum_full = spectrum_full[:int(N/2+1)]  # remove aliases
 
-    if scaling is True:
+    if scaled is True:
         # scale non-offset coefficients by 2
         spectrum_full[1:] = 2*spectrum_full[1:]
 
@@ -345,7 +345,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 scaling=scaling, dipole=basicConfig['params.dipole'],
+                 scaled=scaled, dipole=basicConfig['params.dipole'],
                  start_date=start_date)
         print("Output saved to {:}".format(save_to))
 

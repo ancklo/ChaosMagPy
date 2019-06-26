@@ -985,10 +985,11 @@ class CHAOS(object):
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency']
             spectrum = frequency_spectrum['spectrum']
+            scaled = frequency_spectrum['scaled']
 
             # build rotation matrix for external field coefficients GSM -> GEO
             rotate_gauss = cu.synth_rotate_gauss(
-                time, frequency, spectrum, scaling=False)
+                time, frequency, spectrum, scaled=scaled)
 
             # rotate external GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss, self.coeffs_gsm)
@@ -997,10 +998,11 @@ class CHAOS(object):
             # unpack file: oscillations per day, complex spectrum
             frequency_ind = frequency_spectrum['frequency_ind']
             spectrum_ind = frequency_spectrum['spectrum_ind']
+            scaled = frequency_spectrum['scaled']
 
             # build rotation matrix for external field coefficients GSM -> GEO
             rotate_gauss_ind = cu.synth_rotate_gauss(
-                time, frequency_ind, spectrum_ind, scaling=False)
+                time, frequency_ind, spectrum_ind, scaled=scaled)
 
             # rotate internal GSM coefficients to GEO reference
             coeffs = np.matmul(rotate_gauss_ind, self.coeffs_gsm)
@@ -1181,10 +1183,11 @@ class CHAOS(object):
         # unpack file: oscillations per day, complex spectrum
         frequency = frequency_spectrum['frequency']
         spectrum = frequency_spectrum['spectrum']
+        scaled = frequency_spectrum['scaled']
 
         # build rotation matrix for external field coefficients SM -> GEO
         rotate_gauss = cu.synth_rotate_gauss(
-            time, frequency, spectrum, scaling=False)
+            time, frequency, spectrum, scaled=scaled)
 
         if source == 'external':
             coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
@@ -1204,10 +1207,11 @@ class CHAOS(object):
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']
             spectrum = frequency_spectrum['spectrum_ind']
+            scaled = frequency_spectrum['scaled']
 
             # build rotation matrix for induced coefficients SM -> GEO
             rotate_gauss_ind = cu.synth_rotate_gauss(
-                time, frequency, spectrum, scaling=False)
+                time, frequency, spectrum, scaled=scaled)
 
             # take degree 1 matrix elements of unmodified rotation matrix
             # since induction effect will be accounted for by RC_i

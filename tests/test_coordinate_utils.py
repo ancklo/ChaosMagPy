@@ -123,7 +123,7 @@ class CoordinateUtilsTestCase(TestCase):
             for time in np.linspace(-4*365.25, 24*365.25, 50):
 
                 matrix_time = c.synth_rotate_gauss(
-                    time, frequency, spectrum, scaling=False)
+                    time, frequency, spectrum, scaled=True)
 
                 nmax = int(np.sqrt(spectrum.shape[1] + 1) - 1)
                 kmax = int(np.sqrt(spectrum.shape[2] + 1) - 1)
@@ -159,7 +159,7 @@ class CoordinateUtilsTestCase(TestCase):
 
             frequency, amplitude, _, _ = c.rotate_gauss_fft(
                 nmax, kmax, step=1., N=int(365*24), filter=20, save_to=False,
-                reference=reference)
+                reference=reference, scaled=False)
 
             omega = 2*pi*frequency / (24*3600)
 
