@@ -1119,9 +1119,25 @@ def center_azimuth(phi):
     return phi
 
 
-def local_time(phi):
+def local_time(time, phi):
+    """
+    Compute local time from the azimuthal distance to prime meridian.
 
+    Parameters
+    ----------
+    time : float, ndarray
+        Time given as modified Julian date.
+    phi : float, ndarray
+        Azimuth in degrees.
 
+    Returns
+    -------
+    local : ndarray
+        Local time [0, 24).
+
+    """
+
+    return np.remainder(time + phi/360, 1)*24
 
 
 def conducting_sphere(periods, sigma, radius, n):
