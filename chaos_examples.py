@@ -3,7 +3,7 @@ import cdflib
 import matplotlib.pyplot as plt
 from chaosmagpy import load_CHAOS_matfile
 from chaosmagpy.coordinate_utils import transform_points
-from chaosmagpy.data_utils import mjd2000, rsme
+from chaosmagpy.data_utils import mjd2000
 
 FILEPATH_CHAOS = 'data/CHAOS-6-x9.mat'
 
@@ -111,7 +111,7 @@ def example2():
     # compute field strength and plot together with data
     F = np.sqrt(B_radius**2 + B_theta**2 + B_phi**2)
 
-    print('RMSE of F: {:.5f} nT'.format(rsme(F, F_swarm)))
+    print('RMSE of F: {:.5f} nT'.format(np.std(np.abs(F-F_swarm)**2)))
 
     plt.scatter(theta_gsm[index_day], F_swarm[index_day]-F[index_day],
                 s=0.5, c='r', label='dayside')

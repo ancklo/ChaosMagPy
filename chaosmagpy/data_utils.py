@@ -448,18 +448,3 @@ def gauss_units(deriv):
         units = '$\\mathrm{{nT}}\\cdot \\mathrm{{yr}}^{{{:}}}$'.format(-deriv)
 
     return units
-
-
-def rsme(x, y):
-    """
-    Compute RSME (root square mean error) of inputs x and y.
-
-    Parameters
-    ----------
-    x, y : ndarray
-    """
-
-    x = np.array(x)
-    y = np.array(y)
-
-    return np.mean(np.abs(x-y)**2)**0.5
