@@ -1099,11 +1099,11 @@ def center_azimuth(phi):
     :math:`(-180^\\circ, 180^\\circ]`.
     """
 
-    phi = phi % degrees(2*pi)
+    phi = phi % 360.
     try:  # works for ndarray
-        phi[phi > degrees(pi)] += -degrees(2*pi)  # centered around prime
+        phi[phi > 180.] += -360.  # centered around prime
     except TypeError:  # catch error if float
-        phi += -degrees(2*pi) if phi > degrees(pi) else 0
+        phi += -360. if phi > 180. else 0
 
     return phi
 
