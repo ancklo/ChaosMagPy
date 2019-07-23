@@ -111,7 +111,7 @@ def example2():
     # compute field strength and plot together with data
     F = np.sqrt(B_radius**2 + B_theta**2 + B_phi**2)
 
-    print('RMSE of F: {:.5f} nT'.format(np.std(np.abs(F-F_swarm)**2)))
+    print('RMSE of F: {:.5f} nT'.format(np.std(F-F_swarm)))
 
     plt.scatter(theta_gsm[index_day], F_swarm[index_day]-F[index_day],
                 s=0.5, c='r', label='dayside')
