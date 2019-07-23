@@ -1097,6 +1097,17 @@ def center_azimuth(phi):
     """
     Project arbitrary azimuth angles in degrees to semi-open interval
     :math:`(-180^\\circ, 180^\\circ]`.
+
+    Parameters
+    ----------
+    phi : ndarray, float
+        Azimuth in degrees.
+
+    Returns
+    -------
+    phi : ndarray, float
+        Prime meridian centered azimuth.
+
     """
 
     phi = phi % 360.
@@ -1106,6 +1117,11 @@ def center_azimuth(phi):
         phi += -360. if phi > 180. else 0
 
     return phi
+
+
+def local_time(phi):
+
+
 
 
 def conducting_sphere(periods, sigma, radius, n):
