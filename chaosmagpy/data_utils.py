@@ -199,6 +199,101 @@ def load_shcfile(filepath, leap_year=None):
     return mjd, coeffs, parameters
 
 
+def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
+                 leap_year=None, header=None):
+    """
+    Save Gauss coefficients as `shc`-file.
+
+    Parameters
+    ----------
+    time : float, list, ndarray, shape (n,)
+        Time of model coeffcients in modified Julian date.
+    coeffs : ndarray, shape (N,) or (n, N)
+        Gauss coefficients as vector or array. The first dimension of the array
+        must be equal to the length `n` of the given ``time``.
+    order : int, optional (defaults to 1)
+        Order of the piecewise polynomial with which the coefficients are
+        parameterized in time (breaks are given by ``time[::order]``).
+    filepath : str, optional
+        Filepath and name of the output file. Defaults to the current working
+        directory and filename `model.shc`.
+    nmin : int, optional
+        Minimum spherical harmonic degree (defaults to 1). This will remove
+        first values from coeffs if greater than 1.
+    nmax : int, optional
+        Maximum spherical harmonic degree (defaults to degree compatible with
+        number of coeffcients, otherwise coeffcients are truncated).
+    leap_year : {True, False}, optional
+        Take leap years for decimal year conversion into account
+        (defaults to ``True``).
+    header : str, optional
+        Optional header at beginning of file. Defaults to empty string.
+
+    """
+
+    time = np.array(time, dtype=np.float)
+
+    order = 1 if order is None else int(order)
+
+    nmin = 1 if nmin is None else int(nmin)
+    if nmax is None:
+        nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+    else:
+        nmax = int(nmax)
+
+    assert (nmin <= nmax), \
+        '``nmin`` must be smaller than or equal to ``nmax``.'
+
+    if filepath is None:
+        filepath = 'model.shc'
+
+    header = '' if header is None else header
+
+    if coeffs.ndim == 1:
+        coeffs = coeffs.reshape((1, -1))
+
+    coeffs = coeffs[:, (nmin**2-1):((nmax+1)**2-1)]
+
+    # compute all possible degree and orders
+    deg = np.array([], dtype=np.int)
+    ord = np.array([], dtype=np.int)
+    for n in range(nmin, nmax+1):
+        deg = np.append(deg, np.repeat(n, 2*n+1))
+        ord = np.append(ord, [0])
+        for m in range(1, n+1):
+            ord = np.append(ord, [m, -m])
+
+    comment = (header +
+               f"# Created on {datetime.utcnow()} UTC.\n"
+               f"# Leap years are accounted for in "
+               f"decimal years format ({leap_year}).\n"
+               f"{nmin} {nmax} {time.size} {order} {order-1}\n")
+
+    with open(filepath, 'w') as f:
+        # write comment line
+        f.write(comment)
+
+        # write header lines to 8 significants
+        f.write('  ')  # to represent two missing values
+        for t in time:
+            f.write(' {:9.4f}'.format(
+                mjd_to_dyear(t, leap_year=leap_year)))
+        f.write('\n')
+
+        # write coefficient table to 8 significants
+        for row, (n, m) in enumerate(zip(deg, ord)):
+
+            f.write('{:} {:}'.format(n, m))
+
+            for value in coeffs[:, row]:
+                f.write(' {:.8e}'.format(value))
+
+            f.write('\n')
+
+    print('Coefficients saved to {}.'.format(
+        os.path.join(os.getcwd(), filepath)))
+
+
 def mjd2000(*args, **kwargs):
     """
     Computes the modified Julian date as floating point number. It assigns 0 to

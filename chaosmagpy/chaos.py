@@ -482,6 +482,9 @@ class CHAOS(object):
         angles alpha, beta and gamma as trailing dimension (keys are
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
         ``'swarm_c'``).
+    name : str, optional
+        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
+        where <version> is the default in ``basicConfig['params.version']``.
 
     Attributes
     ----------
@@ -561,7 +564,7 @@ class CHAOS(object):
                  coeffs_sm=None, coeffs_gsm=None,
                  breaks_delta=None, coeffs_delta=None,
                  breaks_euler=None, coeffs_euler=None,
-                 version=None):
+                 version=None, name=None):
         """
         Initialize the CHAOS model.
 
@@ -610,6 +613,12 @@ class CHAOS(object):
             self.version = version
         else:
             self.version = str(version)
+
+        # give the model a name: CHAOS-x.x or user input
+        if name is None:
+            self.name = f'CHAOS-{self.version}'
+        else:
+            self.name = name
 
     def __call__(self, time, radius, theta, phi, source_list=None):
         """
@@ -1474,21 +1483,17 @@ class CHAOS(object):
                 times = np.append(times, np.arange(start, end, step))
             times = np.append(times, breaks[-1])
 
-            # write comment lines
-            comment = (
+            # create header lines
+            header = (
                 f"# {self}\n"
                 f"# Spherical harmonic coefficients of the time-dependent"
                 f" internal field model (derivative = {deriv})"
                 f" from degree {nmin} to {nmax}.\n"
-                f"# Coefficients (nT/yr^{deriv}) are given at"
-                f" {(breaks.size-1) * (order-1) + 1} points in"
-                f" time (decimal years, accounting for leap years set to"
-                f" {leap_year})\n"
+                f"# Coefficients ({du.gauss_units(deriv)}) are given at"
+                f" {(breaks.size-1) * (order-1) + 1} points in time\n"
                 f"# and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
-                f" {order-1} steps).\n"
-                f"# Created on {datetime.utcnow()} UTC.\n"
-                f"{nmin} {nmax} {times.size} {order} {order-1}\n"
+                f" {order} steps of the time sequence).\n"
                 )
 
             gauss_coeffs = self.synth_coeffs_tdep(
@@ -1502,56 +1507,24 @@ class CHAOS(object):
 
             nmin = self.model_tdep.nmax + 1
             nmax = self.model_static.nmax
+            order = 1
 
             # compute times in mjd2000
             times = np.array([self.model_static.breaks[0]])
 
-            # write comment lines
-            comment = (
+            # create additonal header lines
+            header = (
                 f"# {self}\n"
                 f"# Spherical harmonic coefficients of the static internal"
                 f" field model from degree {nmin} to {nmax}.\n"
-                f"# Given at the first break point (decimal year, accounting"
-                f" for leap years: {leap_year})\n"
-                f"# Created on {datetime.utcnow()} UTC.\n"
-                f"{nmin} {nmax} {times.size} 1 0\n"
+                f"# Given at the first break point.\n"
                 )
 
             gauss_coeffs = self.synth_coeffs_static(nmax=nmax)
-            gauss_coeffs = gauss_coeffs[int(nmin**2-1):].reshape((1, -1))
 
-        # compute all possible degree and orders
-        degree = np.array([], dtype=np.int)
-        order = np.array([], dtype=np.int)
-        for n in range(nmin, nmax+1):
-            degree = np.append(degree, np.repeat(n, 2*n+1))
-            order = np.append(order, [0])
-            for m in range(1, n+1):
-                order = np.append(order, [m, -m])
-
-        with open(filepath, 'w') as f:
-            # write comment line
-            f.write(comment)
-
-            # write header lines to 8 significants
-            f.write('  ')  # to represent two missing values
-            for time in times:
-                f.write(' {:9.4f}'.format(
-                    du.mjd_to_dyear(time, leap_year=leap_year)))
-            f.write('\n')
-
-            # write coefficient table to 8 significants
-            for row, (n, m) in enumerate(zip(degree, order)):
-
-                f.write('{:} {:}'.format(n, m))
-
-                for col in range(times.size):
-                    f.write(' {:.8e}'.format(gauss_coeffs[col, row]))
-
-                f.write('\n')
-
-        print('Coefficients saved to {}.'.format(
-            os.path.join(os.getcwd(), filepath)))
+        du.save_shcfile(times, gauss_coeffs, order=order, filepath=filepath,
+                        nmin=nmin, nmax=nmax, leap_year=leap_year,
+                        header=header)
 
     def save_matfile(self, filepath):
         """

@@ -425,7 +425,7 @@ def synth_values(coeffs, radius, theta, phi, *,
         print(f'radius: {radius.shape}')
         print(f'theta:  {theta.shape}')
         print(f'phi:    {phi.shape}')
-        print(f'coeffs: {coeffs.shape}')
+        print(f'coeffs: {coeffs.shape[:-1]}')
         raise
 
     grid_shape = b.shape
