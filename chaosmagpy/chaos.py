@@ -23,7 +23,9 @@ class Base(object):
 
     """
 
-    def __init__(self, breaks=None, order=None, coeffs=None):
+    def __init__(self, name, breaks=None, order=None, coeffs=None):
+
+        self.name = str(name)
 
         self.breaks = breaks
         self.pieces = None if breaks is None else int(breaks.size - 1)
@@ -152,27 +154,19 @@ class BaseModel(Base):
 
     """
 
-    def __init__(self, breaks=None, order=None, coeffs=None, source=None):
+    def __init__(self, name, breaks=None, order=None, coeffs=None,
+                 source=None):
         """
         Initialize time-dependent spherical harmonic model as a piecewise
         polynomial.
         """
 
-        self.breaks = breaks
-        self.pieces = None if breaks is None else int(breaks.size - 1)
+        super().__init__(name, breaks=breaks, order=order, coeffs=coeffs)
 
-        if coeffs is None:
-            self.coeffs = coeffs
-            self.order = None if order is None else int(order)
+        if self.ndim is None:
             self.nmax = None
         else:
-            if order is None:
-                self.order = coeffs.shape[0]
-            else:
-                self.order = min(int(order), coeffs.shape[0])
-
-            self.coeffs = coeffs[-self.order:]
-            self.nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+            self.nmax = int(np.sqrt(self.ndim + 1) - 1)
 
         self.source = 'internal' if source is None else source
 
@@ -219,69 +213,10 @@ class BaseModel(Base):
 
         """
 
-        if self.coeffs is None:
-            raise ValueError("Coefficients are missing.")
+        ndim = nmax*(nmax+2)
 
-        # handle optional argument: nmax
-        if nmax is None:
-            nmax = self.nmax
-        elif nmax > self.nmax:
-            warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.nmax))
-            nmax = self.nmax
-
-        if deriv is None:
-            deriv = 0
-
-        if extrapolate is None:
-            extrapolate = 'linear'  # linear extrapolation
-
-        # setting spline interpolation
-        PP = sip.PPoly.construct_fast(
-            self.coeffs[..., :nmax*(nmax+2)].astype(float),
-            self.breaks.astype(float), extrapolate=True)
-
-        start = self.breaks[0]
-        end = self.breaks[-1]
-
-        if np.amin(time) < start or np.amax(time) > end:
-            if isinstance(extrapolate, str):  # convert string to integer
-                dkey = {'linear': 2,
-                        'quadratic': 3,
-                        'cubic': 4,
-                        'constant': 1,
-                        'spline': self.order,
-                        'off': 0}
-                try:
-                    key = min(dkey[extrapolate], self.order)
-                except KeyError:
-                    string = '", "'.join([*dkey.keys()])
-                    raise ValueError(
-                        f'Unknown extrapolation method "{extrapolate}". Use '
-                        f'one of {{"{string}"}}.')
-
-            else:
-                key = min(extrapolate, self.order)
-
-            message = 'no' if extrapolate == 'off' else extrapolate
-            warnings.warn("Requested coefficients are "
-                          "outside of the modelled period from "
-                          f"{start} to {end}. Doing {message} extrapolation.")
-
-            if key > 0:
-                for x in [start, end]:  # left and right
-                    bin = np.zeros((self.order, 1, nmax*(nmax+2)))
-                    for k in range(key):
-                        bin[-1-k] = PP(x, nu=k)
-                    PP.extend(bin, np.array([x]))
-
-            else:  # no extrapolation
-                PP.extrapolate = False
-
-        PP = PP.derivative(nu=deriv)
-        coeffs = PP(time) * 365.25**deriv
+        coeffs = super().synth_coeffs(time, ndim=ndim, deriv=deriv,
+                                      extrapolate=extrapolate)
 
         return coeffs
 
@@ -587,7 +522,7 @@ class CHAOS(object):
         UTC timestamp at initialization.
     model_tdep : :class:`BaseModel` instance
         Time-dependent internal field model.
-    model_static : :class:`StaticModel` instance
+    model_static : :class:`BaseModel` instance
         Static internal field model.
     n_sm : int, positive
         Maximum spherical harmonic degree of external field in SM coordinates.
@@ -668,8 +603,9 @@ class CHAOS(object):
         self.timestamp = str(datetime.utcnow())
 
         # time-dependent internal field
-        self.model_tdep = BaseModel(breaks, order, coeffs_tdep)
-        self.model_static = BaseModel(breaks[[0, -1]], 1, coeffs_static)
+        self.model_tdep = BaseModel('model_tdep', breaks, order, coeffs_tdep)
+        self.model_static = BaseModel('model_static', breaks[[0, -1]], 1,
+                                      coeffs_static)
 
         # helper for returning the degree of the provided coefficients
         def dimension(coeffs):
