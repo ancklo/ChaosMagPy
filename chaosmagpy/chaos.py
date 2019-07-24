@@ -18,7 +18,102 @@ from timeit import default_timer as timer
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
-class BaseModel(object):
+class Base(object):
+    """
+
+    """
+
+    def __init__(self, breaks=None, order=None, coeffs=None):
+
+        self.breaks = breaks
+        self.pieces = None if breaks is None else int(breaks.size - 1)
+
+        if coeffs is None:
+            self.coeffs = coeffs
+            self.order = None if order is None else int(order)
+            self.ndim = None
+        else:
+            if order is None:
+                self.order = coeffs.shape[0]
+            else:
+                self.order = min(int(order), coeffs.shape[0])
+
+            self.coeffs = coeffs[-self.order:]
+            self.ndim = coeffs.shape[-1]
+
+    def synth_coeffs(self, time, *, ndim=None, deriv=None, extrapolate=None):
+
+        if self.coeffs is None:
+            raise ValueError("Coefficients are missing.")
+
+        # handle optional argument: nmax
+        if ndim is None:
+            ndim = self.ndim
+        elif ndim > self.ndim:
+            warnings.warn(
+                'Supplied ndim = {0} is incompatible with number of '
+                'coefficients. Using ndim = {1} instead.'.format(
+                    ndim, self.ndim))
+            ndim = self.ndim
+
+        if deriv is None:
+            deriv = 0
+
+        if extrapolate is None:
+            extrapolate = 'linear'  # linear extrapolation
+
+        # setting spline interpolation
+        PP = sip.PPoly.construct_fast(
+            self.coeffs[..., :ndim].astype(float),
+            self.breaks.astype(float), extrapolate=True)
+
+        start = self.breaks[0]
+        end = self.breaks[-1]
+
+        if np.amin(time) < start or np.amax(time) > end:
+            if isinstance(extrapolate, str):  # convert string to integer
+                dkey = {'linear': 2,
+                        'quadratic': 3,
+                        'cubic': 4,
+                        'constant': 1,
+                        'spline': self.order,
+                        'off': 0}
+                try:
+                    key = min(dkey[extrapolate], self.order)
+                except KeyError:
+                    string = '", "'.join([*dkey.keys()])
+                    raise ValueError(
+                        f'Unknown extrapolation method "{extrapolate}". Use '
+                        f'one of {{"{string}"}}.')
+
+            else:
+                key = min(extrapolate, self.order)
+
+            message = 'no' if extrapolate == 'off' else extrapolate
+            warnings.warn("Requested coefficients are "
+                          "outside of the modelled period from "
+                          f"{start} to {end}. Doing {message} extrapolation.")
+
+            if key > 0:
+                for x in [start, end]:  # left and right
+                    bin = np.zeros((self.order, 1, ndim))
+                    for k in range(key):
+                        bin[-1-k] = PP(x, nu=k)
+                    PP.extend(bin, np.array([x]))
+
+            else:  # no extrapolation
+                PP.extrapolate = False
+
+        PP = PP.derivative(nu=deriv)
+        coeffs = PP(time) * 365.25**deriv
+
+        return coeffs
+
+    def synth_values(self):
+        raise NotImplementedError
+
+
+class BaseModel(Base):
     """
     Class for time-dependent (piecewise polynomial) model.
 
