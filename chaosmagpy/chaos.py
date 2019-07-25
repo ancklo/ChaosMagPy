@@ -20,6 +20,7 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 
 class Base(object):
     """
+    Piecewise polynomial base class.
 
     """
 
@@ -33,7 +34,7 @@ class Base(object):
         if coeffs is None:
             self.coeffs = coeffs
             self.order = None if order is None else int(order)
-            self.ndim = None
+            self.dim = None
         else:
             if order is None:
                 self.order = coeffs.shape[0]
@@ -41,22 +42,22 @@ class Base(object):
                 self.order = min(int(order), coeffs.shape[0])
 
             self.coeffs = coeffs[-self.order:]
-            self.ndim = coeffs.shape[-1]
+            self.dim = coeffs.shape[-1]
 
-    def synth_coeffs(self, time, *, ndim=None, deriv=None, extrapolate=None):
+    def synth_coeffs(self, time, *, dim=None, deriv=None, extrapolate=None):
 
         if self.coeffs is None:
-            raise ValueError("Coefficients are missing.")
+            raise ValueError(f'Coefficients of "{self.name}" are missing.')
 
-        # handle optional argument: nmax
-        if ndim is None:
-            ndim = self.ndim
-        elif ndim > self.ndim:
+        # handle optional argument: dim
+        if dim is None:
+            dim = self.dim
+        elif dim > self.dim:
             warnings.warn(
-                'Supplied ndim = {0} is incompatible with number of '
-                'coefficients. Using ndim = {1} instead.'.format(
-                    ndim, self.ndim))
-            ndim = self.ndim
+                'Supplied dim = {0} is incompatible with number of '
+                'coefficients. Using dim = {1} instead.'.format(
+                    dim, self.dim))
+            dim = self.dim
 
         if deriv is None:
             deriv = 0
@@ -66,7 +67,7 @@ class Base(object):
 
         # setting spline interpolation
         PP = sip.PPoly.construct_fast(
-            self.coeffs[..., :ndim].astype(float),
+            self.coeffs[..., :dim].astype(float),
             self.breaks.astype(float), extrapolate=True)
 
         start = self.breaks[0]
@@ -98,7 +99,7 @@ class Base(object):
 
             if key > 0:
                 for x in [start, end]:  # left and right
-                    bin = np.zeros((self.order, 1, ndim))
+                    bin = np.zeros((self.order, 1, dim))
                     for k in range(key):
                         bin[-1-k] = PP(x, nu=k)
                     PP.extend(bin, np.array([x]))
@@ -121,14 +122,14 @@ class BaseModel(Base):
 
     Parameters
     ----------
+    name : str
+        User specified name of the model.
     breaks : ndarray, shape (m+1,)
         Break points for piecewise-polynomial representation of the
         time-dependent internal field in modified Julian date format.
     order : int, positive
         Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
         field.
-    nmax : int, positive
-        Maximum spherical harmonic degree of the time-dependent field.
     coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
         Coefficients of the time-dependent field.
     source : {'internal', 'external'}
@@ -147,6 +148,8 @@ class BaseModel(Base):
         field.
     nmax : int, positive
         Maximum spherical harmonic degree of the time-dependent field.
+    dim : int, ``nmax`` * (``nmax`` + 2)
+        Dimension of the model.
     coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
         Coefficients of the time-dependent field.
     source : {'internal', 'external'}
@@ -163,10 +166,10 @@ class BaseModel(Base):
 
         super().__init__(name, breaks=breaks, order=order, coeffs=coeffs)
 
-        if self.ndim is None:
+        if self.dim is None:
             self.nmax = None
         else:
-            self.nmax = int(np.sqrt(self.ndim + 1) - 1)
+            self.nmax = int(np.sqrt(self.dim + 1) - 1)
 
         self.source = 'internal' if source is None else source
 
@@ -213,9 +216,8 @@ class BaseModel(Base):
 
         """
 
-        ndim = nmax*(nmax+2)
-
-        coeffs = super().synth_coeffs(time, ndim=ndim, deriv=deriv,
+        dim = nmax*(nmax+2)
+        coeffs = super().synth_coeffs(time, dim=dim, deriv=deriv,
                                       extrapolate=extrapolate)
 
         return coeffs
@@ -604,7 +606,7 @@ class CHAOS(object):
 
         # time-dependent internal field
         self.model_tdep = BaseModel('model_tdep', breaks, order, coeffs_tdep)
-        self.model_static = BaseModel('model_static', breaks[[0, -1]], 1,
+        self.model_static = BaseModel('model_tdep', breaks[[0, -1]], 1,
                                       coeffs_static)
 
         # helper for returning the degree of the provided coefficients
@@ -627,15 +629,18 @@ class CHAOS(object):
         self.coeffs_delta = coeffs_delta
 
         # Euler angles
-        self.breaks_euler = breaks_euler
-        self.coeffs_euler = coeffs_euler
         if breaks_euler is None:
             satellites = None
+            self.model_euler = None
         else:
             satellites = tuple([*breaks_euler.keys()])
+            self.model_euler = dict()
 
-        # dictionary for meta data
-        self._meta_data = dict(satellites=satellites)
+            for satellite in satellites:
+                model = Base(satellite, order=1,
+                             breaks=breaks_euler[satellite],
+                             coeffs=coeffs_euler[satellite])
+                self.model_euler[satellite] = model
 
         # set version of CHAOS model
         if version is None:
@@ -1425,7 +1430,8 @@ class CHAOS(object):
                      titles=titles, label=units)
         plt.show()
 
-    def synth_euler_angles(self, time, satellite):
+    def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,
+                           extrapolate=None):
         """
         Extract Euler angles for specified satellite.
 
@@ -1435,6 +1441,15 @@ class CHAOS(object):
             Time given as MJD2000 (modified Julian date).
         satellite : str
             Satellite from which to get the euler angles.
+        dim : int, positive, optional
+            Maximum dimension (default is 3, for the three angles alpha, beta,
+            gamma).
+        deriv : int, positive, optional
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+        extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
+            Extrapolate to times outside of the model bounds. Defaults to
+            ``'linear'``.
 
         Returns
         -------
@@ -1444,32 +1459,14 @@ class CHAOS(object):
 
         """
 
-        if satellite not in self._meta_data['satellites']:
-            string = '", "'.join(self._meta_data['satellites'])
+        if satellite not in self.model_euler:
+            string = '", "'.join([*self.model_euler.keys()])
             raise ValueError(
                         f'Unknown satellite "{satellite}". Use '
                         f'one of {{"{string}"}}.')
 
-        if self.coeffs_euler[satellite] is None:
-            raise ValueError('Euler angles are missing')
-
-        # find smallest overlapping time period for breaks_delta
-        start = self.breaks_euler[satellite][0]
-        end = self.breaks_euler[satellite][-1]
-
-        # ensure ndarray input
-        time = np.array(time, dtype=np.float)
-
-        if np.amin(time) < start or np.amax(time) > end:
-            warnings.warn(
-                'Requested Euler angles are outside of the '
-                f'modelled period from {start} to {end}. Doing linear '
-                'extrapolation of the angles.')
-
-        euler = sip.PPoly(self.coeffs_euler[satellite],
-                          self.breaks_euler[satellite], extrapolate=True)
-
-        return euler(time)
+        return self.model_euler[satellite].synth_coeffs(
+            time, dim=dim, deriv=deriv, extrapolate=extrapolate)
 
     def save_shcfile(self, filepath, *, model=None, deriv=None,
                      leap_year=None):
@@ -1818,10 +1815,13 @@ def load_CHAOS_matfile(filepath):
     # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
     # so first dimension: order, second: number of intervals, third: 3 angles
     def compose_array(num):
-        return np.stack([model_euler[angle][0, num].reshape(
+        if model_euler['alpha'][0, num].size == 0:
+            return None
+        else:
+            return np.stack([model_euler[angle][0, num].reshape(
                 (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
 
-    coeffs_euler = {}
+    coeffs_euler = dict()
     for num, satellite in enumerate(satellites):
         coeffs_euler[satellite] = compose_array(num)
 
