@@ -216,7 +216,7 @@ class BaseModel(Base):
 
         """
 
-        dim = nmax*(nmax+2)
+        dim = None if nmax is None else nmax*(nmax+2)
         coeffs = super().synth_coeffs(time, dim=dim, deriv=deriv,
                                       extrapolate=extrapolate)
 
