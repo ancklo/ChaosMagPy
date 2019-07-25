@@ -46,7 +46,7 @@ class Base(object):
 
     def synth_coeffs(self, time, *, dim=None, deriv=None, extrapolate=None):
 
-        if self.coeffs is None:
+        if (self.coeffs is None) or (self.coeffs.size == 0):
             raise ValueError(f'Coefficients of "{self.name}" are missing.')
 
         # handle optional argument: dim
@@ -1613,7 +1613,7 @@ class CHAOS(object):
                   matlab_compatible=True)
 
         # write Euler angles to matfile for each satellite
-        satellites = self._meta_data['satellites']
+        satellites = [*self.model_euler.keys()]
 
         t_breaks_Euler = []  # list of Euler angle breaks for satellites
         alpha = []  # list of alpha for each satellite
@@ -1807,7 +1807,7 @@ def load_CHAOS_matfile(filepath):
             satellites.append(f'satellite_{counter}')
 
     # coefficients and breaks of euler angles
-    breaks_euler = {}
+    breaks_euler = dict()
     for num, satellite in enumerate(satellites):
         breaks_euler[satellite] = np.ravel(
             model_euler['t_break_Euler'][0, num])
@@ -1815,11 +1815,8 @@ def load_CHAOS_matfile(filepath):
     # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
     # so first dimension: order, second: number of intervals, third: 3 angles
     def compose_array(num):
-        if model_euler['alpha'][0, num].size == 0:
-            return None
-        else:
-            return np.stack([model_euler[angle][0, num].reshape(
-                (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
+        return np.stack([model_euler[angle][0, num].reshape(
+            (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
 
     coeffs_euler = dict()
     for num, satellite in enumerate(satellites):
