@@ -1759,48 +1759,54 @@ def load_CHAOS_matfile(filepath):
 
     version = _guess_version(filepath)
 
-    # mat_contents = sio.loadmat(filepath)
-    pp = du.load_matfile(filepath, 'pp', struct=True)
-    model_ext = du.load_matfile(filepath, 'model_ext', struct=True)
-    model_euler = du.load_matfile(filepath, 'model_Euler', struct=True)
+    mat_contents = hdf.loadmat(filepath)
 
-    order = int(pp['order'])
-    pieces = int(pp['pieces'])
-    dim = int(pp['dim'])
-    breaks = np.ravel(pp['breaks'])  # flatten 2-D array
-    coefs = pp['coefs']
-    g = du.load_matfile(filepath, 'g', struct=False)
-    coeffs_static = np.ravel(g).reshape((1, 1, -1))
+    pp = mat_contents['pp']
+    model_ext = mat_contents['model_ext']
+    model_euler = mat_contents['model_Euler']
+    params = mat_contents['params']
+
+    order = int(du.convert_var(pp['order']))
+    pieces = int(du.convert_var(pp['pieces']))
+    dim = int(du.convert_var(pp['dim']))
+    breaks = du.convert_var(pp['breaks'])  # flatten 2-D array
+    coefs = du.convert_var(pp['coefs'])
+
+    g = mat_contents['g']
+    coeffs_static = g.squeeze().reshape((1, 1, -1))
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
     # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
-    coeffs_sm = np.copy(np.ravel(model_ext['m_sm']))
-    coeffs_sm[:3] = np.ravel(model_ext['m_Dst'])  # replace with m_Dst
+    coeffs_sm = np.copy(du.convert_var(model_ext['m_sm']))
+    coeffs_sm[:3] = du.convert_var(model_ext['m_Dst'])  # replace with m_Dst
 
     # external field (GSM): n=1, 2
     n_gsm = int(2)
     coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
-    coeffs_gsm[[0, 3]] = np.ravel(model_ext['m_gsm'])  # only m=0 are non-zero
+    # only m=0 are non-zero
+    coeffs_gsm[[0, 3]] = du.convert_var(model_ext['m_gsm'])
 
     # coefficients and breaks of external SM field offsets for q10, q11, s11
-    breaks_delta = {}
-    breaks_delta['q10'] = np.ravel(model_ext['t_break_q10'])
-    breaks_delta['q11'] = np.ravel(model_ext['t_break_qs11'])
-    breaks_delta['s11'] = np.ravel(model_ext['t_break_qs11'])
+    breaks_delta = dict()
+    breaks_delta['q10'] = du.convert_var(model_ext['t_break_q10'])
+    breaks_delta['q11'] = du.convert_var(model_ext['t_break_qs11'])
+    breaks_delta['s11'] = du.convert_var(model_ext['t_break_qs11'])
 
     # reshape to comply with scipy PPoly coefficients
-    coeffs_delta = {}
-    coeffs_delta['q10'] = np.ravel(model_ext['q10']).reshape((1, -1))
-    coeffs_delta['q11'] = np.ravel(model_ext['qs11'][:, 0]).reshape((1, -1))
-    coeffs_delta['s11'] = np.ravel(model_ext['qs11'][:, 1]).reshape((1, -1))
+    coeffs_delta = dict()
+    coeffs_delta['q10'] = du.convert_var(model_ext['q10']).reshape((1, -1))
+    qs11 = du.convert_var(model_ext['qs11'])
+    coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
+    coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
     # define satellite names
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
 
     # append generic satellite name if more data available
-    n = len(model_euler['t_break_Euler'][0])
+    t_break_Euler = du.convert_var(model_euler['t_break_Euler'])
+    n = len(t_break_Euler)
     m = len(satellites)
     if n > m:
         for counter in range(m+1, n+1):
@@ -1809,18 +1815,18 @@ def load_CHAOS_matfile(filepath):
     # coefficients and breaks of euler angles
     breaks_euler = dict()
     for num, satellite in enumerate(satellites):
-        breaks_euler[satellite] = np.ravel(
-            model_euler['t_break_Euler'][0, num])
+        breaks_euler[satellite] = t_break_Euler[num].squeeze()
 
     # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
     # so first dimension: order, second: number of intervals, third: 3 angles
-    def compose_array(num):
-        return np.stack([model_euler[angle][0, num].reshape(
-            (1, -1)) for angle in ['alpha', 'beta', 'gamma']], axis=-1)
-
     coeffs_euler = dict()
     for num, satellite in enumerate(satellites):
-        coeffs_euler[satellite] = compose_array(num)
+        euler = [du.convert_var(model_euler[angle])[num].reshape((1, -1)) for
+                 angle in ['alpha', 'beta', 'gamma']]
+        euler = np.stack(euler, axis=-1).astype(np.float)
+        euler += du.convert_var(params['Euler_prerotation'])[num, :]
+
+        coeffs_euler[satellite] = euler
 
     model = CHAOS(breaks=breaks,
                   order=order,

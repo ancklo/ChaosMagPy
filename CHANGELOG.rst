@@ -3,14 +3,19 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** June 15, 2019
+| **Date:** July 25, 2019
 | **Release:** v0.2
 
 Features
 ^^^^^^^^
-* added keyword ``start_date`` to ``to rotate_gauss_fft``
-* improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
-* automatically import ``model_utils.synth_values``.
+* Added keyword ``start_date`` to ``to rotate_gauss_fft``
+* Improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
+* Automatically import ``model_utils.synth_values``.
+
+Deprecations
+^^^^^^^^^^^^
+* Removed ``breaks_euler`` and ``coeffs_euler`` from ``CHAOS`` class
+  attributes. Euler angles are now handled as ``Base`` class instance.
 
 Version 0.1
 -------------

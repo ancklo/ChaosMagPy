@@ -10,6 +10,19 @@ from datetime import timedelta, datetime
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
+def convert_var(variable):
+
+    if isinstance(variable, np.ndarray):
+        if variable.dtype == np.dtype('O'):
+            variable = variable[0, 0].squeeze()
+        else:
+            variable = variable.squeeze()
+    else:
+        raise ValueError('Structured array not understood.')
+
+    return variable
+
+
 def load_matfile(filepath, variable_name, struct=False):
     """
     Load variable from matfile. Can handle mat-files v7.3 and before.
