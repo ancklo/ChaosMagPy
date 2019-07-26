@@ -45,6 +45,47 @@ class Base(object):
             self.dim = coeffs.shape[-1]
 
     def synth_coeffs(self, time, *, dim=None, deriv=None, extrapolate=None):
+        """
+        Compute the coefficients from the piecewise polynomial representation.
+
+        Parameters
+        ----------
+        time : ndarray, shape (...) or float
+            Array containing the time in modified Julian dates.
+        dim : int, positive, optional
+            Truncation value of the number of coefficients (no truncation by
+            default).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
+            Extrapolate to times outside of the piecewise polynomial bounds.
+            Specify polynomial degree as string or any order as integer.
+            Defaults to ``'linear'`` (equiv. to order 2 polynomials).
+
+             +------------+---------------------------------------------------+
+             | Value      | Description                                       |
+             +============+===================================================+
+             | 'constant' | Use degree zero polynomial only (extrapolate=1).  |
+             +------------+---------------------------------------------------+
+             | 'linear'   | Use degree-1 polynomials (extrapolate=2).         |
+             +------------+---------------------------------------------------+
+             | 'quadratic'| Use degree-2 polynomials (extrapolate=3).         |
+             +------------+---------------------------------------------------+
+             | 'cubic'    | Use degree-3 polynomials (extrapolate=4).         |
+             +------------+---------------------------------------------------+
+             | 'spline'   | Use all degree polynomials.                       |
+             +------------+---------------------------------------------------+
+             | 'off'      | Return NaN outside model bounds (extrapolate=0).  |
+             +------------+---------------------------------------------------+
+
+        Returns
+        -------
+        coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
+            Array containing the coefficients.
+
+        """
 
         if (self.coeffs is None) or (self.coeffs.size == 0):
             raise ValueError(f'Coefficients of "{self.name}" are missing.')
@@ -162,6 +203,7 @@ class BaseModel(Base):
         """
         Initialize time-dependent spherical harmonic model as a piecewise
         polynomial.
+
         """
 
         super().__init__(name, breaks=breaks, order=order, coeffs=coeffs)
@@ -175,7 +217,7 @@ class BaseModel(Base):
 
     def synth_coeffs(self, time, *, nmax=None, deriv=None, extrapolate=None):
         """
-        Compute the field coefficients at points in time.
+        Compute the coefficients from the piecewise polynomial representation.
 
         Parameters
         ----------
@@ -526,6 +568,10 @@ class CHAOS(object):
         Time-dependent internal field model.
     model_static : :class:`BaseModel` instance
         Static internal field model.
+    model_euler : dict of :class:`Base` instances
+        Dictionary containing the satellite's name as key and the Euler angles
+        as :class:`Base` class instance. (CHAOS-6: keys are ``'oersted'``,
+        ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``).
     n_sm : int, positive
         Maximum spherical harmonic degree of external field in SM coordinates.
     coeffs_sm : ndarray, shape (``n_sm`` * (``n_sm`` + 2),)
@@ -540,15 +586,6 @@ class CHAOS(object):
     coeffs_delta : dict with ndarrays, shape (:math:`m_q`,)
         Coefficients of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
-    breaks_euler : dict with ndarrays, shape (:math:`m_e` +1,)
-        Dictionary containing satellite name as key and corresponding break
-        vectors of Euler angles (CHAOS-6: keys are ``'oersted'``, ``'champ'``,
-        ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``).
-    coeffs_euler : dict with ndarrays, shape (1, :math:`m_e`, 3)
-        Dictionary containing satellite name as key and arrays of the Euler
-        angles alpha, beta and gamma as trailing dimension (CHAOS-6: keys are
-        ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
-        ``'swarm_c'``).
     version : str
         Version specifier (``None`` evaluates to
         ``basicConfig['params.version']`` by default).
@@ -1823,7 +1860,7 @@ def load_CHAOS_matfile(filepath):
     for num, satellite in enumerate(satellites):
         euler = [du.convert_var(model_euler[angle])[num].reshape((1, -1)) for
                  angle in ['alpha', 'beta', 'gamma']]
-        euler = np.stack(euler, axis=-1).astype(np.float)
+        euler = np.stack(euler, axis=-1).astype(np.float)  # because no sac-c
         euler += du.convert_var(params['Euler_prerotation'])[num, :]
 
         coeffs_euler[satellite] = euler
