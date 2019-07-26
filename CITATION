@@ -1,58 +1,18 @@
-Citation
-========
-
 To reference ChaosMagPy in publications, please cite the package itself
 
 https://doi.org/10.5281/zenodo.3352398
 
 and all three of the following:
 
-Finlay, C.C., Olsen, N., Kotsiaros, S., Gillet, N. and Toeffner-Clausen, L. (2016),
+*Finlay, C.C., Olsen, N., Kotsiaros, S., Gillet, N. and Toeffner-Clausen, L. (2016)*,
 Recent geomagnetic secular variation from Swarm and ground observatories
 as estimated in the CHAOS-6 geomagnetic field model Earth Planets Space,
 Vol 68, 112. doi: 10.1186/s40623-016-0486-1
 
-Olsen, N., Luehr, H., Finlay, C.C., Sabaka, T. J., Michaelis, I., Rauberg, J. and Toeffner-Clausen, L. (2014),
+*Olsen, N., Luehr, H., Finlay, C.C., Sabaka, T. J., Michaelis, I., Rauberg, J. and Toeffner-Clausen, L. (2014)*,
 The CHAOS-4 geomagnetic field model, Geophys. J. Int., Vol 197, 815-827,
 doi: 10.1093/gji/ggu033.
 
-Olsen, N.,  Luehr, H.,  Sabaka, T.J.,  Mandea, M. ,Rother, M., Toeffner-Clausen, L. and Choi, S. (2006),
+*Olsen, N.,  Luehr, H.,  Sabaka, T.J.,  Mandea, M. ,Rother, M., Toeffner-Clausen, L. and Choi, S. (2006)*,
 CHAOS — a model of Earth's magnetic field derived from CHAMP, Ørsted, and SAC-C magnetic satellite data,
 Geophys. J. Int., vol. 166 67-75
-
-BibTex
-------
-
-@Article{Finlay2016,
-  author    = {Christopher C. Finlay and Nils Olsen and Stavros Kotsiaros and Nicolas Gillet and Lars T{\o}ffner-Clausen},
-  title     = {Recent geomagnetic secular variation from Swarm and ground observatories as estimated in the {CHAOS}-6 geomagnetic field model},
-  journal   = {Earth, Planets and Space},
-  year      = {2016},
-  volume    = {68},
-  number    = {1},
-  month     = {jul},
-  doi       = {10.1186/s40623-016-0486-1},
-  publisher = {Springer Nature},
-}
-
-@Article{Olsen2014,
-  author    = {Olsen, Nils and L{\"u}hr, Hermann and Finlay, Christopher C. and Sabaka, Terence J. and Michaelis, Ingo and Rauberg, Jan and T{\o}ffner-Clausen, Lars},
-  title     = {The CHAOS-4 geomagnetic field model},
-  journal   = {Geophysical Journal International},
-  year      = {2014},
-  volume    = {197},
-  number    = {2},
-  pages     = {815--827},
-  publisher = {Oxford University Press},
-}
-
-@Article{Olsen2006,
-  author    = {Olsen, Nils and L{\"u}hr, Hermann and Sabaka, Terence J. and Mandea, Mioara and Rother, Martin and Tøffner-Clausen, Lars and Choi, Sungchan},
-  title     = {CHAOS—a model of the Earth's magnetic field derived from CHAMP, Ørsted, and SAC-C magnetic satellite data},
-  journal   = {Geophysical Journal International},
-  year      = {2006},
-  volume    = {166},
-  number    = {1},
-  pages     = {67--75},
-  publisher = {Blackwell Publishing Ltd Oxford, UK},
-}
