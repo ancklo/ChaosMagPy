@@ -7,9 +7,6 @@ ChaosMagPy is a simple Python package for evaluating the
 field model. To get quickly started, download a complete working example
 including the latest model `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/chaosmagpy_package.zip>`_.
 
-References
-----------
-
 .. include:: ../../CITATION
 
 Documentation
