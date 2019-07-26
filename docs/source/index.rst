@@ -15,6 +15,7 @@ ChaosMagPy documentation
    usage
    references
    changelog
+   license
 
 Indices and tables
 ==================

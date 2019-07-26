@@ -1,4 +1,11 @@
-To reference ChaosMagPy in publications, please cite all three of the following:
+Citation
+========
+
+To reference ChaosMagPy in publications, please cite the package itself
+
+https://doi.org/10.5281/zenodo.3352398
+
+and all three of the following:
 
 Finlay, C.C., Olsen, N., Kotsiaros, S., Gillet, N. and Toeffner-Clausen, L. (2016),
 Recent geomagnetic secular variation from Swarm and ground observatories
@@ -13,6 +20,8 @@ Olsen, N.,  Luehr, H.,  Sabaka, T.J.,  Mandea, M. ,Rother, M., Toeffner-Clausen,
 CHAOS — a model of Earth's magnetic field derived from CHAMP, Ørsted, and SAC-C magnetic satellite data,
 Geophys. J. Int., vol. 166 67-75
 
+BibTex
+------
 
 @Article{Finlay2016,
   author    = {Christopher C. Finlay and Nils Olsen and Stavros Kotsiaros and Nicolas Gillet and Lars T{\o}ffner-Clausen},
