@@ -1,5 +1,4 @@
 import numpy as np
-import cdflib
 import matplotlib.pyplot as plt
 from chaosmagpy import load_CHAOS_matfile
 from chaosmagpy.coordinate_utils import transform_points
@@ -83,6 +82,7 @@ def example2():
     data in August 2018 from a cdf-file.
 
     """
+    import cdflib
 
     model = load_CHAOS_matfile(FILEPATH_CHAOS)
     print(model)
