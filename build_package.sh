@@ -31,7 +31,10 @@ cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/da
 cp -r docs/build/html/* $tempdir/html/
 
 # create readme.txt and write introduction
-cat > $tempdir/readme.txt < README.rst
+cat > $tempdir/readme.txt <(head -9 README.rst)
+
+# create readme.txt and write introduction
+cat >> $tempdir/readme.txt <(tail -17 README.rst)
 
 # include License
 cat >> $tempdir/readme.txt <(echo) LICENSE
