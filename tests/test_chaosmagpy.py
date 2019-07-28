@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import hdf5storage as hdf
 from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
@@ -66,40 +67,31 @@ class ChaosMagPyTestCase(TestCase):
             # print(x, y)
             np.testing.assert_array_equal(x, y)
 
-        pp = d.load_matfile(CHAOS_PATH, 'pp', struct=True)
-        pp_out = d.load_matfile(filepath, 'pp', struct=True)
+        chaos = hdf.loadmat(CHAOS_PATH)
+        chaos_out = hdf.loadmat(filepath)
 
-        test(np.ravel(pp['order']), np.ravel(pp_out['order']))
-        test(np.ravel(pp['dim']), np.ravel(pp_out['dim']))
-        test(np.ravel(pp['pieces']), np.ravel(pp_out['pieces']))
-        test(pp['coefs'].shape, pp_out['coefs'].shape)
-        test(pp['breaks'].shape, pp_out['breaks'].shape)
-        test(np.ravel(pp['form']), np.ravel(pp_out['form']))
+        pp = chaos['pp']
+        pp_out = chaos_out['pp']
 
-        g = d.load_matfile(CHAOS_PATH, 'g', struct=False)
-        g_out = d.load_matfile(filepath, 'g', struct=False)
+        for var in ['order', 'dim', 'pieces', 'form', 'coefs', 'breaks']:
+            test(d.fetch(pp[var]), d.fetch(pp_out[var]))
 
-        test(g.shape, g_out.shape)
+        test(d.fetch(chaos['g']), d.fetch(chaos_out['g']))
 
-        model_ext = d.load_matfile(CHAOS_PATH, 'model_ext', struct=True)
-        model_ext_out = d.load_matfile(filepath, 'model_ext', struct=True)
+        model_ext = chaos['model_ext']
+        model_ext_out = chaos_out['model_ext']
 
-        test(model_ext['m_Dst'].shape, model_ext_out['m_Dst'].shape)
-        test(model_ext['m_gsm'].shape, model_ext_out['m_gsm'].shape)
-        test(model_ext['m_sm'].shape, model_ext_out['m_sm'].shape)
-        test(model_ext['q10'].shape, model_ext_out['q10'].shape)
-        test(model_ext['qs11'].shape, model_ext_out['qs11'].shape)
-        test(model_ext['t_break_q10'].shape,
-             model_ext_out['t_break_q10'].shape)
-        test(model_ext['t_break_qs11'].shape,
-             model_ext_out['t_break_qs11'].shape)
+        for var in ['m_Dst', 'm_gsm', 'm_sm', 'q10', 'qs11', 't_break_q10',
+                    't_break_qs11']:
+            test(d.fetch(model_ext['m_Dst']).shape,
+                 d.fetch(model_ext_out['m_Dst']).shape)
 
-        model_Euler = d.load_matfile(CHAOS_PATH, 'model_Euler', struct=True)
-        model_Euler_out = d.load_matfile(filepath, 'model_Euler', struct=True)
+        model_Euler = chaos['model_Euler']
+        model_Euler_out = chaos_out['model_Euler']
 
         for key in ['alpha', 'beta', 'gamma', 't_break_Euler']:
-            var = model_Euler[key]
-            var_out = model_Euler_out[key]
+            var = d.fetch(model_Euler[key])
+            var_out = d.fetch(model_Euler_out[key])
 
             test(var.shape, var_out.shape)
             for value, value_out in zip(np.ravel(var), np.ravel(var_out)):

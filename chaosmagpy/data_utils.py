@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-import hdf5storage as hdf
 import warnings
 import h5py
 import os
@@ -10,49 +9,29 @@ from datetime import timedelta, datetime
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
-def convert_var(variable):
-
-    if isinstance(variable, np.ndarray):
-        if variable.dtype == np.dtype('O'):
-            variable = variable[0, 0].squeeze()
-        else:
-            variable = variable.squeeze()
-    else:
-        raise ValueError('Structured array not understood.')
-
-    return variable
-
-
-def load_matfile(filepath, variable_name, struct=False):
+def fetch(variable):
     """
-    Load variable from matfile. Can handle mat-files v7.3 and before.
+    Load variable from mat-object (matfile loaded with hdf5storage). Can handle
+    mat-files v7.3 and before.
 
     Parameters
     ----------
-    filepath : str
-        Filepath to mat-file.
-    variable_name : str
-        Name of variable or struct to be loaded from mat-file.
-    struct : {False, True}, optional
-        If struct is to be loaded from mat-file, use ``True`` (only required
-        before v7.3 mat-files).
+    variable: mat
+        Matfile that has been loaded with :func:`hdf5storage.loadmat`.
 
     Returns
     -------
-    variable : ndarray, dict
-        Array or dictionary (if ``struct=True``) containing the values.
+    variable : ndarray, float, int
 
     """
 
-    mat_contents = hdf.loadmat(str(filepath),
-                               variable_names=[str(variable_name)])
+    if isinstance(variable, np.ndarray):
+        if (variable.dtype == np.dtype('O')) and (variable.shape == (1, 1)):
+            variable = variable[0, 0].squeeze()
+        else:
+            variable = variable.squeeze()
 
-    variable = mat_contents[str(variable_name)]
-
-    if struct is True and '__header__' in mat_contents:
-        return variable[0, 0]  # version 5 only seems to have header
-    else:
-        return variable
+    return variable
 
 
 def load_RC_datfile(filepath=None, parse_dates=False):

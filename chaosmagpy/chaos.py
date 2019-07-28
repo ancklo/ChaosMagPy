@@ -559,6 +559,8 @@ class CHAOS(object):
     name : str, optional
         User defined name of the model. Defaults to ``'CHAOS-<version>'``,
         where <version> is the default in ``basicConfig['params.version']``.
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     Attributes
     ----------
@@ -633,7 +635,7 @@ class CHAOS(object):
                  coeffs_sm=None, coeffs_gsm=None,
                  breaks_delta=None, coeffs_delta=None,
                  breaks_euler=None, coeffs_euler=None,
-                 version=None, name=None):
+                 version=None, name=None, meta=None):
         """
         Initialize the CHAOS model.
 
@@ -692,6 +694,8 @@ class CHAOS(object):
             self.name = f'CHAOS-{self.version}'
         else:
             self.name = name
+
+        self.meta = meta
 
     def __call__(self, time, radius, theta, phi, source_list=None):
         """
@@ -1593,13 +1597,13 @@ class CHAOS(object):
 
     def save_matfile(self, filepath):
         """
-        Save CHAOS model to `mat`-format. The model must be fully specified as
+        Save CHAOS model to a `mat`-file. The model must be fully specified as
         is the case if originally loaded from a `mat`-file.
 
         Parameters
         ----------
         filepath : str
-            Path and name of `mat`-formatted file that is to be saved.
+            Path and name of `mat`-file that is to be saved.
 
         """
 
@@ -1657,13 +1661,13 @@ class CHAOS(object):
         beta = []  # list of beta for each satellite
         gamma = []  # list of gamma for each satellite
         for num, satellite in enumerate(satellites):
-            t_breaks_Euler.append(self.breaks_euler[satellite].reshape(
+            t_breaks_Euler.append(self.model_euler[satellite].breaks.reshape(
                 (-1, 1)).astype(float))
-            alpha.append(self.coeffs_euler[satellite][0, :, 0].reshape(
+            alpha.append(self.model_euler[satellite].coeffs[0, :, 0].reshape(
                 (-1, 1)).astype(float))
-            beta.append(self.coeffs_euler[satellite][0, :, 1].reshape(
+            beta.append(self.model_euler[satellite].coeffs[0, :, 1].reshape(
                 (-1, 1)).astype(float))
-            gamma.append(self.coeffs_euler[satellite][0, :, 2].reshape(
+            gamma.append(self.model_euler[satellite].coeffs[0, :, 2].reshape(
                 (-1, 1)).astype(float))
 
         hdf.write(np.array(t_breaks_Euler), path='/model_Euler/t_break_Euler/',
@@ -1679,6 +1683,9 @@ class CHAOS(object):
         g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
 
         hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
+
+        hdf.write(self.meta['params'], path='/params', filename=filepath,
+                  matlab_compatible=True)
 
         print('CHAOS saved to {}.'.format(
             os.path.join(os.getcwd(), filepath)))
@@ -1803,11 +1810,11 @@ def load_CHAOS_matfile(filepath):
     model_euler = mat_contents['model_Euler']
     params = mat_contents['params']
 
-    order = int(du.convert_var(pp['order']))
-    pieces = int(du.convert_var(pp['pieces']))
-    dim = int(du.convert_var(pp['dim']))
-    breaks = du.convert_var(pp['breaks'])  # flatten 2-D array
-    coefs = du.convert_var(pp['coefs'])
+    order = int(du.fetch(pp['order']))
+    pieces = int(du.fetch(pp['pieces']))
+    dim = int(du.fetch(pp['dim']))
+    breaks = du.fetch(pp['breaks'])  # flatten 2-D array
+    coefs = du.fetch(pp['coefs'])
 
     g = mat_contents['g']
     coeffs_static = g.squeeze().reshape((1, 1, -1))
@@ -1816,25 +1823,25 @@ def load_CHAOS_matfile(filepath):
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
     # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
-    coeffs_sm = np.copy(du.convert_var(model_ext['m_sm']))
-    coeffs_sm[:3] = du.convert_var(model_ext['m_Dst'])  # replace with m_Dst
+    coeffs_sm = np.copy(du.fetch(model_ext['m_sm']))
+    coeffs_sm[:3] = du.fetch(model_ext['m_Dst'])  # replace with m_Dst
 
     # external field (GSM): n=1, 2
     n_gsm = int(2)
     coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
     # only m=0 are non-zero
-    coeffs_gsm[[0, 3]] = du.convert_var(model_ext['m_gsm'])
+    coeffs_gsm[[0, 3]] = du.fetch(model_ext['m_gsm'])
 
     # coefficients and breaks of external SM field offsets for q10, q11, s11
     breaks_delta = dict()
-    breaks_delta['q10'] = du.convert_var(model_ext['t_break_q10'])
-    breaks_delta['q11'] = du.convert_var(model_ext['t_break_qs11'])
-    breaks_delta['s11'] = du.convert_var(model_ext['t_break_qs11'])
+    breaks_delta['q10'] = du.fetch(model_ext['t_break_q10'])
+    breaks_delta['q11'] = du.fetch(model_ext['t_break_qs11'])
+    breaks_delta['s11'] = du.fetch(model_ext['t_break_qs11'])
 
     # reshape to comply with scipy PPoly coefficients
     coeffs_delta = dict()
-    coeffs_delta['q10'] = du.convert_var(model_ext['q10']).reshape((1, -1))
-    qs11 = du.convert_var(model_ext['qs11'])
+    coeffs_delta['q10'] = du.fetch(model_ext['q10']).reshape((1, -1))
+    qs11 = du.fetch(model_ext['qs11'])
     coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
     coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
@@ -1842,7 +1849,7 @@ def load_CHAOS_matfile(filepath):
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
 
     # append generic satellite name if more data available
-    t_break_Euler = du.convert_var(model_euler['t_break_Euler'])
+    t_break_Euler = du.fetch(model_euler['t_break_Euler'])
     n = len(t_break_Euler)
     m = len(satellites)
     if n > m:
@@ -1858,12 +1865,15 @@ def load_CHAOS_matfile(filepath):
     # so first dimension: order, second: number of intervals, third: 3 angles
     coeffs_euler = dict()
     for num, satellite in enumerate(satellites):
-        euler = [du.convert_var(model_euler[angle])[num].reshape((1, -1)) for
+        euler = [du.fetch(model_euler[angle])[num].reshape((1, -1)) for
                  angle in ['alpha', 'beta', 'gamma']]
         euler = np.stack(euler, axis=-1).astype(np.float)  # because no sac-c
-        euler += du.convert_var(params['Euler_prerotation'])[num, :]
+        euler += du.fetch(params['Euler_prerotation'])[num, :]
 
         coeffs_euler[satellite] = euler
+
+    dict_params = dict(Euler_prerotation=du.fetch(params['Euler_prerotation']))
+    meta = {'params': dict_params}
 
     model = CHAOS(breaks=breaks,
                   order=order,
@@ -1875,7 +1885,8 @@ def load_CHAOS_matfile(filepath):
                   coeffs_delta=coeffs_delta,
                   breaks_euler=breaks_euler,
                   coeffs_euler=coeffs_euler,
-                  version=version)
+                  version=version,
+                  meta=meta)
 
     return model
 
