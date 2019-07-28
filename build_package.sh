@@ -30,11 +30,14 @@ cp data/CHAOS-6-x9.mat $tempdir/data/CHAOS-6-x9.mat
 cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf
 cp -r docs/build/html/* $tempdir/html/
 
-# create readme.txt and write introduction
+# create readme.txt and write introduction (without citation rst link)
 cat > $tempdir/readme.txt <(head -9 README.rst)
 
-# create readme.txt and write introduction
+# create readme.txt and write documentation information
 cat >> $tempdir/readme.txt <(tail -17 README.rst)
+
+# create readme.txt and write introduction
+cat >> $tempdir/readme.txt <(echo) CITATION
 
 # include License
 cat >> $tempdir/readme.txt <(echo) LICENSE
