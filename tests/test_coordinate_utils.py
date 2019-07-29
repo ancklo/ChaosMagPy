@@ -38,7 +38,7 @@ class CoordinateUtilsTestCase(TestCase):
             c._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
 
     @skip('New conductivity model uses thinlayer approximation.')
-    def test_conducting_sphere(self):
+    def _test_q_response_sphere(self):
 
         a = 6371.2
         n = 1
