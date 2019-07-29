@@ -93,15 +93,21 @@ cat >> $tempdir/readme.txt <(echo) CHANGELOG.rst
 
 # build archive recursively in tmp directory
 cd $tempdir/
-zip -r $out *
-cd -
+zip $out -r *
+cd ..
 
 # move archive to build
 mv -i $tempdir/$out build/$out
 
 # clean up
-rm -r $tempdir
-rm example1_output.txt
+while true; do
+    read -p "Do you wish to delete temporary files? y/n: " yn
+    case $yn in
+        [Yy]* ) rm -r $tempdir; rm example1_output.txt; break;;
+        [Nn]* ) echo Exit.; exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
 
 # upload to PyPI
 # twine upload dist/chaosmagpy-$version*
