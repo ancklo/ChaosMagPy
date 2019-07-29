@@ -24,7 +24,7 @@ class Base(object):
 
     """
 
-    def __init__(self, name, breaks=None, order=None, coeffs=None):
+    def __init__(self, name, breaks=None, order=None, coeffs=None, meta=None):
 
         self.name = str(name)
 
@@ -43,6 +43,8 @@ class Base(object):
 
             self.coeffs = coeffs[-self.order:]
             self.dim = coeffs.shape[-1]
+
+        self.meta = meta
 
     def synth_coeffs(self, time, *, dim=None, deriv=None, extrapolate=None):
         """
@@ -175,7 +177,8 @@ class BaseModel(Base):
         Coefficients of the time-dependent field.
     source : {'internal', 'external'}
         Internal or external source (defaults to ``'internal'``)
-
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     Attributes
     ----------
@@ -199,14 +202,15 @@ class BaseModel(Base):
     """
 
     def __init__(self, name, breaks=None, order=None, coeffs=None,
-                 source=None):
+                 source=None, meta=None):
         """
         Initialize time-dependent spherical harmonic model as a piecewise
         polynomial.
 
         """
 
-        super().__init__(name, breaks=breaks, order=order, coeffs=coeffs)
+        super().__init__(name, breaks=breaks, order=order, coeffs=coeffs,
+                         meta=meta)
 
         if self.dim is None:
             self.nmax = None
@@ -675,10 +679,17 @@ class CHAOS(object):
             satellites = tuple([*breaks_euler.keys()])
             self.model_euler = dict()
 
-            for satellite in satellites:
+            for k, satellite in enumerate(satellites):
+
+                try:
+                    Euler_prerotation = meta['params']['Euler_prerotation'][k]
+                except KeyError:
+                    Euler_prerotation = None
+
                 model = Base(satellite, order=1,
                              breaks=breaks_euler[satellite],
-                             coeffs=coeffs_euler[satellite])
+                             coeffs=coeffs_euler[satellite],
+                             meta={'Euler_prerotation': Euler_prerotation})
                 self.model_euler[satellite] = model
 
         # set version of CHAOS model
@@ -1506,8 +1517,15 @@ class CHAOS(object):
                         f'Unknown satellite "{satellite}". Use '
                         f'one of {{"{string}"}}.')
 
-        return self.model_euler[satellite].synth_coeffs(
+        coeffs = self.model_euler[satellite].synth_coeffs(
             time, dim=dim, deriv=deriv, extrapolate=extrapolate)
+
+        # add Euler prerotation angles if available in meta
+        pre = self.model_euler[satellite].meta['Euler_prerotation']
+        if pre is not None:
+            coeffs += pre
+
+        return coeffs
 
     def save_shcfile(self, filepath, *, model=None, deriv=None,
                      leap_year=None):
@@ -1868,12 +1886,12 @@ def load_CHAOS_matfile(filepath):
         euler = [du.fetch(model_euler[angle])[num].reshape((1, -1)) for
                  angle in ['alpha', 'beta', 'gamma']]
         euler = np.stack(euler, axis=-1).astype(np.float)  # because no sac-c
-        euler += du.fetch(params['Euler_prerotation'])[num, :]
 
         coeffs_euler[satellite] = euler
 
     dict_params = dict(Euler_prerotation=du.fetch(params['Euler_prerotation']))
-    meta = {'params': dict_params}
+    meta = dict(params=dict_params,
+                satellites=tuple(satellites))
 
     model = CHAOS(breaks=breaks,
                   order=order,
