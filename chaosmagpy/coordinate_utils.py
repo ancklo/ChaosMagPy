@@ -1140,7 +1140,7 @@ def local_time(time, phi):
     return np.remainder(time + phi/360, 1)*24
 
 
-def conducting_sphere(periods, sigma, radius, n):
+def q_response_sphere(periods, sigma, radius, n, kind=None):
     """
     Computation of the response for a spherically layered conductor in an
     inducing external field of a single spherical degree.
@@ -1157,6 +1157,9 @@ def conducting_sphere(periods, sigma, radius, n):
         layer in kilometers (i.e. conductor surface, see Notes).
     n : int
         Spherical degree of inducing external field.
+    kind : {'thin', 'thick'}, optional
+        Approximation for thin layers (quadratic sigma in layers) or thick
+        layers (computing Bessel functions).
 
     Returns
     -------
@@ -1171,13 +1174,22 @@ def conducting_sphere(periods, sigma, radius, n):
 
     Notes
     -----
+
+    ``kind='thin'``
+    ^^^^^^^^^^^^^^^
+    Not stable for short periods of less than a few seconds.
+
+    Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
+
+    ``kind='thick'``
+    ^^^^^^^^^^^^^^^^
     The following applies to the layered conductivity shells:
 
     | ``radius[0]`` > `r` > ``radius[1]`` : ``sigma[0]``
     | ``radius[1]`` > `r` > ``radius[2]`` : ``sigma[1]``
     | ...
     | ``radius[nl-1]`` > `r` > ``radius[nl]`` : ``sigma[nl-1]``
-    | ``radius[nl+1]`` > `r` > 0 :      :math:`\\sigma` = `\\inf`
+    | ``radius[nl]`` > `r` > 0 :      :math:`\\sigma` = `\\inf`
 
     ``nl`` is number of uniform layers (excluding a perfectly conducting core),
     radius in km, conductivity :math:`\\sigma` in (S/m).
@@ -1188,165 +1200,11 @@ def conducting_sphere(periods, sigma, radius, n):
     | Python version: August 2018, Clemens Kloss
     | Matlab version: November 2000, Nils Olsen
     | Original Fortran program: Peter Weidelt
-    """
-
-    periods = np.array(periods)  # ensure numpy array
-    if periods.ndim > 1:
-        raise ValueError("Input ``periods`` must be a vector.")
-
-    sigma = np.array(sigma)  # ensure numpy array
-    if sigma.ndim > 1:
-        raise ValueError("Conductivity ``sigma`` must be a vector.")
-    nl = sigma.size-1  # index of last layer, there are nl+1 layers
-
-    eps = 1.0e-10
-    zlimit = 3
-
-    fac1 = factorial(n)
-    fac2 = (-1)**n * fac1/(2*n+1)
-
-    # initialze helpers variables and output
-    C = np.empty(periods.shape, dtype=np.complex)
-    z = np.empty((2,), dtype=np.complex)
-    p = np.empty((2,), dtype=np.complex)
-    q = np.empty((2,), dtype=np.complex)
-    pd = np.empty((2,), dtype=np.complex)
-    qd = np.empty((2,), dtype=np.complex)
-
-    for counter, period in enumerate(periods):
-        for il in range(nl, -1, -1):  # runs over nl...0
-            k = np.sqrt(8.0e-7 * 1.0j * pi**2 * sigma[il] / period)
-            z[0] = k*radius[il]*1000
-            z[1] = k*radius[il+1]*1000
-
-            # calculate spherical bessel functions with small argument
-            # by power series (abramowitz & Stegun 10.2.5, 10.2.6 and 10.2.4):
-
-            if abs(z[0]) < zlimit:
-                for m in range(2):
-                    p[m] = 1+0j
-                    q[m] = 1+0j
-                    pd[m] = n
-                    qd[m] = -(n+1)
-                    zz = z[m]**2 / 2
-
-                    j = 1
-                    dp = 1+0j
-                    dq = 1+0j
-                    while (abs(dp) > eps or abs(dq) > eps):
-                        dp = dp * zz / j / (2*j+1+2*n)
-                        dq = dq * zz / j / (2*j-1-2*n)
-                        p[m] = p[m] + dp
-                        q[m] = q[m] + dq
-                        pd[m] = pd[m] + dp*(2*j+n)
-                        qd[m] = qd[m] + dq*(2*j-n-1)
-                        j += 1
-
-                    p[m] = p[m] * z[m]**n / fac1
-                    q[m] = q[m] * z[m]**(-n-1) * fac2
-                    q[m] = (-1)**(n+1) * pi/2 * (p[m]-q[m])
-                    pd[m] = pd[m] * z[m]**(n-1) / fac1
-                    qd[m] = qd[m] * z[m]**(-n-2) * fac2
-                    qd[m] = (-1)**(n+1) * pi/2 * (pd[m]-qd[m])
-
-                v1 = p[1] / p[0]
-                v2 = pd[0] / p[0]
-                v3 = pd[1] / p[0]
-                v4 = q[0] / q[1]
-                v5 = qd[0] / q[1]
-                v6 = qd[1] / q[1]
-            else:
-                # calculate spherical bessel functions with large argument
-                # the exponential behaviour is split off and treated
-                # separately (abramowitz & stegun 10.2.9 and 10.2.15)
-                for m in range(2):
-                    zz = 2*z[m]
-                    rm = 1+0j
-                    rp = 1+0j
-                    rmd = 1+0j
-                    rpd = 1+0j
-                    d = 1+0j
-                    sg = 1+0j
-                    for j in range(1, n+1):
-                        d = d * (n+1-j)*(n+j) / j / zz
-                        sg = -sg
-                        rp = rp + d
-                        rm = rm + sg*d
-                        rmd = rmd + sg*d*(j+1)
-                        rpd = rpd + d*(j+1)
-
-                    e = np.exp(-2*z[m])
-                    p[m] = (rm - sg*rp*e) / zz
-                    q[m] = (pi/zz) * rp
-                    pd[m] = (rm + sg*rp*e) / zz - 2*(rmd - sg*rpd*e) / zz**2
-                    qd[m] = -q[m] - 2*pi*rpd / zz**2
-
-                e = np.exp(-(z[0] - z[1]))
-                v1 = p[1] / p[0] * e
-                v2 = pd[0] / p[0]
-                v3 = pd[1] / p[0] * e
-                v4 = q[0] / q[1] * e
-                v5 = qd[0] / q[1] * e
-                v6 = qd[1] / q[1]
-
-            if (il == nl):
-                b = k*(v2 - v5*v1) / (1 - v4*v1)
-            else:
-                b = (k*((v2 - v5*v1)*b + k*(v5*v3-v2*v6)) /
-                     ((1 - v4*v1)*b + k*(v4*v3 - v6)))
-
-        C[counter] = radius[0] / (1+1000*radius[0]*b)  # C in km
-        print("Finished {:.1f}%".format(
-            (counter+1)/periods.size*100), end='\r')
-
-    print('')
-
-    # if nargout > 1
-    rho_a = 1e-7*8*pi**2 / periods * np.abs(C*1000)**2
-    phi = 90 + 57.3*np.angle(C)
-    Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
-
-    return C, rho_a, phi, Q
-
-
-def conducting_sphere_thinlayer(periods, sigma, radius, n):
 
     """
-    Computation of the response for a spherically layered conductor in an
-    inducing external field of a single spherical degree.
 
-    Parameters
-    ----------
-    periods : ndarray or float, shape (m,)
-        Oscillation period of the inducing field in seconds.
-    sigma : ndarray, shape (nl,)
-        Conductivity of spherical shells, starting with the outermost and
-        excluding the perfectly conducting innermost sphere in (S/m).
-    radius : ndarray, shape (nl+1,)
-        Radius of the interfaces in between the layers, starting with outermost
-        layer in kilometers (i.e. conductor surface, see Notes).
-    n : int
-        Spherical degree of inducing external field.
-
-    Returns
-    -------
-    C : ndarray, shape (m,)
-        C-response in (km), complex.
-    rho_a : ndarray, shape (m,)
-        Electrical surface resistance in (:math:`\\Omega m`).
-    phi : ndarray, shape (m,)
-        Proportional to phase angle of C-response in degrees.
-    Q : ndarray, shape (m,)
-        Q-response, complex.
-
-
-    Notes
-    -----
-    Not stable for short periods of less than a few seconds.
-
-    Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
-
-    """
+    if kind is None:
+        kind = 'thin'
 
     periods = np.array(periods)  # ensure numpy array
     if periods.ndim > 1:
@@ -1356,53 +1214,171 @@ def conducting_sphere_thinlayer(periods, sigma, radius, n):
     if sigma.ndim > 1:
         raise ValueError("Conductivity ``sigma`` must be a vector.")
 
-    radius = 1e3*np.array(radius)
+    if kind == 'thick':
 
-    # constants
-    mu = 4*np.pi*1e-7
+        nl = sigma.size-1  # index of last layer, there are nl+1 layers
 
-    omega = 2*pi*1.0j/periods
+        eps = 1.0e-10
+        zlimit = 3
 
-    # Number of layers
-    N = sigma.size
-    M = omega.size
+        fac1 = factorial(n)
+        fac2 = (-1)**n * fac1/(2*n+1)
 
-    # Preallocate
-    Y = np.zeros((M, N), dtype=np.complex)
+        # initialze helpers variables and output
+        C = np.empty(periods.shape, dtype=np.complex)
+        z = np.empty((2,), dtype=np.complex)
+        p = np.empty((2,), dtype=np.complex)
+        q = np.empty((2,), dtype=np.complex)
+        pd = np.empty((2,), dtype=np.complex)
+        qd = np.empty((2,), dtype=np.complex)
 
-    # values for inner sphere, r = N (core)
-    qk = -omega*mu*radius[-1]
-    bk = np.sqrt((n+0.5)**2 - qk*sigma[-1]*radius[-1])
-    bkp = bk + 0.5
-    Y[:, -1] = -bkp/qk
+        for counter, period in enumerate(periods):
+            for il in range(nl, -1, -1):  # runs over nl...0
+                k = np.sqrt(8.0e-7 * 1.0j * pi**2 * sigma[il] / period)
+                z[0] = k*radius[il]*1000
+                z[1] = k*radius[il+1]*1000
 
-    # Loop over all layers above core (from core to surface)
-    # from before last (N-2) to first (0)
-    for k in range(N-2, -1, -1):
-        # Compute temporary scalars
-        qk = -omega*mu*radius[k]
-        bk = np.sqrt((n+0.5)**2 - qk*sigma[k]*radius[k])
+                # calculate spherical bessel functions with small argument
+                # by power series (abramowitz & Stegun 10.2.5, 10.2.6
+                # and 10.2.4):
+
+                if abs(z[0]) < zlimit:
+                    for m in range(2):
+                        p[m] = 1+0j
+                        q[m] = 1+0j
+                        pd[m] = n
+                        qd[m] = -(n+1)
+                        zz = z[m]**2 / 2
+
+                        j = 1
+                        dp = 1+0j
+                        dq = 1+0j
+                        while (abs(dp) > eps or abs(dq) > eps):
+                            dp = dp * zz / j / (2*j+1+2*n)
+                            dq = dq * zz / j / (2*j-1-2*n)
+                            p[m] = p[m] + dp
+                            q[m] = q[m] + dq
+                            pd[m] = pd[m] + dp*(2*j+n)
+                            qd[m] = qd[m] + dq*(2*j-n-1)
+                            j += 1
+
+                        p[m] = p[m] * z[m]**n / fac1
+                        q[m] = q[m] * z[m]**(-n-1) * fac2
+                        q[m] = (-1)**(n+1) * pi/2 * (p[m]-q[m])
+                        pd[m] = pd[m] * z[m]**(n-1) / fac1
+                        qd[m] = qd[m] * z[m]**(-n-2) * fac2
+                        qd[m] = (-1)**(n+1) * pi/2 * (pd[m]-qd[m])
+
+                    v1 = p[1] / p[0]
+                    v2 = pd[0] / p[0]
+                    v3 = pd[1] / p[0]
+                    v4 = q[0] / q[1]
+                    v5 = qd[0] / q[1]
+                    v6 = qd[1] / q[1]
+                else:
+                    # calculate spherical bessel functions with large argument
+                    # the exponential behaviour is split off and treated
+                    # separately (abramowitz & stegun 10.2.9 and 10.2.15)
+                    for m in range(2):
+                        zz = 2*z[m]
+                        rm = 1+0j
+                        rp = 1+0j
+                        rmd = 1+0j
+                        rpd = 1+0j
+                        d = 1+0j
+                        sg = 1+0j
+                        for j in range(1, n+1):
+                            d = d * (n+1-j)*(n+j) / j / zz
+                            sg = -sg
+                            rp = rp + d
+                            rm = rm + sg*d
+                            rmd = rmd + sg*d*(j+1)
+                            rpd = rpd + d*(j+1)
+
+                        e = np.exp(-2*z[m])
+                        p[m] = (rm - sg*rp*e) / zz
+                        q[m] = (pi/zz) * rp
+                        pd[m] = ((rm + sg*rp*e) /
+                                 zz - 2*(rmd - sg*rpd*e) / zz**2)
+                        qd[m] = -q[m] - 2*pi*rpd / zz**2
+
+                    e = np.exp(-(z[0] - z[1]))
+                    v1 = p[1] / p[0] * e
+                    v2 = pd[0] / p[0]
+                    v3 = pd[1] / p[0] * e
+                    v4 = q[0] / q[1] * e
+                    v5 = qd[0] / q[1] * e
+                    v6 = qd[1] / q[1]
+
+                if (il == nl):
+                    b = k*(v2 - v5*v1) / (1 - v4*v1)
+                else:
+                    b = (k*((v2 - v5*v1)*b + k*(v5*v3-v2*v6)) /
+                         ((1 - v4*v1)*b + k*(v4*v3 - v6)))
+
+            C[counter] = radius[0] / (1+1000*radius[0]*b)  # C in km
+            print("Finished {:.1f}%".format(
+                (counter+1)/periods.size*100), end='\r')
+
+        print('')
+
+        # if nargout > 1
+        rho_a = 1e-7*8*pi**2 / periods * np.abs(C*1000)**2
+        phi = 90 + 57.3*np.angle(C)
+        Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
+
+    elif kind == 'thin':
+
+        radius = 1e3*np.array(radius)
+
+        # constants
+        mu = 4*np.pi*1e-7
+
+        omega = 2*pi*1.0j/periods
+
+        # Number of layers
+        N = sigma.size
+        M = omega.size
+
+        # Preallocate
+        Y = np.zeros((M, N), dtype=np.complex)
+
+        # values for inner sphere, r = N (core)
+        qk = -omega*mu*radius[-1]
+        bk = np.sqrt((n+0.5)**2 - qk*sigma[-1]*radius[-1])
         bkp = bk + 0.5
-        bkm = bk - 0.5
+        Y[:, -1] = -bkp/qk
 
-        etak = radius[k]/radius[k+1]
-        zetak = etak**(2*bk)
-        tauk = (1-zetak)/(1+zetak)
-        qk = -omega*mu*radius[k]
-        qk1 = -omega*mu*radius[k+1]
-        qY = qk1*Y[:, k+1]
+        # Loop over all layers above core (from core to surface)
+        # from before last (N-2) to first (0)
+        for k in range(N-2, -1, -1):
+            # Compute temporary scalars
+            qk = -omega*mu*radius[k]
+            bk = np.sqrt((n+0.5)**2 - qk*sigma[k]*radius[k])
+            bkp = bk + 0.5
+            bkm = bk - 0.5
 
-        # Admittance for this layer
-        Y[:, k] = 1/qk*(qY*(bk-0.5*tauk)+bkp*bkm*tauk)/(bk+tauk*(0.5+qY))
+            etak = radius[k]/radius[k+1]
+            zetak = etak**(2*bk)
+            tauk = (1-zetak)/(1+zetak)
+            qk = -omega*mu*radius[k]
+            qk1 = -omega*mu*radius[k+1]
+            qY = qk1*Y[:, k+1]
 
-    # Compute the C-response (in km)
-    C = 1/(omega*mu*Y[:, 0])/1e3
+            # Admittance for this layer
+            Y[:, k] = 1/qk*(qY*(bk-0.5*tauk)+bkp*bkm*tauk)/(bk+tauk*(0.5+qY))
 
-    rho_a = mu*omega*np.abs(C*1000)**2  # rho_a in (Ohm*m)
-    phi = 90 + 57.3*np.angle(C)  # phase phi in degrees
+        # Compute the C-response (in km)
+        C = 1/(omega*mu*Y[:, 0])/1e3
 
-    # Q-response
-    Q = n/(n+1)*(1-(n+1)*C/(radius[0]/1e3))/(1+n*C/(radius[0]/1e3))
+        rho_a = mu*omega*np.abs(C*1000)**2  # rho_a in (Ohm*m)
+        phi = 90 + 57.3*np.angle(C)  # phase phi in degrees
+
+        # Q-response
+        Q = n/(n+1)*(1-(n+1)*C/(radius[0]/1e3))/(1+n*C/(radius[0]/1e3))
+
+    else:
+        raise ValueError(f'Option "kind={kind}" not understood.')
 
     return C, rho_a, phi, Q
 
@@ -1451,8 +1427,8 @@ def q_response(frequency, nmax):
     for n in range(nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n
-        C_n, rho_n, phi_n, Q_n = conducting_sphere_thinlayer(
-            periods, sigma, sigma_radius, n+1)
+        C_n, rho_n, phi_n, Q_n = q_response_sphere(
+            periods, sigma, sigma_radius, n+1, kind='thin')
         q_response[n, index] = Q_n  # index 0: degree 1, index 1: degree 2, ...
 
     return q_response
