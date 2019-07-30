@@ -28,14 +28,24 @@ class Base(object):
 
         self.name = str(name)
 
-        self.breaks = breaks
+        # ensure breaks is None or has 2 elements
+        if breaks is None:
+            self.breaks = breaks
+        else:
+            breaks = np.array(breaks, dtype=np.float)
+            if breaks.size == 1:
+                breaks = np.append(breaks, breaks)
+
         self.pieces = None if breaks is None else int(breaks.size - 1)
 
         if coeffs is None:
             self.coeffs = coeffs
             self.order = None if order is None else int(order)
             self.dim = None
+
         else:
+            coeffs = np.array(coeffs, dtype=np.float)
+
             if order is None:
                 self.order = coeffs.shape[0]
             else:
@@ -1709,7 +1719,7 @@ class CHAOS(object):
             os.path.join(os.getcwd(), filepath)))
 
     @classmethod
-    def from_mat(self, filepath):
+    def from_mat(self, filepath, name=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1717,6 +1727,10 @@ class CHAOS(object):
         ----------
         filepath : str
             Path to mat-file containing the CHAOS model.
+        name : str, optional
+            User defined name of the model. Defaults to ``'CHAOS-<version>'``,
+            where <version> is the default in
+            ``basicConfig['params.version']``.
 
         Returns
         -------
@@ -1741,10 +1755,10 @@ class CHAOS(object):
 
         """
 
-        return load_CHAOS_matfile(filepath)
+        return load_CHAOS_matfile(filepath, name=name)
 
     @classmethod
-    def from_shc(self, filepath, *, leap_year=None):
+    def from_shc(self, filepath, *, name=None, leap_year=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1752,6 +1766,10 @@ class CHAOS(object):
         ----------
         filepath : str
             Path to shc-file.
+        name : str, optional
+            User defined name of the model. Defaults to ``'CHAOS-<version>'``,
+            where <version> is the default in
+            ``basicConfig['params.version']``.
         leap_year : {True, False}, optional
             Take leap year in time conversion into account (default).
             Otherwise, use conversion factor of 365.25 days per year.
@@ -1782,10 +1800,10 @@ class CHAOS(object):
         """
         leap_year = True if leap_year is None else leap_year
 
-        return load_CHAOS_shcfile(filepath, leap_year=leap_year)
+        return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year)
 
 
-def load_CHAOS_matfile(filepath):
+def load_CHAOS_matfile(filepath, name=None):
     """
     Load CHAOS model from mat-file, e.g. ``CHAOS-6-x7.mat``.
 
@@ -1793,6 +1811,9 @@ def load_CHAOS_matfile(filepath):
     ----------
     filepath : str
         Path to mat-file containing the CHAOS model.
+    name : str, optional
+        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
+        where <version> is the default in ``basicConfig['params.version']``.
 
     Returns
     -------
@@ -1904,12 +1925,13 @@ def load_CHAOS_matfile(filepath):
                   breaks_euler=breaks_euler,
                   coeffs_euler=coeffs_euler,
                   version=version,
+                  name=name,
                   meta=meta)
 
     return model
 
 
-def load_CHAOS_shcfile(filepath, leap_year=None):
+def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     """
     Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
     should contain the coefficients of the time-dependent or static internal
@@ -1920,6 +1942,9 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
     ----------
     filepath : str
         Path to shc-file.
+    name : str, optional
+        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
+        where <version> is the default in ``basicConfig['params.version']``.
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
@@ -1983,7 +2008,8 @@ def load_CHAOS_shcfile(filepath, leap_year=None):
         model = CHAOS(breaks=breaks,
                       order=order,
                       coeffs_tdep=coeffs_pp,
-                      version=_guess_version(filepath))
+                      version=_guess_version(filepath),
+                      name=name)
 
     return model
 
