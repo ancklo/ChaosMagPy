@@ -29,12 +29,12 @@ class Base(object):
         self.name = str(name)
 
         # ensure breaks is None or has 2 elements
-        if breaks is None:
-            self.breaks = breaks
-        else:
+        if breaks is not None:
             breaks = np.array(breaks, dtype=np.float)
             if breaks.size == 1:
                 breaks = np.append(breaks, breaks)
+
+        self.breaks = breaks
 
         self.pieces = None if breaks is None else int(breaks.size - 1)
 

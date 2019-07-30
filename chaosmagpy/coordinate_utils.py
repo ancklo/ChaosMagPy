@@ -1175,14 +1175,14 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     Notes
     -----
 
-    ``kind='thin'``
-    ^^^^^^^^^^^^^^^
+    Regarding the ``kind='thin'`` option:
+
     Not stable for short periods of less than a few seconds.
 
     Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
 
-    ``kind='thick'``
-    ^^^^^^^^^^^^^^^^
+    Regarding ``kind='thick'`` option:
+
     The following applies to the layered conductivity shells:
 
     | ``radius[0]`` > `r` > ``radius[1]`` : ``sigma[0]``
