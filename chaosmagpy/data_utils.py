@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import hdf5storage as hdf
 import warnings
 import h5py
 import os
@@ -32,6 +33,38 @@ def fetch(variable):
             variable = variable.squeeze()
 
     return variable
+
+
+def load_matfile(filepath, variable_name, struct=False):
+    """
+    Load variable from matfile. Can handle mat-files v7.3 and before.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath to mat-file.
+    variable_name : str
+        Name of variable or struct to be loaded from mat-file.
+    struct : {False, True}, optional
+        If struct is to be loaded from mat-file, use ``True`` (only required
+        before v7.3 mat-files).
+
+    Returns
+    -------
+    variable : ndarray, dict
+        Array or dictionary (if ``struct=True``) containing the values.
+
+    """
+
+    mat_contents = hdf.loadmat(str(filepath),
+                               variable_names=[str(variable_name)])
+
+    variable = mat_contents[str(variable_name)]
+
+    if struct is True and '__header__' in mat_contents:
+        return variable[0, 0]  # version 5 only seems to have header
+    else:
+        return variable
 
 
 def load_RC_datfile(filepath=None, parse_dates=False):
