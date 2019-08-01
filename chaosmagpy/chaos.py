@@ -1,3 +1,19 @@
+"""
+Classes and functions to read the CHAOS model.
+
+Summary
+-------
+
+.. autosummary::
+
+    Base
+    BaseModel
+    CHAOS
+    load_CHAOS_matfile
+    load_CHAOS_shcfile
+
+"""
+
 import numpy as np
 import os
 import re
@@ -164,9 +180,6 @@ class Base(object):
         coeffs = PP(time) * 365.25**deriv
 
         return coeffs
-
-    def synth_values(self):
-        raise NotImplementedError
 
 
 class BaseModel(Base):
@@ -364,7 +377,7 @@ class BaseModel(Base):
 
     def plot_power_spectrum(self, time, **kwargs):
         """
-        Plot power spectrum.
+        Plot the power spectrum.
 
         Parameters
         ----------
@@ -534,8 +547,7 @@ class BaseModel(Base):
 
 class CHAOS(object):
     """
-    Class for the time-dependent geomagnetic field model CHAOS. Only
-    CHAOS-6 is currently supported.
+    Class for the time-dependent geomagnetic field model CHAOS.
 
     Parameters
     ----------
@@ -720,9 +732,10 @@ class CHAOS(object):
 
     def __call__(self, time, radius, theta, phi, source_list=None):
         """
-        Calculate the magnetic field from the CHAOS model using all sources
-        (time-dependent and static internal field, and external SM/GSM
-        fields including induced parts).
+        Calculate the magnetic field of all sources from the CHAOS model.
+
+        All sources means the time-dependent and static internal field, the
+        external SM/GSM fields both including and induced parts.
 
         Parameters
         ----------
@@ -741,6 +754,7 @@ class CHAOS(object):
         -------
         B_radius, B_theta, B_phi : ndarray, shape (grid_shape)
             Radial, colatitude and azimuthal field components.
+
         """
 
         time = np.array(time, dtype=float)
@@ -873,8 +887,10 @@ class CHAOS(object):
 
     def synth_values_tdep(self, *args, **kwargs):
         """
-        Convenience method for computing magnetic components of the internal
-        time-dependent field. See :meth:`BaseModel.synth_values`.
+        Compute magnetic components of the internal
+        time-dependent field.
+
+        Convenience method. See :meth:`BaseModel.synth_values`.
 
         """
 
@@ -1625,8 +1641,10 @@ class CHAOS(object):
 
     def save_matfile(self, filepath):
         """
-        Save CHAOS model to a `mat`-file. The model must be fully specified as
-        is the case if originally loaded from a `mat`-file.
+        Save CHAOS model to a `mat`-file.
+
+        The model must be fully specified as is the case if originally loaded
+        from a `mat`-file.
 
         Parameters
         ----------
@@ -1798,6 +1816,7 @@ class CHAOS(object):
         load_CHAOS_shcfile
 
         """
+
         leap_year = True if leap_year is None else leap_year
 
         return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year)
@@ -1805,7 +1824,7 @@ class CHAOS(object):
 
 def load_CHAOS_matfile(filepath, name=None):
     """
-    Load CHAOS model from mat-file, e.g. ``CHAOS-6-x7.mat``.
+    Load CHAOS model from mat-file.
 
     Parameters
     ----------
@@ -1933,9 +1952,10 @@ def load_CHAOS_matfile(filepath, name=None):
 
 def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     """
-    Load CHAOS model from shc-file, e.g. ``CHAOS-6-x7_tdep.shc``. The file
-    should contain the coefficients of the time-dependent or static internal
-    part of the CHAOS model. In case of the time-dependent part, a
+    Load CHAOS model from shc-file.
+
+    The file should contain the coefficients of the time-dependent or static
+    internal part of the CHAOS model. In case of the time-dependent part, a
     reconstruction of the piecewise polynomial is performed.
 
     Parameters
@@ -1973,6 +1993,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     CHAOS, load_CHAOS_matfile
 
     """
+
     leap_year = True if leap_year is None else leap_year
 
     time, coeffs, params = du.load_shcfile(str(filepath), leap_year=leap_year)
@@ -2016,9 +2037,10 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 
 def _guess_version(filepath):
     """
-    Extract version from filename. For example from the file 'CHAOS-6-x7.mat',
-    it returns '6.x7'. If not successful, version is set to default in
-    ``basicConfig['params.version']``.
+    Extract version from filename.
+
+    For example from the file 'CHAOS-6-x7.mat', it returns '6.x7'. If not
+    successful, version is set to default in ``basicConfig['params.version']``.
 
     """
 

@@ -1,3 +1,25 @@
+"""
+The module provides functions for loading and writing data and models. It also
+offers functions to do simple time conversions.
+
+Summary
+-------
+
+.. autosummary::
+
+    load_RC_datfile
+    save_RC_h5file
+    load_shcfile
+    save_shcfile
+    mjd2000
+    dyear_to_mjd
+    mjd_to_dyear
+    memory_usage
+    gauss_units
+
+"""
+
+
 import pandas as pd
 import numpy as np
 import hdf5storage as hdf
@@ -125,7 +147,7 @@ def load_RC_datfile(filepath=None, parse_dates=False):
 
 def save_RC_h5file(filepath, read_from=None):
     """
-    Return h5-file of the RC index.
+    Return hdf-file of the RC index.
 
     Parameters
     ----------
@@ -227,7 +249,7 @@ def load_shcfile(filepath, leap_year=None):
 def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
                  leap_year=None, header=None):
     """
-    Save Gauss coefficients as `shc`-file.
+    Save Gauss coefficients as shc-file.
 
     Parameters
     ----------
@@ -321,8 +343,9 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
 def mjd2000(*args, **kwargs):
     """
-    Computes the modified Julian date as floating point number. It assigns 0 to
-    0h00 January 1, 2000. Leap seconds are not accounted for.
+    Computes the modified Julian date as floating point number.
+
+    It assigns 0 to 0h00 January 1, 2000. Leap seconds are not accounted for.
 
     Parameters
     ----------
@@ -359,8 +382,9 @@ def mjd2000(*args, **kwargs):
 
 def dyear_to_mjd(time, leap_year=None):
     """
-    Convert time from decimal years to modified Julian date 2000. Leap years
-    are accounted for by default.
+    Convert time from decimal years to modified Julian date 2000.
+
+    Leap years are accounted for by default.
 
     Parameters
     ----------
@@ -375,6 +399,7 @@ def dyear_to_mjd(time, leap_year=None):
     -------
     time : float
         Time in modified Julian date 2000.
+
     """
 
     leap_year = True if leap_year is None else leap_year
@@ -403,8 +428,9 @@ def dyear_to_mjd(time, leap_year=None):
 
 def mjd_to_dyear(time, leap_year=None):
     """
-    Convert time in modified Julian date 2000 to decimal years. Leap years are
-    accounted for by default.
+    Convert time in modified Julian date 2000 to decimal years.
+
+    Leap years are accounted for by default.
 
     Parameters
     ----------
@@ -419,6 +445,7 @@ def mjd_to_dyear(time, leap_year=None):
     -------
     time : float
         Time in decimal years.
+
     """
 
     leap_year = True if leap_year is None else leap_year
@@ -446,8 +473,9 @@ def mjd_to_dyear(time, leap_year=None):
 
 def memory_usage(pandas_obj):
     """
-    Compute memory usage of pandas object. For full report, use:
-    ``df.info(memory_usage='deep')``.
+    Compute memory usage of pandas object.
+
+    For full report, use: ``df.info(memory_usage='deep')``.
 
     """
 
@@ -462,7 +490,9 @@ def memory_usage(pandas_obj):
 def gauss_units(deriv):
     """
     Return string of the magnetic field units given the derivative with time.
+
     String is meant to be parsed to plot labels.
+
     """
 
     deriv = 0 if deriv is None else deriv

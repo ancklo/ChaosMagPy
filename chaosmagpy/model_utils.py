@@ -1,5 +1,21 @@
 """
-Functions for building the CHAOS model.
+This module provide functions for building the CHAOS model and geomagnetic
+field models in general.
+
+Summary
+-------
+
+.. autosummary::
+
+    design_matrix
+    design_gauss
+    colloc_matrix
+    augment_breaks
+    synth_from_pp
+    synth_values
+    legendre_poly
+    power_spectrum
+    degree_correlation
 
 """
 
@@ -16,10 +32,11 @@ def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
     """
     Returns matrices that connect radial, colatitude and azimuthal field
     components on a grid with `radius`, `theta` (colatitude) and `phi`
-    with the spherical harmonics expansion of a potential. The potential is
-    time-dependent on large length-scales (`n` <= `n_tdep`) and static on small
-    length-scales (`n_tdep` < `n` <= `n_static`). The time-dependent part uses
-    a B-spline representation of order `k`.
+    to the spherical harmonics expansion of a potential.
+
+    The potential is time-dependent on large length-scales (`n` <= `n_tdep`)
+    and static on small length-scales (`n_tdep` < `n` <= `n_static`). The
+    time-dependent part uses a B-spline representation of order `k`.
 
     Parameters
     ----------
@@ -121,8 +138,9 @@ def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
 def colloc_matrix(x, knots, order):
     """
     Create collocation matrix of a univariate function on `x` in terms  of a
-    B-spline representation of order `k`. The computation of the splines is
-    based on the scipy-package.
+    B-spline representation of order `k`.
+
+    The computation of the splines is based on the scipy-package.
 
     Parameters
     ----------
@@ -142,6 +160,7 @@ def colloc_matrix(x, knots, order):
     See Also
     --------
     augment_breaks
+
     """
 
     # create spline using scipy.interpolate
@@ -606,7 +625,7 @@ def design_gauss(radius, theta, phi, nmax, source=None):
 def legendre_poly(nmax, theta):
     """
     Returns associated Legendre polynomials `P(n,m)` (Schmidt quasi-normalized)
-    and the derivative `dP(n,m)` vrt. `theta` evaluated at `theta`.
+    and the derivative :math:`dP(n,m)/d\\theta` evaluated at :math:`\\theta`.
 
     Parameters
     ----------

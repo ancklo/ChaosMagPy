@@ -1,3 +1,18 @@
+"""
+This module provides functions for plotting model outputs.
+
+Summary
+-------
+
+.. autosummary::
+
+    plot_timeseries
+    plot_maps
+    plot_power_spectrum
+    nio_colormap
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -7,7 +22,7 @@ from chaosmagpy.config_utils import basicConfig
 from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
 
-try:  # make cartopy optional: issues when installing on Mac machines
+try:  # make cartopy optional
     import cartopy.crs as ccrs
 except ImportError:
     warnings.warn('Could not import Cartopy package. Plotting data on maps '

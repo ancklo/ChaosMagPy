@@ -56,7 +56,7 @@ extensions = [
 ]
 
 # Remove class members to suppress error message when compiling (removes module list)
-numpydoc_show_class_members = False
+numpydoc_show_class_members = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']

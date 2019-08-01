@@ -57,8 +57,8 @@ class CoordinateUtilsTestCase(TestCase):
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
-        C_n, rho_a, phi, Q_n = c.conducting_sphere(periods, sigma, radius, n,
-                                                   kind='thick')
+        C_n, rho_a, phi, Q_n = c.q_response_sphere(periods, sigma, radius, n,
+                                                   kind='constant')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
         self.assertIsNone(np.testing.assert_allclose(rho_a, rho_a_mat))
@@ -87,7 +87,7 @@ class CoordinateUtilsTestCase(TestCase):
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
         C_n, rho_a, phi, Q_n = c.q_response_sphere(
-            periods, sigma, radius, n, kind='thin')
+            periods, sigma, radius, n, kind='quadratic')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
         self.assertIsNone(np.testing.assert_allclose(rho_a, rho_a_mat))

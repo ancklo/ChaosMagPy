@@ -1,7 +1,10 @@
 """
-Functions for coordinate transformations.
+This module provides functions related to coordinate transformations. Typical
+coordinate reference frames and corresponding abbbreviations are listed in the
+following.
 
-Abbreviations :
+Abbreviations
+-------------
 
 GEO : geocentric, orthogonal coordinate system
     With z-axis along Earth's rotation axis, x-axis pointing to Greenwich and
@@ -21,6 +24,31 @@ MAG : magnetic orthogonal coordinate system (centered dipole)
     spanned by the dipole axis and Earth's rotation axis, and y-axis completing
     the right-handed system.
 
+Summary
+-------
+
+.. autosummary::
+
+    igrf_dipole
+    synth_rotate_gauss
+    rotate_gauss_fft
+    rotate_gauss
+    sun_position
+    spherical_to_cartesian
+    cartesian_to_spherical
+    basevectors_gsm
+    basevectors_sm
+    basevectors_use
+    basevectors_mag
+    geo_to_base
+    matrix_geo_to_base
+    transform_points
+    transform_vectors
+    center_azimuth
+    local_time
+    q_response
+    q_response_sphere
+
 """
 
 import numpy as np
@@ -35,9 +63,10 @@ ROOT = os.path.abspath(os.path.dirname(__file__))
 
 def igrf_dipole(epoch=None):
     """
-    Unit vector that is anti-parallel to the IGRF dipole, i.e. pointing towards
-    the geomagnetic North pole (located in the Northern Hemisphere). Epoch 2015
-    of IGRF-12 is used by default.
+    Compute unit vector that is anti-parallel to the IGRF dipole.
+
+    The vector points towards the geomagnetic North pole (located in the
+    Northern Hemisphere). Epoch 2015 of IGRF-12 is used by default.
 
     Parameters
     ----------
@@ -110,8 +139,11 @@ def _dipole_to_unit(*args):
 
 def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     """
-    Compute matrices to transform sphercial harmonic expansion from a
-    time-dependent reference system (e.g. GSM, SM) to GEO based on Fourier
+    Compute matrices to transform sphercial harmonic expansion from Fourier
+    coefficients.
+
+    The function computes matrices that couple the spherical harmonic expansion
+    of a time-dependent reference system (e.g. GSM, SM) and GEO using Fourier
     coefficients.
 
     Parameters
@@ -354,9 +386,10 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
 
 def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
     """
-    Compute the matrix to transform spherical harmonic expansion given with
-    respect to a rotated coordinate system to the standard geographic
-    reference (GEO). The rotated coordinate system is described by 3 orthogonal
+    Compute the matrix to transform the spherical harmonic expansion from a
+    rotated coordinate system to the standard geographic reference (GEO).
+
+    The rotated coordinate system is described by 3 orthogonal
     base vectors with components in GEO coordinates.
 
     Parameters
@@ -506,7 +539,9 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
 def sun_position(time):
     """
     Computes the sun's position in longitude and colatitude given time
-    (mjd2000). It is accurate for years 1901 through 2099, to within 0.006 deg.
+    (mjd2000).
+
+    It is accurate for years 1901 through 2099, to within 0.006 deg.
     Input shape is preserved.
 
     Parameters
@@ -731,8 +766,8 @@ def basevectors_sm(time, dipole=None):
 def basevectors_mag(dipole=None):
     """
     Computes the unit base vectors of the central-dipole coordinate system
-    (sometimes referred to as MAG). The components are given with respect to
-    the geocentric coordinate system.
+    (sometimes referred to as MAG) with respect to the geocentric coordinate
+    system.
 
     Parameters
     ----------
@@ -1142,8 +1177,8 @@ def local_time(time, phi):
 
 def q_response_sphere(periods, sigma, radius, n, kind=None):
     """
-    Computation of the response for a spherically layered conductor in an
-    inducing external field of a single spherical degree.
+    Computes the response for a spherically layered conductor in an
+    inducing external field of a single spherical harmonic degree.
 
     Parameters
     ----------
@@ -1157,9 +1192,9 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
         layer in kilometers (i.e. conductor surface, see Notes).
     n : int
         Spherical degree of inducing external field.
-    kind : {'thin', 'thick'}, optional
-        Approximation for thin layers (quadratic sigma in layers) or thick
-        layers (computing Bessel functions).
+    kind : {'quadratic', 'constant'}, optional
+        Approximation for thin layers (layers of sigma with inverse quadratic
+        dependence on radius) or thick layers (layers of constant sigma).
 
     Returns
     -------
@@ -1175,13 +1210,13 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     Notes
     -----
 
-    Regarding the ``kind='thin'`` option:
+    Regarding the ``kind='quadratic'`` option:
 
     Not stable for short periods of less than a few seconds.
 
     Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
 
-    Regarding ``kind='thick'`` option:
+    Regarding ``kind='constant'`` option:
 
     The following applies to the layered conductivity shells:
 
@@ -1204,7 +1239,7 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     """
 
     if kind is None:
-        kind = 'thin'
+        kind = 'quadratic'
 
     periods = np.array(periods)  # ensure numpy array
     if periods.ndim > 1:
@@ -1214,7 +1249,7 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     if sigma.ndim > 1:
         raise ValueError("Conductivity ``sigma`` must be a vector.")
 
-    if kind == 'thick':
+    if kind == 'constant':
 
         nl = sigma.size-1  # index of last layer, there are nl+1 layers
 
@@ -1327,7 +1362,7 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
         phi = 90 + 57.3*np.angle(C)
         Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
 
-    elif kind == 'thin':
+    elif kind == 'quadratic':
 
         radius = 1e3*np.array(radius)
 
@@ -1385,9 +1420,10 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
 
 def q_response(frequency, nmax):
     """
-    Computes the Q-response given a conductivity model of Earth, which is
-    loaded during the computation (from
-    ``basicConfig['file.Earth_conductivity']``).
+    Computes the Q-response given a conductivity model of Earth.
+
+    The conductivity model is loaded during the computation from
+    ``basicConfig['file.Earth_conductivity']``.
 
     Parameters
     ----------

@@ -60,3 +60,4 @@ Configuration utilities (`config_utils`)
 .. automodule:: config_utils
     :members:
     :show-inheritance:
+    :inherited-members:

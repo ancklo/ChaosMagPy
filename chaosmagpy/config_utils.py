@@ -48,6 +48,13 @@ keywords.
                                           or equiv. 16cm)
  ==========================  ===========  =====================================
 
+Summary
+-------
+
+.. autosummary::
+
+    BasicConfig
+
 """
 
 import os
