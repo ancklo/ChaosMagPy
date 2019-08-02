@@ -181,6 +181,36 @@ class Base(object):
 
         return coeffs
 
+    def save_matfile(self, filepath, path=None):
+        """
+        Save piecewise polynomial as mat-file.
+
+        Parameters
+        ----------
+        filepath : str
+            Filepath and name of mat-file.
+        path : str
+            Location in mat-file. Defaults to ``'/pp'``.
+
+        """
+
+        if path is None:
+            path = '/pp'
+
+        dim = self.dim
+        coeffs = self.coeffs
+        coefs = coeffs.reshape((self.order, -1)).transpose()
+
+        pp = dict(
+            form='pp',
+            order=self.order,
+            pieces=self.pieces,
+            dim=dim,
+            breaks=self.breaks.reshape((1, -1)),  # ensure 2d
+            coefs=coefs)
+
+        hdf.write(pp, path=path, filename=filepath, matlab_compatible=True)
+
 
 class BaseModel(Base):
     """
@@ -1654,19 +1684,7 @@ class CHAOS(object):
         """
 
         # write time-dependent internal field model to matfile
-        nmax = self.model_tdep.nmax
-        coeffs = self.model_tdep.coeffs
-        coefs = coeffs.reshape((self.model_tdep.order, -1)).transpose()
-
-        pp = dict(
-            form='pp',
-            order=self.model_tdep.order,
-            pieces=self.model_tdep.pieces,
-            dim=int((nmax+2)*nmax),
-            breaks=self.model_tdep.breaks.reshape((1, -1)),  # ensure 2d
-            coefs=coefs)
-
-        hdf.write(pp, path='/pp', filename=filepath, matlab_compatible=True)
+        self.model_tdep.save_matfile(filepath)
 
         # write time-dependent external field model to matfile
         q10 = self.coeffs_delta['q10'].reshape((-1, 1))
@@ -1700,15 +1718,20 @@ class CHAOS(object):
                   matlab_compatible=True)
 
         # write Euler angles to matfile for each satellite
-        satellites = [*self.model_euler.keys()]
+        satellites = self.meta['satellites']
 
-        t_breaks_Euler = []  # list of Euler angle breaks for satellites
+        t_break_Euler = []  # list of Euler angle breaks for satellites
         alpha = []  # list of alpha for each satellite
         beta = []  # list of beta for each satellite
         gamma = []  # list of gamma for each satellite
         for num, satellite in enumerate(satellites):
-            t_breaks_Euler.append(self.model_euler[satellite].breaks.reshape(
-                (-1, 1)).astype(float))
+
+            # reduce breaks if start end end are equal
+            breaks = self.model_euler[satellite].breaks
+            if breaks[0] == breaks[-1]:
+                breaks = breaks[0]
+
+            t_break_Euler.append(breaks.reshape((-1, 1)).astype(float))
             alpha.append(self.model_euler[satellite].coeffs[0, :, 0].reshape(
                 (-1, 1)).astype(float))
             beta.append(self.model_euler[satellite].coeffs[0, :, 1].reshape(
@@ -1716,7 +1739,7 @@ class CHAOS(object):
             gamma.append(self.model_euler[satellite].coeffs[0, :, 2].reshape(
                 (-1, 1)).astype(float))
 
-        hdf.write(np.array(t_breaks_Euler), path='/model_Euler/t_break_Euler/',
+        hdf.write(np.array(t_break_Euler), path='/model_Euler/t_break_Euler/',
                   filename=filepath, matlab_compatible=True)
         hdf.write(np.array(alpha), path='/model_Euler/alpha/',
                   filename=filepath, matlab_compatible=True)
@@ -1861,45 +1884,45 @@ def load_CHAOS_matfile(filepath, name=None):
 
     version = _guess_version(filepath)
 
-    mat_contents = hdf.loadmat(filepath)
+    mat_contents = du.loadmat(filepath, variable_names=[
+        'g', 'pp', 'model_ext', 'model_Euler', 'params'])
 
     pp = mat_contents['pp']
     model_ext = mat_contents['model_ext']
     model_euler = mat_contents['model_Euler']
     params = mat_contents['params']
 
-    order = int(du.fetch(pp['order']))
-    pieces = int(du.fetch(pp['pieces']))
-    dim = int(du.fetch(pp['dim']))
-    breaks = du.fetch(pp['breaks'])  # flatten 2-D array
-    coefs = du.fetch(pp['coefs'])
+    order = int(pp['order'])
+    pieces = int(pp['pieces'])
+    dim = int(pp['dim'])
+    breaks = pp['breaks']  # flatten 2-D array
+    coefs = pp['coefs']
 
-    g = mat_contents['g']
-    coeffs_static = g.squeeze().reshape((1, 1, -1))
+    coeffs_static = mat_contents['g'].reshape((1, 1, -1))
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
     # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
-    coeffs_sm = np.copy(du.fetch(model_ext['m_sm']))
-    coeffs_sm[:3] = du.fetch(model_ext['m_Dst'])  # replace with m_Dst
+    coeffs_sm = np.copy(model_ext['m_sm'])
+    coeffs_sm[:3] = model_ext['m_Dst']  # replace with m_Dst
 
     # external field (GSM): n=1, 2
     n_gsm = int(2)
     coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
     # only m=0 are non-zero
-    coeffs_gsm[[0, 3]] = du.fetch(model_ext['m_gsm'])
+    coeffs_gsm[[0, 3]] = model_ext['m_gsm']
 
     # coefficients and breaks of external SM field offsets for q10, q11, s11
     breaks_delta = dict()
-    breaks_delta['q10'] = du.fetch(model_ext['t_break_q10'])
-    breaks_delta['q11'] = du.fetch(model_ext['t_break_qs11'])
-    breaks_delta['s11'] = du.fetch(model_ext['t_break_qs11'])
+    breaks_delta['q10'] = model_ext['t_break_q10']
+    breaks_delta['q11'] = model_ext['t_break_qs11']
+    breaks_delta['s11'] = model_ext['t_break_qs11']
 
     # reshape to comply with scipy PPoly coefficients
     coeffs_delta = dict()
-    coeffs_delta['q10'] = du.fetch(model_ext['q10']).reshape((1, -1))
-    qs11 = du.fetch(model_ext['qs11'])
+    coeffs_delta['q10'] = model_ext['q10'].reshape((1, -1))
+    qs11 = model_ext['qs11']
     coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
     coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
@@ -1907,7 +1930,7 @@ def load_CHAOS_matfile(filepath, name=None):
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
 
     # append generic satellite name if more data available
-    t_break_Euler = du.fetch(model_euler['t_break_Euler'])
+    t_break_Euler = model_euler['t_break_Euler']
     n = len(t_break_Euler)
     m = len(satellites)
     if n > m:
@@ -1923,13 +1946,13 @@ def load_CHAOS_matfile(filepath, name=None):
     # so first dimension: order, second: number of intervals, third: 3 angles
     coeffs_euler = dict()
     for num, satellite in enumerate(satellites):
-        euler = [du.fetch(model_euler[angle])[num].reshape((1, -1)) for
+        euler = [model_euler[angle][num].reshape((1, -1)) for
                  angle in ['alpha', 'beta', 'gamma']]
         euler = np.stack(euler, axis=-1).astype(np.float)  # because no sac-c
 
         coeffs_euler[satellite] = euler
 
-    dict_params = dict(Euler_prerotation=du.fetch(params['Euler_prerotation']))
+    dict_params = dict(Euler_prerotation=params['Euler_prerotation'])
     meta = dict(params=dict_params,
                 satellites=tuple(satellites))
 

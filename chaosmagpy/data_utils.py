@@ -32,6 +32,75 @@ from datetime import timedelta, datetime
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
+def loadmat(filepath, variable_names=None):
+    """
+    Load mat-file and return dictionary.
+
+    Function loads mat-file by traversing the structure converting data into
+    low-level numpy arrays of different types. There is no guarantee that any
+    kind of data is read in correctly. The data dtype can also vary depending
+    on the mat-file (v7.3 returns floats instead of integers). But it should
+    work identically for v7.3 and prior mat-files. Arrays are squeezed if
+    possible.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath and name of mat-file.
+    variable_names : list of strings
+        Top-level variables to be loaded.
+
+    Returns
+    -------
+    data : dict
+        Dictionary containing the data as dictionaries or numpy arrays.
+
+    """
+
+    # define a recursively called function to traverse structure
+    def traverse_struct(struct):
+
+        # for dictionaries, iterate through keys
+        if isinstance(struct, dict):
+            out = dict()
+            for key, value in struct.items():
+                out[key] = traverse_struct(value)
+            return out
+
+        # for ndarray, iterate through dtype names
+        elif isinstance(struct, np.ndarray):
+
+            # collect dtype names if available
+            names = struct.dtype.names
+
+            # if no fields in array
+            if names is None:
+                if struct.dtype == np.dtype('O') and struct.shape == (1, 1):
+                    return traverse_struct(struct[0, 0])
+                else:
+                    return struct.squeeze()
+
+            else:  # if there are fields, iterate through fields
+                out = dict()
+                for name in names:
+                    out[name] = traverse_struct(struct[name])
+                return out
+
+        else:
+            return struct
+
+    output = hdf.loadmat(filepath, variable_names=variable_names)
+
+    # loadmat returns dictionary, go through keys and call traverse_struct
+    for key, value in output.items():
+        if key.startswith('__') and key.endswith('__'):
+            pass
+        else:
+            output[key] = traverse_struct(value)
+
+    return output
+
+
 def fetch(variable):
     """
     Load variable from mat-object (matfile loaded with hdf5storage). Can handle

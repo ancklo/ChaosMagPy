@@ -1,10 +1,9 @@
 import os
 import numpy as np
-import hdf5storage as hdf
 from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
-from chaosmagpy import data_utils as d
+from chaosmagpy import data_utils as du
 from chaosmagpy.chaos import _guess_version, basicConfig
 from unittest import TestCase, main
 try:
@@ -64,38 +63,42 @@ class ChaosMagPyTestCase(TestCase):
         model.save_matfile(filepath)
 
         def test(x, y):
-            # print(x, y)
-            np.testing.assert_array_equal(x, y)
+            if isinstance(x, str) or isinstance(y, str):
+                # convert unicode to str
+                np.testing.assert_string_equal(str(x), str(y))
+            else:
+                np.testing.assert_allclose(x, y, atol=1e-10, verbose=True)
 
-        chaos = hdf.loadmat(CHAOS_PATH)
-        chaos_out = hdf.loadmat(filepath)
+        chaos = du.loadmat(CHAOS_PATH, variable_names=[
+            'pp', 'model_ext', 'model_Euler', 'g'])
+        chaos_out = du.loadmat(filepath, variable_names=[
+            'pp', 'model_ext', 'model_Euler', 'g'])
 
         pp = chaos['pp']
         pp_out = chaos_out['pp']
 
-        for var in ['order', 'dim', 'pieces', 'form', 'coefs', 'breaks']:
-            test(d.fetch(pp[var]), d.fetch(pp_out[var]))
+        for key in ['order', 'dim', 'pieces', 'form', 'coefs', 'breaks']:
+            test(pp[key], pp_out[key])
 
-        test(d.fetch(chaos['g']), d.fetch(chaos_out['g']))
+        test(chaos['g'], chaos_out['g'])
 
         model_ext = chaos['model_ext']
         model_ext_out = chaos_out['model_ext']
 
-        for var in ['m_Dst', 'm_gsm', 'm_sm', 'q10', 'qs11', 't_break_q10',
+        for key in ['m_Dst', 'm_gsm', 'm_sm', 'q10', 'qs11', 't_break_q10',
                     't_break_qs11']:
-            test(d.fetch(model_ext['m_Dst']).shape,
-                 d.fetch(model_ext_out['m_Dst']).shape)
+            test(model_ext[key], model_ext_out[key])
 
         model_Euler = chaos['model_Euler']
         model_Euler_out = chaos_out['model_Euler']
 
         for key in ['alpha', 'beta', 'gamma', 't_break_Euler']:
-            var = d.fetch(model_Euler[key])
-            var_out = d.fetch(model_Euler_out[key])
-
+            var = model_Euler[key]
+            var_out = model_Euler_out[key]
             test(var.shape, var_out.shape)
+
             for value, value_out in zip(np.ravel(var), np.ravel(var_out)):
-                test(value.shape, value_out.shape)
+                test(value, value_out)
 
         print(f"  Removing file {filepath}")
         os.remove(filepath)
