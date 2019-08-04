@@ -1252,7 +1252,7 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
 
     if kind == 'constant':
 
-        nl = sigma.size-1  # index of last layer, there are nl+1 layers
+        nl = radius.size-2  # index of last layer, there are nl+1 layers
 
         eps = 1.0e-10
         zlimit = 3
