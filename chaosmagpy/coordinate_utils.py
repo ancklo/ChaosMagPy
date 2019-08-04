@@ -1193,8 +1193,9 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     n : int
         Spherical degree of inducing external field.
     kind : {'quadratic', 'constant'}, optional
-        Approximation for thin layers (layers of sigma with inverse quadratic
-        dependence on radius) or thick layers (layers of constant sigma).
+        Approximation for "quadratic" layers (layers of sigma with inverse
+        quadratic dependence on radius) or "constant" layers (layers of
+        constant sigma).
 
     Returns
     -------
@@ -1464,7 +1465,7 @@ def q_response(frequency, nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n
         C_n, rho_n, phi_n, Q_n = q_response_sphere(
-            periods, sigma, sigma_radius, n+1, kind='thin')
+            periods, sigma, sigma_radius, n+1, kind='quadratic')
         q_response[n, index] = Q_n  # index 0: degree 1, index 1: degree 2, ...
 
     return q_response
