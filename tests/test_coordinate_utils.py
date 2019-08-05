@@ -264,6 +264,16 @@ class CoordinateUtilsTestCase(TestCase):
         self.assertEqual(c.spherical_to_cartesian(
             radius=1, phi=phi, theta=theta), result)
 
+    def test_gg_to_geo(self):
+
+        mat = d.loadmat(MATFILE_PATH, variable_names=['test_gg_to_geo'])
+        mat = mat['test_gg_to_geo']
+
+        radius, theta = c.gg_to_geo(mat['height'], mat['beta'])
+
+        self.assertIsNone(np.testing.assert_allclose(radius, mat['radius']))
+        self.assertIsNone(np.testing.assert_allclose(theta, mat['theta']))
+
     def test_matrix_geo_to_base(self):
 
         theta_geo = np.linspace(1, 179, 10)

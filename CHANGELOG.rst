@@ -3,11 +3,12 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** July 25, 2019
+| **Date:** August 5, 2019
 | **Release:** v0.2
 
 Features
 ^^^^^^^^
+* New function ``gg_to_geo`` transforming geodetic to geocentric coordinates.
 * Added keyword ``start_date`` to ``rotate_gauss_fft``
 * Improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
 * Automatically import ``model_utils.synth_values``.

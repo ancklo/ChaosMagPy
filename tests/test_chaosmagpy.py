@@ -65,9 +65,11 @@ class ChaosMagPyTestCase(TestCase):
         def test(x, y):
             if isinstance(x, str) or isinstance(y, str):
                 # convert unicode to str
-                np.testing.assert_string_equal(str(x), str(y))
+                self.assertIsNone(
+                    np.testing.assert_string_equal(str(x), str(y)))
             else:
-                np.testing.assert_allclose(x, y, atol=1e-10, verbose=True)
+                self.assertIsNone(
+                    np.testing.assert_allclose(x, y, atol=1e-10, verbose=True))
 
         chaos = du.loadmat(CHAOS_PATH, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])

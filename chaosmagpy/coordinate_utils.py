@@ -9,6 +9,9 @@ Abbreviations
 GEO : geocentric, orthogonal coordinate system
     With z-axis along Earth's rotation axis, x-axis pointing to Greenwich and
     y-axis completing right-handed coordinate system.
+GG : geographic or geodetic, orthogonal corrdinate system. Earth is
+    approximated by a spheroid (ellipsoid of revolution) with equatorial radius
+    `a` and polar radius `b`, `b < a`.
 USE : local orthogonal coordinate system on spherical surface
     Axes directions are defined as Up-South-East (e.g. B_radius, B_theta,
     B_phi in GEO).
@@ -651,6 +654,55 @@ def cartesian_to_spherical(x, y, z):
     phi = np.arctan2(y, x)
 
     return radius, degrees(theta), degrees(phi)
+
+
+def gg_to_geo(height, beta):
+    """
+    Compute geocentric colatitude and radius from geodetic latitude and height.
+
+    Parameters
+    ----------
+    height : ndarray, shape (...)
+        Altitude in kilometers.
+    beta : ndarray, shape (...)
+        Geodetic colatitude
+
+    Returns
+    -------
+    radius : ndarray, shape (...)
+        Geocentric radius in kilometers.
+    theta : ndarray, shape (...)
+        Geocentric colatitude in degrees.
+
+    References
+    ----------
+    Equations (51)-(53) from chapter 4: "The main field" by Langel, R. A. in
+    Geomagnetism, Volume 1, Jacobs, J. A., Academic Press, 1987.
+
+    """
+
+    a = basicConfig['params.ellipsoid'][0]  # equatorial radius
+    b = basicConfig['params.ellipsoid'][1]  # polar radius
+
+    # convert geodetic colatitude to latitude
+    alpha = radians(90. - beta)
+
+    sin_alpha_2 = np.sin(alpha)**2
+    cos_alpha_2 = np.cos(alpha)**2
+
+    factor = height*np.sqrt(a**2*cos_alpha_2 + b**2*sin_alpha_2)
+    gamma = np.arctan2((factor + b**2)*np.tan(alpha), (factor + a**2))
+
+    theta = 90. - degrees(gamma)
+    radius = np.sqrt(height**2 + 2*factor +
+                     a**2*(1. - (1. - (b/a)**4)*sin_alpha_2) /
+                          (1. - (1. - (b/a)**2)*sin_alpha_2))
+
+    return radius, theta
+
+
+def geo_to_gg(theta, phi):
+    pass
 
 
 def basevectors_gsm(time, dipole=None):

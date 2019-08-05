@@ -13,8 +13,11 @@ keywords.
  'params.r_cmb'        `float`        Core-mantle boundary radius in kilometers
                                       (defaults to 3485.0 km).
  'params.dipole'       `list`,        Coefficients of the dipole (used for
-                       `ndarray`,     GSM/SM coordinate transformations).
-                       `shape (3,)`
+                       `ndarray`,     GSM/SM coordinate transformations) in
+                       `shape (3,)`   units of nanotesla.
+ 'params.ellipsoid'    `list`,        Equatorial (index 0) and polar radius
+                       `ndarray`      (index 1) of the spheroid describing
+                       `shape (2,)`   Earth (WGS84) in units of kilometers.
  'params.version'      `str`          Default version of the CHAOS model, e.g.
                                       ``'6.x7'``.
  'params.cdf_to_mjd'   `int`          Number of days on Jan 01, 2000 since Jan
@@ -131,6 +134,8 @@ DEFAULTS = {
     'params.r_cmb': [3485.0, check_float],
     'params.dipole': [np.array([-29442.0, -1501.0, 4797.1]),
                       lambda x: check_vector(x, len=3)],
+    'params.ellipsoid': [np.array([6378.137, 6356.752]),
+                         lambda x: check_vector(x, len=2)],
     'params.version': ['6.x7', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
@@ -214,7 +219,7 @@ class BasicConfig(dict):
                 value = value.split('#')[0].strip()  # remove comments and \n
 
                 # check list input and convert to array
-                if value[0] == '[' and value[-1] == ']':
+                if value.startswith('[') and value.endswidth(']'):
                     value = np.fromstring(value[1:-1], sep=' ')
 
                 self.__setitem__(key.strip(), value)
