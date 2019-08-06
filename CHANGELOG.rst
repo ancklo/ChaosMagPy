@@ -3,7 +3,7 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** August 5, 2019
+| **Date:** August 6, 2019
 | **Release:** v0.2
 
 Features
