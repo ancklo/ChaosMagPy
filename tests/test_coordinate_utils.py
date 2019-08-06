@@ -274,6 +274,16 @@ class CoordinateUtilsTestCase(TestCase):
         self.assertIsNone(np.testing.assert_allclose(radius, mat['radius']))
         self.assertIsNone(np.testing.assert_allclose(theta, mat['theta']))
 
+    def test_geo_to_gg(self):
+
+        mat = d.loadmat(MATFILE_PATH, variable_names=['test_geo_to_gg'])
+        mat = mat['test_geo_to_gg']
+
+        height, beta = c.geo_to_gg(mat['radius'], mat['theta'])
+
+        # self.assertIsNone(np.testing.assert_allclose(height, mat['height']))
+        self.assertIsNone(np.testing.assert_allclose(beta, mat['beta']))
+
     def test_gg_geo_gg(self):
 
         mat = d.loadmat(MATFILE_PATH, variable_names=['test_gg_to_geo'])

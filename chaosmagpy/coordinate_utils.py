@@ -725,6 +725,12 @@ def geo_to_gg(radius, theta):
     beta : ndarray, shape (...)
         Geodetic colatitude
 
+    Notes
+    -----
+    Round-off errors might lead to a failure of the algorithm especially but
+    not exclusively for points close to the geographic poles. Corresponding
+    geodetic coordinates are returned as NaN.
+
     References
     ----------
     Function uses Heikkinen's algorithm taken from:
@@ -751,7 +757,7 @@ def geo_to_gg(radius, theta):
     r2 = r**2
     z2 = z**2
 
-    F = 54*z2*b2
+    F = 54*b2*z2
 
     G = r2 + (1. - e2)*z2 - e2*(a2 - b2)
 
@@ -764,11 +770,11 @@ def geo_to_gg(radius, theta):
     Q = np.sqrt(1. + 2*e4*P)
 
     r0 = -P*e2*r / (1. + Q) + np.sqrt(
-        0.5*a2*(1 + 1./Q) - P*(1. - e2)*z2 / (Q*(1. + Q)) - 0.5*P*r2)
+        0.5*a2*(1. + 1./Q) - P*(1. - e2)*z2 / (Q*(1. + Q)) - 0.5*P*r2)
 
     U = np.sqrt((r - e2*r0)**2 + z2)
 
-    V = np.sqrt((r - e2*r0)**2 + (1 - e2)*z2)
+    V = np.sqrt((r - e2*r0)**2 + (1. - e2)*z2)
 
     z0 = b2*z/(a*V)
 
