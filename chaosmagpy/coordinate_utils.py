@@ -52,7 +52,7 @@ Summary
     center_azimuth
     local_time
     q_response
-    q_response_sphere
+    q_response_1D
 
 """
 
@@ -1307,7 +1307,7 @@ def local_time(time, phi):
     return np.remainder(time + phi/360, 1)*24
 
 
-def q_response_sphere(periods, sigma, radius, n, kind=None):
+def q_response_1D(periods, sigma, radius, n, kind=None):
     """
     Computes the response for a spherically layered conductor in an
     inducing external field of a single spherical harmonic degree.
@@ -1316,9 +1316,8 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     ----------
     periods : ndarray or float, shape (m,)
         Oscillation period of the inducing field in seconds.
-    sigma : ndarray, shape (nl,)
-        Conductivity of spherical shells, starting with the outermost and
-        excluding the perfectly conducting innermost sphere in (S/m).
+    sigma : ndarray, shape (nl+1,)
+        Conductivity of spherical shells, starting with the outermost in (S/m).
     radius : ndarray, shape (nl+1,)
         Radius of the interfaces in between the layers, starting with outermost
         layer in kilometers (i.e. conductor surface, see Notes).
@@ -1327,7 +1326,8 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     kind : {'quadratic', 'constant'}, optional
         Approximation for "quadratic" layers (layers of sigma with inverse
         quadratic dependence on radius) or "constant" layers (layers of
-        constant sigma).
+        constant sigma, last layer will be set to infity irrespective of its
+        value in ``sigma``).
 
     Returns
     -------
@@ -1344,8 +1344,6 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
     -----
 
     Regarding the ``kind='quadratic'`` option:
-
-    Not stable for short periods of less than a few seconds.
 
     Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
 
@@ -1528,7 +1526,11 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
 
             etak = radius[k]/radius[k+1]
             zetak = etak**(2*bk)
-            tauk = (1-zetak)/(1+zetak)
+
+            tauk = (1. - zetak) / (1. + zetak)
+            # handling of precision overflow due to high frequencies
+            tauk[np.isnan(tauk)] = -1.
+
             qk = -omega*mu*radius[k]
             qk1 = -omega*mu*radius[k+1]
             qY = qk1*Y[:, k+1]
@@ -1546,7 +1548,7 @@ def q_response_sphere(periods, sigma, radius, n, kind=None):
         Q = n/(n+1)*(1-(n+1)*C/(radius[0]/1e3))/(1+n*C/(radius[0]/1e3))
 
     else:
-        raise ValueError(f'Option "kind={kind}" not understood.')
+        raise ValueError(f'Unknown option "kind={kind}".')
 
     return C, rho_a, phi, Q
 
@@ -1596,7 +1598,7 @@ def q_response(frequency, nmax):
     for n in range(nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n
-        C_n, rho_n, phi_n, Q_n = q_response_sphere(
+        C_n, rho_n, phi_n, Q_n = q_response_1D(
             periods, sigma, sigma_radius, n+1, kind='quadratic')
         q_response[n, index] = Q_n  # index 0: degree 1, index 1: degree 2, ...
 

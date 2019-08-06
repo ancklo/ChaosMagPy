@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from unittest import TestCase, main, skip
+from unittest import TestCase, main
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import data_utils as d
 from math import pi
@@ -37,8 +37,7 @@ class CoordinateUtilsTestCase(TestCase):
             c.igrf_dipole('2015'),
             c._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
 
-    @skip('New conductivity model uses thinlayer approximation.')
-    def _test_q_response_sphere(self):
+    def test_q_response_sphere_pre7(self):
 
         a = 6371.2
         n = 1
@@ -46,19 +45,22 @@ class CoordinateUtilsTestCase(TestCase):
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_conducting_sphere')
 
-        model = np.loadtxt(c.basicConfig['file.Earth_conductivity'])
         C_n_mat = np.ravel(test['C_n'])
         rho_a_mat = np.ravel(test['rho_a'])
         phi_mat = np.ravel(test['phi'])
         Q_n_mat = np.ravel(test['Q_n'])
 
+        model = np.loadtxt(
+            os.path.join(ROOT, '../data/conductivity_Utada2003.dat'))
+
         radius = a - model[:, 0]
-        sigma = model[:-1, 1]  # drop perfectly conducting core
+        # perfectly conducting core will automatically be removed
+        sigma = model[:, 1]
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
-        C_n, rho_a, phi, Q_n = c.q_response_sphere(periods, sigma, radius, n,
-                                                   kind='constant')
+        C_n, rho_a, phi, Q_n = c.q_response_1D(periods, sigma, radius, n,
+                                               kind='constant')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
         self.assertIsNone(np.testing.assert_allclose(rho_a, rho_a_mat))
@@ -78,15 +80,14 @@ class CoordinateUtilsTestCase(TestCase):
         phi_mat = np.ravel(test['phi'])
         Q_n_mat = np.ravel(test['Q_n'])
 
-        model = np.loadtxt('/home/ancklo/Documents/Python/' +
-                           'Chaos-master/data/conductivity_Grayver2017.dat')
+        model = np.loadtxt(c.basicConfig['file.Earth_conductivity'])
 
         radius = a - model[:, 0]
         sigma = model[:, 1]
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
-        C_n, rho_a, phi, Q_n = c.q_response_sphere(
+        C_n, rho_a, phi, Q_n = c.q_response_1D(
             periods, sigma, radius, n, kind='quadratic')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
