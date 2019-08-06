@@ -8,7 +8,8 @@ Version 0.2
 
 Features
 ^^^^^^^^
-* New function ``gg_to_geo`` transforming geodetic to geocentric coordinates.
+* New function ``gg_to_geo`` and  ``geo_to_gg`` for transforming geodetic and
+  geocentric coordinates.
 * Added keyword ``start_date`` to ``rotate_gauss_fft``
 * Improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
 * Automatically import ``model_utils.synth_values``.

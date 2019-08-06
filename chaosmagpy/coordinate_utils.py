@@ -43,6 +43,8 @@ Summary
     basevectors_sm
     basevectors_use
     basevectors_mag
+    geo_to_gg
+    gg_to_geo
     geo_to_base
     matrix_geo_to_base
     transform_points
@@ -620,6 +622,7 @@ def spherical_to_cartesian(radius, theta, phi):
     -------
     x, y, z : float or ndarray, shape(...)
         Cartesian coordinates.
+
     """
 
     theta, phi = radians(theta), radians(phi)
@@ -658,7 +661,8 @@ def cartesian_to_spherical(x, y, z):
 
 def gg_to_geo(height, beta):
     """
-    Compute geocentric colatitude and radius from geodetic latitude and height.
+    Compute geocentric colatitude and radius from geodetic colatitude and
+    height.
 
     Parameters
     ----------
@@ -676,8 +680,9 @@ def gg_to_geo(height, beta):
 
     References
     ----------
-    Equations (51)-(53) from chapter 4: "The main field" by Langel, R. A. in
-    Geomagnetism, Volume 1, Jacobs, J. A., Academic Press, 1987.
+    Equations (51)-(53) from "The main field" (chapter 4) by Langel, R. A. in:
+
+    "Geomagnetism", Volume 1, Jacobs, J. A., Academic Press, 1987.
 
     """
 
@@ -701,8 +706,77 @@ def gg_to_geo(height, beta):
     return radius, theta
 
 
-def geo_to_gg(theta, phi):
-    pass
+def geo_to_gg(radius, theta):
+    """
+    Compute geodetic colatitude and vertical height above the ellipsoid from
+    geocentric radius and colatitude.
+
+    Parameters
+    ----------
+    radius : ndarray, shape (...)
+        Geocentric radius in kilometers.
+    theta : ndarray, shape (...)
+        Geocentric colatitude in degrees.
+
+    Returns
+    -------
+    height : ndarray, shape (...)
+        Altitude in kilometers.
+    beta : ndarray, shape (...)
+        Geodetic colatitude
+
+    References
+    ----------
+    Function uses Heikkinen's algorithm taken from:
+
+    Zhu, J., "Conversion of Earth-centered Earth-fixed coordinates to geodetic
+    coordinates", IEEE Transactions on Aerospace and Electronic Systems}, 1994,
+    vol. 30, num. 3, pp. 957-961
+
+    """
+
+    a = basicConfig['params.ellipsoid'][0]  # equatorial radius
+    b = basicConfig['params.ellipsoid'][1]  # polar radius
+
+    a2 = a**2
+    b2 = b**2
+
+    e2 = (a2 - b2) / a2  # squared eccentricity
+    e4 = e2*e2
+    ep2 = (a2 - b2) / b2  # squared primed eccentricity
+
+    r = radius * np.sin(radians(theta))
+    z = radius * np.cos(radians(theta))
+
+    r2 = r**2
+    z2 = z**2
+
+    F = 54*z2*b2
+
+    G = r2 + (1. - e2)*z2 - e2*(a2 - b2)
+
+    c = e4*F*r2 / G**3
+
+    s = (1. + c + np.sqrt(c**2 + 2*c))**(1./3)
+
+    P = F / (3*(s + 1./s + 1.)**2 * G**2)
+
+    Q = np.sqrt(1. + 2*e4*P)
+
+    r0 = -P*e2*r / (1. + Q) + np.sqrt(
+        0.5*a2*(1 + 1./Q) - P*(1. - e2)*z2 / (Q*(1. + Q)) - 0.5*P*r2)
+
+    U = np.sqrt((r - e2*r0)**2 + z2)
+
+    V = np.sqrt((r - e2*r0)**2 + (1 - e2)*z2)
+
+    z0 = b2*z/(a*V)
+
+    height = U*(1. - b2 / (a*V))
+
+    beta = 90. - degrees(np.arctan2(z + ep2*z0, r))
+
+    return height, beta
 
 
 def basevectors_gsm(time, dipole=None):
