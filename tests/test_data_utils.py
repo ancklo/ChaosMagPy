@@ -19,7 +19,7 @@ class DataUtilsTestCase(TestCase):
 
     def test_time_conversion(self):
 
-        size = (100,)
+        size = (10,)
         days = np.random.randint(int(365.25*30), size=size)
         hours = np.random.randint(24, size=size)
         minutes = np.random.randint(60, size=size)
@@ -33,13 +33,30 @@ class DataUtilsTestCase(TestCase):
                             date.minute, date.second)
 
             dyear = d.mjd_to_dyear(mjd, leap_year=True)
-
             mjd2 = d.dyear_to_mjd(dyear, leap_year=True)
             self.assertIsNone(np.testing.assert_allclose(mjd2, mjd, atol=1e-8))
 
             dyear = d.mjd_to_dyear(mjd, leap_year=False)
             mjd2 = d.dyear_to_mjd(dyear, leap_year=False)
             self.assertIsNone(np.testing.assert_allclose(mjd2, mjd, atol=1e-8))
+
+            dyear = d.mjd_to_dyear(mjd, leap_year=True)
+            mjd2 = d.dyear_to_mjd(dyear, leap_year=False)
+            self.assertRaises(
+                AssertionError, lambda: np.testing.assert_allclose(
+                    mjd2, mjd, atol=1e-8))
+
+            dyear = d.mjd_to_dyear(mjd, leap_year=False)
+            mjd2 = d.dyear_to_mjd(dyear, leap_year=True)
+            self.assertRaises(
+                AssertionError, lambda: np.testing.assert_allclose(
+                    mjd2, mjd, atol=1e-8))
+
+            dyear = d.mjd_to_dyear(mjd, leap_year=False)
+            mjd2 = d.dyear_to_mjd(dyear, leap_year=None)
+            self.assertRaises(
+                AssertionError, lambda: np.testing.assert_allclose(
+                    mjd2, mjd, atol=1e-8))
 
     def test_mjd_to_dyear(self):
 
@@ -54,6 +71,7 @@ class DataUtilsTestCase(TestCase):
         self.assertEqual(d.mjd_to_dyear(2*365.25, leap_year=False), 2002.0)
         self.assertEqual(d.mjd_to_dyear(3*365.25, leap_year=False), 2003.0)
         self.assertEqual(d.mjd_to_dyear(4*365.25, leap_year=False), 2004.0)
+
 
 if __name__ == '__main__':
     main()

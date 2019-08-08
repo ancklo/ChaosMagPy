@@ -19,7 +19,7 @@ python chaos_examples.py
 cat example1_output.txt
 
 # make temporary directory
-tempdir=$(mktemp -d XXXXXX)
+tempdir=$(mktemp -t -d XXXXXX)
 
 # copy files to tmp directory
 cp dist/chaosmagpy-$version.tar.gz $tempdir/chaosmagpy-$version.tar.gz
@@ -94,14 +94,14 @@ cat >> $tempdir/readme.txt <(echo) CHANGELOG.rst
 # build archive recursively in tmp directory
 cd $tempdir/
 zip $out -r *
-cd ..
+cd -
 
 # move archive to build
 mv -i $tempdir/$out build/$out
 
 # clean up
 while true; do
-    read -p "Do you wish to delete temporary files? y/n: " yn
+    read -p "Do you wish to delete temporary files in '$tempdir'? y/n: " yn
     case $yn in
         [Yy]* ) rm -r $tempdir; rm example1_output.txt; break;;
         [Nn]* ) echo Exit.; exit;;
