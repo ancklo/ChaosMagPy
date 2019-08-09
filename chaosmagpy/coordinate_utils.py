@@ -340,7 +340,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spectrum_full = np.fft.fft(matrix_time, axis=0) / N
     spectrum_full = spectrum_full[:int(N/2+1)]  # remove aliases
 
-    if scaled is True:
+    if scaled:
         # scale non-offset coefficients by 2
         spectrum_full[1:] = 2*spectrum_full[1:]
 
