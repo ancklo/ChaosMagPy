@@ -160,8 +160,8 @@ class CoordinateUtilsTestCase(TestCase):
         for reference in ['gsm', 'sm']:
 
             frequency, amplitude, _, _ = c.rotate_gauss_fft(
-                nmax, kmax, step=1., N=int(365*24), filter=20, save_to=False,
-                reference=reference, scaled=False)
+                nmax, kmax, step=1., N=int(365*24), filter=20,
+                save_to=False, reference=reference, scaled=False)
 
             omega = 2*pi*frequency / (24*3600)
 

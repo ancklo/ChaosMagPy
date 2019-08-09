@@ -198,13 +198,13 @@ def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     return np.real(matrix)
 
 
-def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
+def rotate_gauss_fft(nmax, kmax, *, func=None, step=None, N=None, filter=None,
                      save_to=None, reference=None, scaled=None,
                      start_date=None):
     """
     Compute Fourier coefficients of the timeseries of matrices that transform
     spherical harmonic expansions (degree ``kmax``) from a time-dependent
-    reference system (e.g. GSM, SM) to GEO (degree ``nmax``).
+    reference system (GSM, SM) to GEO (degree ``nmax``).
 
     Parameters
     ----------
@@ -214,6 +214,12 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     kmax : int
         Maximum degree of spherical harmonic expansion with respect to rotated
         reference system.
+    func : callable
+        Callable ``q = func(freq, k)`` that returns the complex q-response
+        ``q`` (ndarray, shape (``N``,)) given a frequency vector ``freq``
+        (ndarray, shape (``N``,)) and the index ``k`` (int) counting the Gauss
+        coefficients in natural order, i.e. ``k = 0`` is :math:`g_1^0`,
+        ``k = 1`` is :math:`g_1^1`, ``k = 2`` is :math:`h_1^1` and so on.
     step : float
         Sample spacing given in hours (default is 1.0 hour).
     N : int, optional
@@ -230,9 +236,9 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
     scaled : bool, optional (default is ``False``)
         If ``True``, the function returns `scaled` Fourier coefficients, i.e.
         the non-bias terms (all non-zero frequency terms) are multiplied by a
-        factor of 2. Hence, taking the real part of half the spectrum
-        multiplied with the complex exponentials results in the correctly
-        scaled and time-shifted real-valued harmonics.
+        factor of 2. Hence, taking the real part of the first half of the
+        spectrum multiplied with the complex exponentials results in the
+        correctly scaled and time-shifted real-valued harmonics.
     start_date : float, optional (defaults to ``0.0``, i.e. Jan 1, 2000)
         Time point from which to compute the time series of coefficient
         matrices in modified Julian date.
@@ -243,8 +249,7 @@ def rotate_gauss_fft(nmax, kmax, *, step=None, N=None, filter=None,
 shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         Unsorted vector of positive frequencies in 1/days and complex fourier
         spectrum of rotation matrices to transform spherical
-        harmonic expansions. It uses a conductivity model to derive the
-        transform for the induced field, see :func:`q_response`.
+        harmonic expansions.
 
     Notes
     -----
@@ -254,7 +259,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spherical harmonic coefficients of the dipole set in
     ``basicConfig['params.dipole']``.
 
-    A word to the discrete Fourier transform (DFT) used here:
+    About the discrete Fourier transform (DFT) used here:
 
     A discrete periodic signal :math:`x[n]` with :math:`n\\in [0, N-1]`
     (period of `N`) is represented in terms of complex-exponentials as
@@ -278,7 +283,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
 
        X = np.fft.fft(x) / N
 
-    Finally, if ``save_to`` is ``True``, only half of the Fourier coefficients
+    Finally, if ``save_to`` is given, only half of the Fourier coefficients
     ``X[0:int(N/2)+1]`` (right-exclusive) are saved (or less if ``filter`` is
     specified).
 
@@ -340,10 +345,17 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         spectrum_full[1:] = 2*spectrum_full[1:]
 
     # oscillations per day
-    frequency_full = (np.arange(int(N/2+1)) / N) * 24 / step
+    frequency_full = (np.arange(int(N/2+1)) / N) * 24. / step
 
-    # compute Q-response for freqencies
-    response = q_response(frequency_full / (24*3600), nmax)
+    if func is None:
+        # compute q-response and keep in memory
+        q = q_response(frequency_full / (24*3600), nmax)
+
+        # now define func here
+        def func(freq, k):
+            # index of degree in response
+            n = np.floor(np.sqrt(k+1)-1).astype(int)
+            return q[n]
 
     # predefine output arrays
     frequency = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)))
@@ -353,28 +365,31 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spectrum_ind = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)),
                             dtype=np.complex)
 
-    for k, l in np.ndindex(nmax*(nmax+2), kmax*(kmax+2)):
+    for k in range(nmax*(nmax+2)):
 
-        # select specific element of rotation matrix and its Fourier components
-        element = spectrum_full[:, k, l]
+        # compute Q-response for freqencies and given Gauss coefficient
+        response = func(frequency_full, k)
 
-        # modify Fourier components with Q-response
-        n = np.floor(np.sqrt(k+1)-1).astype(int)  # index of degree in response
-        element_ind = response[n]*element
+        for l in range(kmax*(kmax+2)):
+            # select specific Fourier coefficients from the rotation matrix
+            element = spectrum_full[:, k, l]
 
-        # index of sorted element spectrum (descending order)
-        sort = np.argsort(np.abs(element))[::-1]
-        sort = sort[:filter]  # only keep small number of components
+            # modify Fourier components with Q-response
+            element_ind = response*element
 
-        # index of sorted element spectrum (descending order)
-        sort_ind = np.argsort(np.abs(element_ind))[::-1]
-        sort_ind = sort_ind[:filter]  # only keep small number of components
+            # index of sorted element spectrum (descending order)
+            sort = np.argsort(np.abs(element))[::-1]
+            sort = sort[:filter]  # only keep small number of components
 
-        # write sorted omega and fourier components to array
-        frequency[:, k, l] = frequency_full[sort]
-        frequency_ind[:, k, l] = frequency_full[sort_ind]
-        spectrum[:, k, l] = element[sort]
-        spectrum_ind[:, k, l] = element_ind[sort_ind]
+            # index of sorted element spectrum (descending order)
+            sort_ind = np.argsort(np.abs(element_ind))[::-1]
+            sort_ind = sort_ind[:filter]  # only keep small number
+
+            # write sorted omega and fourier components to array
+            frequency[:, k, l] = frequency_full[sort]
+            frequency_ind[:, k, l] = frequency_full[sort_ind]
+            spectrum[:, k, l] = element[sort]
+            spectrum_ind[:, k, l] = element_ind[sort_ind]
 
     # save several arrays to binary
     if save_to:
@@ -1316,9 +1331,9 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
     ----------
     periods : ndarray or float, shape (m,)
         Oscillation period of the inducing field in seconds.
-    sigma : ndarray, shape (nl+1,)
+    sigma : ndarray, shape (k,)
         Conductivity of spherical shells, starting with the outermost in (S/m).
-    radius : ndarray, shape (nl+1,)
+    radius : ndarray, shape (k,)
         Radius of the interfaces in between the layers, starting with outermost
         layer in kilometers (i.e. conductor surface, see Notes).
     n : int
@@ -1326,8 +1341,8 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
     kind : {'quadratic', 'constant'}, optional
         Approximation for "quadratic" layers (layers of sigma with inverse
         quadratic dependence on radius) or "constant" layers (layers of
-        constant sigma, last layer will be set to infity irrespective of its
-        value in ``sigma``).
+        constant sigma, last layer will be set to infinity irrespective of its
+        value in ``sigma[-1]``).
 
     Returns
     -------
@@ -1343,29 +1358,42 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
     Notes
     -----
 
-    Regarding the ``kind='quadratic'`` option:
+    Option ``kind='quadratic'``:
+        The following shows how the conductivity is defined in the sphercial
+        shells:
 
-    Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
+        | ``radius[0]`` >= `r` > ``radius[1]``: \
+            ``sigma[0]`` *( ``radius[0]`` / `r` )**2
+        | ``radius[1]`` >= `r` > ``radius[2]``: \
+            ``sigma[1]`` *( ``radius[1]`` / `r` )**2
+        | ...
+        | ``radius[k-1]`` >= `r` > 0 : \
+            ``sigma[k-1]`` *( ``radius[k-1]`` / `r` )**2
 
-    Regarding ``kind='constant'`` option:
+        Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
 
-    The following applies to the layered conductivity shells:
+    Option ``kind='constant'``:
+        The following shows how the conductivity is defined in the sphercial
+        shells:
 
-    | ``radius[0]`` > `r` > ``radius[1]`` : ``sigma[0]``
-    | ``radius[1]`` > `r` > ``radius[2]`` : ``sigma[1]``
-    | ...
-    | ``radius[nl-1]`` > `r` > ``radius[nl]`` : ``sigma[nl-1]``
-    | ``radius[nl]`` > `r` > 0 :      :math:`\\sigma` = `\\inf`
+        | ``radius[0]`` >= `r` > ``radius[1]``: ``sigma[0]``
+        | ``radius[1]`` >= `r` > ``radius[2]``: ``sigma[1]``
+        | ...
+        | ``radius[k-1]`` >= `r` > 0 : ``sigma[k-1]`` = ``np.inf`` \
+            (:math:`\\sigma` = `\\inf`)
 
-    ``nl`` is number of uniform layers (excluding a perfectly conducting core),
-    radius in km, conductivity :math:`\\sigma` in (S/m).
+        There are ``k`` sphercial shells of uniform conductivity with
+        radius in (km) and conductivity :math:`\\sigma` in (S/m).
 
-    The program should work also for very small periods, where it
-    models the response of a layered plane conductor
+        The last shell corresponds to the sphercial core whose conductivity is
+        set to infinity regardless of the provided ``sigma[-1]``.
 
-    | Python version: August 2018, Clemens Kloss
-    | Matlab version: November 2000, Nils Olsen
-    | Original Fortran program: Peter Weidelt
+        The program should work also for very small periods, where it
+        models the response of a layered plane conductor
+
+        | Python version: August 2018, Clemens Kloss
+        | Matlab version: November 2000, Nils Olsen
+        | Original Fortran program: Peter Weidelt
 
     """
 

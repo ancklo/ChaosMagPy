@@ -352,6 +352,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     order = 1 if order is None else int(order)
 
     nmin = 1 if nmin is None else int(nmin)
+
     if nmax is None:
         nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
     else:
