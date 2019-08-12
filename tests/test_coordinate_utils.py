@@ -176,7 +176,7 @@ class CoordinateUtilsTestCase(TestCase):
             self.assertIsNone(np.testing.assert_allclose(
                 omega_mat, omega, atol=1e-3))
             self.assertIsNone(np.testing.assert_allclose(
-                amplitude_mat, amplitude, atol=1e-3))
+                amplitude_mat, amplitude, atol=1e-10))
 
     def test_rotate_gauss(self):
 

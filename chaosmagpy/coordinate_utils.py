@@ -313,7 +313,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     if start_date is None:
         start_date = 0.0
 
-    time = np.arange(N) * step / 24 + start_date  # time in days
+    time = np.arange(N) * step / 24. + start_date  # time in days
 
     # compute base vectors of time-dependent reference system
     if str(reference).lower() == 'gsm':
