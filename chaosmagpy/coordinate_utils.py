@@ -198,7 +198,7 @@ def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     return np.real(matrix)
 
 
-def rotate_gauss_fft(nmax, kmax, *, func=None, step=None, N=None, filter=None,
+def rotate_gauss_fft(nmax, kmax, *, qfunc=None, step=None, N=None, filter=None,
                      save_to=None, reference=None, scaled=None,
                      start_date=None):
     """
@@ -214,12 +214,13 @@ def rotate_gauss_fft(nmax, kmax, *, func=None, step=None, N=None, filter=None,
     kmax : int
         Maximum degree of spherical harmonic expansion with respect to rotated
         reference system.
-    func : callable
-        Callable ``q = func(freq, k)`` that returns the complex q-response
+    qfunc : callable
+        Callable ``q = qfunc(freq, k)`` that returns the complex q-response
         ``q`` (ndarray, shape (``N``,)) given a frequency vector ``freq``
-        (ndarray, shape (``N``,)) and the index ``k`` (int) counting the Gauss
-        coefficients in natural order, i.e. ``k = 0`` is :math:`g_1^0`,
-        ``k = 1`` is :math:`g_1^1`, ``k = 2`` is :math:`h_1^1` and so on.
+        (ndarray, shape (``N``,)) in (1/sec) and the index ``k`` (int) counting
+        the Gauss coefficients in natural order, i.e. ``k = 0`` is
+        :math:`g_1^0`, ``k = 1`` is :math:`g_1^1`, ``k = 2`` is :math:`h_1^1`
+        and so on.
     step : float
         Sample spacing given in hours (default is 1.0 hour).
     N : int, optional
@@ -340,19 +341,15 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     spectrum_full = np.fft.fft(matrix_time, axis=0) / N
     spectrum_full = spectrum_full[:int(N/2+1)]  # remove aliases
 
-    if scaled:
-        # scale non-offset coefficients by 2
-        spectrum_full[1:] = 2*spectrum_full[1:]
+    # oscillations per second
+    frequency_full = (np.arange(int(N/2+1)) / N) / step / 3600
 
-    # oscillations per day
-    frequency_full = (np.arange(int(N/2+1)) / N) * 24. / step
-
-    if func is None:
+    if qfunc is None:
         # compute q-response and keep in memory
-        q = q_response(frequency_full / (24*3600), nmax)
+        q = q_response(frequency_full, nmax)
 
-        # now define func here
-        def func(freq, k):
+        # now define qfunc here
+        def qfunc(freq, k):
             # index of degree in response
             n = np.floor(np.sqrt(k+1)-1).astype(int)
             return q[n]
@@ -368,7 +365,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     for k in range(nmax*(nmax+2)):
 
         # compute Q-response for freqencies and given Gauss coefficient
-        response = func(frequency_full, k)
+        response = qfunc(frequency_full, k)
 
         for l in range(kmax*(kmax+2)):
             # select specific Fourier coefficients from the rotation matrix
@@ -385,11 +382,17 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
             sort_ind = np.argsort(np.abs(element_ind))[::-1]
             sort_ind = sort_ind[:filter]  # only keep small number
 
-            # write sorted omega and fourier components to array
-            frequency[:, k, l] = frequency_full[sort]
-            frequency_ind[:, k, l] = frequency_full[sort_ind]
+            # write sorted frequency (per day) and fourier components to array
+            frequency[:, k, l] = frequency_full[sort] * (24*3600)
+            frequency_ind[:, k, l] = frequency_full[sort_ind] * (24*3600)
             spectrum[:, k, l] = element[sort]
             spectrum_ind[:, k, l] = element_ind[sort_ind]
+
+    if scaled:
+        # scale non-offset coefficients by 2
+        spectrum = np.where(frequency == 0.0, spectrum, 2*spectrum)
+        spectrum_ind = np.where(frequency_ind == 0.0, spectrum_ind,
+                                2*spectrum_ind)
 
     # save several arrays to binary
     if save_to:
