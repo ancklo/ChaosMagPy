@@ -1002,7 +1002,7 @@ def basevectors_use(theta, phi):
     return use_1, use_2, use_3
 
 
-def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
+def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
     """
     Transforms spherical geographic coordinates into spherical coordinates of a
     rotated reference system as given by three base vectors.
@@ -1032,10 +1032,12 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
     """
 
+    inverse = False if inverse is None else inverse
+
     # convert spherical to cartesian (radius = 1) coordinates
     x, y, z = spherical_to_cartesian(1, theta, phi)
 
-    if inverse is True:
+    if inverse:
         # components of unit base vectors are the columns of inverse matrix
         x_ref = base_1[..., 0]*x + base_2[..., 0]*y + base_3[..., 0]*z
         y_ref = base_1[..., 1]*x + base_2[..., 1]*y + base_3[..., 1]*z
@@ -1056,7 +1058,7 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
     return theta_ref, phi_ref
 
 
-def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
+def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
                      dipole=None):
     """
     Transforms spherical geographic coordinates into spherical coordinates of
@@ -1095,6 +1097,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
     """
 
     reference = str(reference).lower()
+    inverse = False if inverse is None else inverse
 
     if dipole is None:
         dipole = basicConfig['params.dipole']
@@ -1115,7 +1118,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
         raise ValueError('Wrong reference system. Use one of '
                          '{"gsm", "sm", "mag"}.')
 
-    if inverse is True:
+    if inverse:
         theta_base, phi_base = geo_to_base(
             theta, phi, base_1, base_2, base_3, inverse=True)
 
@@ -1125,7 +1128,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=False,
     return theta_base, phi_base
 
 
-def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
+def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
     """
     Computes matrix to rotate vectors from USE frame at spherical geographic
     coordinates (theta, phi) to USE frame at spherical reference coordinates
@@ -1165,7 +1168,9 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
     """
 
-    if inverse is True:
+    inverse = False if inverse is None else inverse
+
+    if inverse:
         theta_ref, phi_ref = theta, phi
         theta, phi = geo_to_base(theta_ref, phi_ref, base_1, base_2,
                                  base_3, inverse=True)
@@ -1191,7 +1196,7 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
     test = R[..., 0, 0]
     np.testing.assert_allclose(test, np.ones(test.shape))
 
-    if inverse is True:
+    if inverse:
         R = np.swapaxes(R, -2, -1)  # transpose matrices
         theta_ref, phi_ref = theta, phi  # overwrite for correct output
 
@@ -1199,7 +1204,7 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=False):
 
 
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
-                      inverse=False, dipole=None):
+                      inverse=None, dipole=None):
     """
     Transforms vectors with components in USE (Up-South-East) at
     spherical geographic coordinates (theta, phi) to components in USE at the
@@ -1244,6 +1249,8 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     matrix_geo_to_base
 
     """
+
+    inverse = False if inverse is None else inverse
 
     reference = str(reference).lower()
 

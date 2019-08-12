@@ -431,7 +431,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     grid = False if grid is None else grid
 
     # manually broadcast input grid on surface
-    if grid is True:
+    if grid:
         theta = theta[..., None]  # first dimension is theta
         phi = phi[None, ...]  # second dimension is phi
 

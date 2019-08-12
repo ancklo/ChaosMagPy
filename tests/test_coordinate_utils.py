@@ -125,7 +125,7 @@ class CoordinateUtilsTestCase(TestCase):
             for time in np.linspace(-4*365.25, 24*365.25, 50):
 
                 matrix_time = c.synth_rotate_gauss(
-                    time, frequency, spectrum, scaled=True)
+                    time, frequency, spectrum, scaled=data['scaled'])
 
                 nmax = int(np.sqrt(spectrum.shape[1] + 1) - 1)
                 kmax = int(np.sqrt(spectrum.shape[2] + 1) - 1)

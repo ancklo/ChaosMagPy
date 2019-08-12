@@ -126,7 +126,7 @@ def fetch(variable):
     return variable
 
 
-def load_matfile(filepath, variable_name, struct=False):
+def load_matfile(filepath, variable_name, struct=None):
     """
     Load variable from matfile. Can handle mat-files v7.3 and before.
 
@@ -147,18 +147,20 @@ def load_matfile(filepath, variable_name, struct=False):
 
     """
 
+    struct = False if struct is None else struct
+
     mat_contents = hdf.loadmat(str(filepath),
                                variable_names=[str(variable_name)])
 
     variable = mat_contents[str(variable_name)]
 
-    if struct is True and '__header__' in mat_contents:
+    if struct and '__header__' in mat_contents:
         return variable[0, 0]  # version 5 only seems to have header
     else:
         return variable
 
 
-def load_RC_datfile(filepath=None, parse_dates=False):
+def load_RC_datfile(filepath=None, parse_dates=None):
     """
     Load RC-index data file into pandas data frame.
 
@@ -205,8 +207,10 @@ def load_RC_datfile(filepath=None, parse_dates=False):
     df = pd.read_csv(filepath,  delim_whitespace=True, comment='#',
                      dtype=column_types, names=column_names)
 
+    parse_dates = False if parse_dates is None else parse_dates
+
     # set datetime as index
-    if parse_dates is True:
+    if parse_dates:
         df.index = pd.to_datetime(
             df['time'].values, unit='D', origin=pd.Timestamp('2000-1-1'))
         df.drop(['time'], axis=1, inplace=True)  # delete redundant time column
