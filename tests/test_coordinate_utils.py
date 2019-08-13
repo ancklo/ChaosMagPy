@@ -51,7 +51,8 @@ class CoordinateUtilsTestCase(TestCase):
         Q_n_mat = np.ravel(test['Q_n'])
 
         model = np.loadtxt(
-            os.path.join(ROOT, '../data/conductivity_Utada2003.dat'))
+            os.path.join(ROOT, '../data/gsm_sm_coefficients',
+                         'conductivity_Utada2003.dat'))
 
         radius = a - model[:, 0]
         # perfectly conducting core will automatically be removed
