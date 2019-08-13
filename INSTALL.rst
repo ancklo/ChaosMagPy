@@ -8,6 +8,7 @@ ChaosMagPy relies on the following:
 * scipy
 * pandas
 * cython
+* h5py
 * cartopy>=0.17
 * matplotlib>=3
 * cdflib
@@ -17,7 +18,7 @@ Specific installation steps using the conda/pip package managers are as follows:
 
 1. Install packages with conda:
 
-   >>> conda install python numpy scipy pandas cython cartopy matplotlib
+   >>> conda install python numpy scipy pandas cython cartopy matplotlib h5py
 
 2. Install packages with pip:
 
