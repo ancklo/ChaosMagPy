@@ -4,7 +4,7 @@ API references
 Core functionality (`CHAOS`)
 ----------------------------
 
-.. automodule:: chaos
+.. automodule:: chaosmagpy.chaos
     :members:
     :undoc-members:
     :special-members: __call__, __str__
@@ -15,7 +15,7 @@ Additional functionality
 Coordinate transformations (`coordinate_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: coordinate_utils
+.. automodule:: chaosmagpy.coordinate_utils
     :members:
     :undoc-members:
     :special-members:
@@ -25,7 +25,7 @@ Coordinate transformations (`coordinate_utils`)
 Model utilities (`model_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: model_utils
+.. automodule:: chaosmagpy.model_utils
     :members:
     :undoc-members:
     :special-members:
@@ -35,7 +35,7 @@ Model utilities (`model_utils`)
 Plotting utilities (`plot_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: plot_utils
+.. automodule:: chaosmagpy.plot_utils
     :members:
     :undoc-members:
     :special-members:
@@ -45,7 +45,7 @@ Plotting utilities (`plot_utils`)
 Data utilities (`data_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: data_utils
+.. automodule:: chaosmagpy.data_utils
     :members:
     :undoc-members:
     :special-members:
@@ -57,7 +57,7 @@ Data utilities (`data_utils`)
 Configuration utilities (`config_utils`)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. automodule:: config_utils
+.. automodule:: chaosmagpy.config_utils
     :members:
     :show-inheritance:
     :inherited-members:

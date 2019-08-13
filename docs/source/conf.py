@@ -16,13 +16,13 @@ import os
 import sys
 
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+# sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
 sys.path.insert(0, root)
-sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
 autodoc_mock_imports = ['_tkinter']
 
 import matplotlib  # import so that 'agg' can be given, as readthedocs fails
 matplotlib.use('agg')
-from chaosmagpy import __version__
+import chaosmagpy
 
 # -- Project information -----------------------------------------------------
 
@@ -31,7 +31,7 @@ copyright = '2019, Clemens Kloss'
 author = 'Clemens Kloss'
 
 # The short X.Y version
-version = __version__
+version = chaosmagpy.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -56,7 +56,7 @@ extensions = [
 ]
 
 # Remove class members to suppress error message when compiling (removes module list)
-numpydoc_show_class_members = True
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']

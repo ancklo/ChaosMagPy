@@ -1373,12 +1373,12 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         shells:
 
         | ``radius[0]`` >= `r` > ``radius[1]``: \
-            ``sigma[0]`` *( ``radius[0]`` / `r` )**2
+            ``sigma[0]`` * ( ``radius[0]`` / `r` ) * * 2
         | ``radius[1]`` >= `r` > ``radius[2]``: \
-            ``sigma[1]`` *( ``radius[1]`` / `r` )**2
+            ``sigma[1]`` * ( ``radius[1]`` / `r` ) * * 2
         | ...
         | ``radius[k-1]`` >= `r` > 0 : \
-            ``sigma[k-1]`` *( ``radius[k-1]`` / `r` )**2
+            ``sigma[k-1]`` * ( ``radius[k-1]`` / `r` ) * * 2
 
         Courtesy of A. Grayver. Code based on Kuvshinov & Semenov (2012).
 
