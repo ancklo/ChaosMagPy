@@ -96,6 +96,44 @@ class CoordinateUtilsTestCase(TestCase):
         self.assertIsNone(np.testing.assert_allclose(phi, phi_mat))
         self.assertIsNone(np.testing.assert_allclose(Q_n, Q_n_mat))
 
+    def test_rotate_gauss_coeffs(self):
+        """
+        Compare GSM/SM rotation matrices synthezised from chaosmagpy and
+        Matlab.
+
+        """
+
+        for reference in ['GSM', 'SM']:
+
+            print(f'  Testing {reference} frame of reference.')
+
+            # load spectrum to synthesize matrices in time-domain
+            filepath = c.basicConfig[f'file.{reference}_spectrum']
+
+            try:
+                data = np.load(filepath)
+            except FileNotFoundError as e:
+                raise ValueError(
+                    f'{reference} file not found in "chaosmagpy/lib/".'
+                    ' Correct reference?') from e
+
+            data_mat = load_matfile(MATFILE_PATH, 'test_rotate_gauss_coeffs')
+
+            time = 10*365.25*np.random.random_sample((20,))
+
+            for freq, spec in zip(['frequency', 'frequency_ind'],
+                                  ['spectrum', 'spectrum_ind']):
+
+                matrix = c.synth_rotate_gauss(
+                    time, data[freq], data[spec], scaled=True)
+
+                matrix_mat = c.synth_rotate_gauss(
+                    time, data_mat[reference + '_' + freq],
+                    data_mat[reference + '_' + spec], scaled=True)
+
+                self.assertIsNone(np.testing.assert_allclose(
+                    matrix, matrix_mat, atol=1e-3))
+
     def test_synth_rotate_gauss(self):
         """
         Tests the accuracy of the Fourier representation of tranformation
