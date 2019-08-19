@@ -119,7 +119,7 @@ class CoordinateUtilsTestCase(TestCase):
 
             data_mat = load_matfile(MATFILE_PATH, 'test_rotate_gauss_coeffs')
 
-            time = 10*365.25*np.random.random_sample((20,))
+            time = 10*365.25*np.random.random_sample((30,))
 
             for freq, spec in zip(['frequency', 'frequency_ind'],
                                   ['spectrum', 'spectrum_ind']):
