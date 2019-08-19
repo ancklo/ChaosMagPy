@@ -16,7 +16,6 @@ import os
 import sys
 
 root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-# sys.path.insert(0, os.path.join(root, 'chaosmagpy'))
 sys.path.insert(0, root)
 autodoc_mock_imports = ['_tkinter']
 
@@ -47,16 +46,23 @@ release = version
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'numpydoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'numpydoc',
     'sphinx.ext.mathjax'
 ]
 
-# Remove class members to suppress error message when compiling (removes module list)
-numpydoc_show_class_members = False
+# generate rst of member functions on the fly
+autosummary_generate = True
+autodata_content = 'both'
+
+# Remove class members to suppress error message when compiling
+# (removes module list)
+numpydoc_show_class_members = True
+numpydoc_show_inherited_class_members = False
+numpydoc_class_members_toctree = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']

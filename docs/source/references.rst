@@ -1,63 +1,46 @@
 API references
 ==============
 
-Core functionality (`CHAOS`)
-----------------------------
+Core functionality (`chaos.py`)
+-------------------------------
 
 .. automodule:: chaosmagpy.chaos
-    :members:
-    :undoc-members:
-    :special-members: __call__, __str__
+    :noindex:
+    :no-members:
 
-Additional functionality
-------------------------
-
-Coordinate transformations (`coordinate_utils`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Coordinate transformations (`coordinate_utils.py`)
+--------------------------------------------------
 
 .. automodule:: chaosmagpy.coordinate_utils
-    :members:
-    :undoc-members:
-    :special-members:
-    :inherited-members:
-    :show-inheritance:
+    :noindex:
+    :no-members:
 
-Model utilities (`model_utils`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Model utilities (`model_utils.py`)
+----------------------------------
 
 .. automodule:: chaosmagpy.model_utils
-    :members:
-    :undoc-members:
-    :special-members:
-    :inherited-members:
-    :show-inheritance:
+    :noindex:
+    :no-members:
 
-Plotting utilities (`plot_utils`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Plotting utilities (`plot_utils.py`)
+------------------------------------
 
 .. automodule:: chaosmagpy.plot_utils
-    :members:
-    :undoc-members:
-    :special-members:
-    :inherited-members:
-    :show-inheritance:
+    :noindex:
+    :no-members:
 
-Data utilities (`data_utils`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Data utilities (`data_utils.py`)
+--------------------------------
 
 .. automodule:: chaosmagpy.data_utils
-    :members:
-    :undoc-members:
-    :special-members:
-    :inherited-members:
-    :show-inheritance:
+    :noindex:
+    :no-members:
 
 .. _label-configuration-list:
 
-Configuration utilities (`config_utils`)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Configuration utilities (`config_utils.py`)
+-------------------------------------------
 
 .. automodule:: chaosmagpy.config_utils
-    :members:
-    :show-inheritance:
-    :inherited-members:
+    :noindex:
+    :no-members:

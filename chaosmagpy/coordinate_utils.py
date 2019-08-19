@@ -3,8 +3,7 @@ This module provides functions related to coordinate transformations. Typical
 coordinate reference frames and corresponding abbbreviations are listed in the
 following.
 
-Abbreviations
--------------
+**Abbreviations**
 
 GEO : geocentric, orthogonal coordinate system
     With z-axis along Earth's rotation axis, x-axis pointing to Greenwich and
@@ -27,10 +26,8 @@ MAG : magnetic orthogonal coordinate system (centered dipole)
     spanned by the dipole axis and Earth's rotation axis, and y-axis completing
     the right-handed system.
 
-Summary
--------
-
 .. autosummary::
+    :toctree: functions
 
     igrf_dipole
     synth_rotate_gauss

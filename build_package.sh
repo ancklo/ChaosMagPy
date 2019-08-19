@@ -9,7 +9,8 @@ echo -------ChaosMagPy Version $version-------
 # build distribution
 python setup.py sdist bdist_wheel
 
-# compile documentary as html
+# clean build and compile documentary as html
+make --directory ./docs clean
 make --directory ./docs html
 
 # run example

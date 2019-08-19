@@ -1,14 +1,17 @@
 """
 Classes and functions to read the CHAOS model.
 
-Summary
--------
-
 .. autosummary::
+    :toctree: classes
+    :template: myclass.rst
 
     Base
     BaseModel
     CHAOS
+
+.. autosummary::
+    :toctree: functions
+
     load_CHAOS_matfile
     load_CHAOS_shcfile
 

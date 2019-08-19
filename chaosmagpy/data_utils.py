@@ -2,10 +2,8 @@
 The module provides functions for loading and writing data and models. It also
 offers functions to do simple time conversions.
 
-Summary
--------
-
 .. autosummary::
+    :toctree: functions
 
     load_RC_datfile
     save_RC_h5file

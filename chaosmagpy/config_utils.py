@@ -51,10 +51,9 @@ keywords.
                                           or equiv. 16cm)
  ==========================  ===========  =====================================
 
-Summary
--------
-
 .. autosummary::
+    :toctree: classes
+    :template: myclass.rst
 
     BasicConfig
 

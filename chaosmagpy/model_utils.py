@@ -2,10 +2,8 @@
 This module provide functions for building the CHAOS model and geomagnetic
 field models in general.
 
-Summary
--------
-
 .. autosummary::
+    :toctree: functions
 
     design_matrix
     design_gauss

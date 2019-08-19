@@ -1,10 +1,8 @@
 """
 This module provides functions for plotting model outputs.
 
-Summary
--------
-
 .. autosummary::
+    :toctree: functions
 
     plot_timeseries
     plot_maps

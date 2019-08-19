@@ -7,7 +7,7 @@ ChaosMagPy documentation
 ========================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    readme
    installation
