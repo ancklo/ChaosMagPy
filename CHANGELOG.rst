@@ -17,6 +17,7 @@ Features
 
 Deprecations
 ^^^^^^^^^^^^
+* Rewrote ``load_matfile``: now traverses matfile and outputs dictionary.
 * Removed ``breaks_euler`` and ``coeffs_euler`` from ``CHAOS`` class
   attributes. Euler angles are now handled as ``Base`` class instance.
 
