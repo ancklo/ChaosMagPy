@@ -1887,7 +1887,7 @@ def load_CHAOS_matfile(filepath, name=None):
 
     version = _guess_version(filepath)
 
-    mat_contents = du.loadmat(filepath, variable_names=[
+    mat_contents = du.load_matfile(filepath, variable_names=[
         'g', 'pp', 'model_ext', 'model_Euler', 'params'])
 
     pp = mat_contents['pp']

@@ -5,6 +5,7 @@ offers functions to do simple time conversions.
 .. autosummary::
     :toctree: functions
 
+    load_matfile
     load_RC_datfile
     save_RC_h5file
     load_shcfile
@@ -30,7 +31,7 @@ from datetime import datetime, timedelta
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
-def loadmat(filepath, variable_names=None):
+def load_matfile(filepath, variable_names=None):
     """
     Load mat-file and return dictionary.
 
@@ -99,7 +100,7 @@ def loadmat(filepath, variable_names=None):
     return output
 
 
-def fetch(variable):
+def _fetch(variable):
     """
     Load variable from mat-object (matfile loaded with hdf5storage). Can handle
     mat-files v7.3 and before.
@@ -124,7 +125,7 @@ def fetch(variable):
     return variable
 
 
-def load_matfile(filepath, variable_name, struct=None):
+def _load_matfile(filepath, variable_name, struct=None):
     """
     Load variable from matfile. Can handle mat-files v7.3 and before.
 
