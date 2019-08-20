@@ -34,6 +34,7 @@ MAG : magnetic orthogonal coordinate system (centered dipole)
     rotate_gauss_fft
     rotate_gauss
     sun_position
+    zenith_angle
     spherical_to_cartesian
     cartesian_to_spherical
     basevectors_gsm
@@ -618,6 +619,41 @@ def sun_position(time):
     phi = center_azimuth(degrees(right_ascension - gmst))
 
     return theta, phi
+
+
+def zenith_angle(time, theta, phi):
+    """
+    Compute the solar zenith angle.
+
+    Parameters
+    ----------
+    time : ndarray, shape (...)
+        Time in modified Julian date.
+    theta : ndarray, shape (...)
+        Colatitude in degrees.
+    phi : ndarray, shape (...)
+        Longitude in degrees.
+
+    Returns
+    -------
+    zeta : ndarray, shape (...)
+        Zenith angle in degrees :math:`[0^\\circ, 180^\\circ]` (angle between
+        the local zenith and the center of the solar disc). Solar elevation
+        angle is then computed by :math:`90^\\circ - \\theta_\\mathrm{zenith}`.
+
+    """
+
+    theta_sun, phi_sun = sun_position(time)
+
+    colat = radians(theta_sun)
+    azim = radians(phi_sun)
+    theta = radians(theta)
+    phi = radians(phi)
+
+    cos_zeta = (np.cos(theta)*np.cos(colat) +
+                np.sin(theta)*np.sin(colat) * np.cos(azim + phi))
+
+    return degrees(np.arccos(cos_zeta))
 
 
 def spherical_to_cartesian(radius, theta, phi):

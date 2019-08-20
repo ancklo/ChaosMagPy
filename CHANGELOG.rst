@@ -3,11 +3,12 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** August 6, 2019
+| **Date:** August 20, 2019
 | **Release:** v0.2
 
 Features
 ^^^^^^^^
+* New function ``zenith_angle`` for computing the solar zenith angle.
 * New function ``gg_to_geo`` and  ``geo_to_gg`` for transforming geodetic and
   geocentric coordinates.
 * Added keyword ``start_date`` to ``rotate_gauss_fft``

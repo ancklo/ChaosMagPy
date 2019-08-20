@@ -37,6 +37,33 @@ class CoordinateUtilsTestCase(TestCase):
             c.igrf_dipole('2015'),
             c._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
 
+    def test_zenith_angle(self):
+        """
+        Compared zenith angle with NOAA
+        `https://www.esrl.noaa.gov/gmd/grad/antuv/SolarCalc.jsp`_ .
+
+        """
+
+        zeta = c.zenith_angle(d.mjd2000(2019, 8, 1), 90., 0.)
+        self.assertIsNone(np.testing.assert_allclose(
+            zeta, 161.79462, rtol=1e-5))
+
+        zeta = c.zenith_angle(d.mjd2000(2013, 8, 1), 77., 54.)
+        self.assertIsNone(np.testing.assert_allclose(
+            zeta, 117.00128, rtol=1e-5))
+
+        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 12), 90., 0.)
+        self.assertIsNone(np.testing.assert_allclose(
+            zeta, 1.85573, rtol=1e-4))
+
+        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 10), 90., 0.)
+        self.assertIsNone(np.testing.assert_allclose(
+            zeta, 31.85246, rtol=1e-3))
+
+        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 14), 90., 0.)
+        self.assertIsNone(np.testing.assert_allclose(
+            zeta, 28.14153, rtol=1e-3))
+
     def test_q_response_sphere_pre7(self):
 
         a = 6371.2
