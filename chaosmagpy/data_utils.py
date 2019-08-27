@@ -107,7 +107,7 @@ def _fetch(variable):
 
     Parameters
     ----------
-    variable: mat
+    variable : mat
         Matfile that has been loaded with :func:`hdf5storage.loadmat`.
 
     Returns
