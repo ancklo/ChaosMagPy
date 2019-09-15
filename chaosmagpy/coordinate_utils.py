@@ -1337,9 +1337,9 @@ def center_azimuth(phi):
 
     phi = phi % 360.
     try:  # works for ndarray
-        phi[phi > 180.] += -360.  # centered around prime
+        phi = np.where(phi > 180., phi - 360., phi)  # centered around prime
     except TypeError:  # catch error if float
-        phi += -360. if phi > 180. else 0
+        phi += -360. if phi > 180. else 0.
 
     return phi
 
