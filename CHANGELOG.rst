@@ -8,6 +8,8 @@ Version 0.2
 
 Features
 ^^^^^^^^
+* Vectorized ``mjd2000``, ``mjd_to_dyear`` and ``dyear_to_mjd``.
+* New function ``local_time`` for a simple computation of the local time.
 * New function ``zenith_angle`` for computing the solar zenith angle.
 * New function ``gg_to_geo`` and  ``geo_to_gg`` for transforming geodetic and
   geocentric coordinates.

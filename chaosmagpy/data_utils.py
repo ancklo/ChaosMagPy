@@ -100,65 +100,6 @@ def load_matfile(filepath, variable_names=None):
     return output
 
 
-def _fetch(variable):
-    """
-    Load variable from mat-object (matfile loaded with hdf5storage). Can handle
-    mat-files v7.3 and before.
-
-    Parameters
-    ----------
-    variable : mat
-        Matfile that has been loaded with :func:`hdf5storage.loadmat`.
-
-    Returns
-    -------
-    variable : ndarray, float, int
-
-    """
-
-    if isinstance(variable, np.ndarray):
-        if (variable.dtype == np.dtype('O')) and (variable.shape == (1, 1)):
-            variable = variable[0, 0].squeeze()
-        else:
-            variable = variable.squeeze()
-
-    return variable
-
-
-def _load_matfile(filepath, variable_name, struct=None):
-    """
-    Load variable from matfile. Can handle mat-files v7.3 and before.
-
-    Parameters
-    ----------
-    filepath : str
-        Filepath to mat-file.
-    variable_name : str
-        Name of variable or struct to be loaded from mat-file.
-    struct : {False, True}, optional
-        If struct is to be loaded from mat-file, use ``True`` (only required
-        before v7.3 mat-files).
-
-    Returns
-    -------
-    variable : ndarray, dict
-        Array or dictionary (if ``struct=True``) containing the values.
-
-    """
-
-    struct = False if struct is None else struct
-
-    mat_contents = hdf.loadmat(str(filepath),
-                               variable_names=[str(variable_name)])
-
-    variable = mat_contents[str(variable_name)]
-
-    if struct and '__header__' in mat_contents:
-        return variable[0, 0]  # version 5 only seems to have header
-    else:
-        return variable
-
-
 def load_RC_datfile(filepath=None, parse_dates=None):
     """
     Load RC-index data file into pandas data frame.
