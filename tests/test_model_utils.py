@@ -45,6 +45,35 @@ class ModelUtilsTestCase(TestCase):
 
         self.assertIsNone(np.testing.assert_equal(R_n.shape, (10, 2, N)))
 
+    def test_synth_values_min(self):
+
+        theta = 79.
+        phi = 13.
+        radius = R_REF
+
+        theta_ls = theta*np.ones((15,))
+        phi_ls = phi*np.ones((27,))
+        phi_grid, theta_grid = np.meshgrid(phi_ls, theta_ls)  # 2-D
+        radius_grid = R_REF * np.ones(phi_grid.shape)  # 2-D
+        coeffs_grid = np.random.random()*np.ones(phi_grid.shape + (24,))  # 3-D
+
+        coeffs_grid_min = np.copy(coeffs_grid)
+        coeffs_grid_min[..., :8] = 0.  # nmax=4
+
+        # exhaustive inputs
+        B = m.synth_values(coeffs_grid_min, radius_grid, theta_grid, phi_grid)
+
+        # function for quick testing with "true" solution
+        def test(field):
+            self.assertIsNone(np.testing.assert_allclose(B, field))
+
+        test(m.synth_values(coeffs_grid_min, radius, theta_grid, phi_grid,
+                            nmin=1, nmax=4))
+        test(m.synth_values(coeffs_grid_min, radius, theta_grid, phi_grid,
+                            nmin=3, nmax=4))
+        test(m.synth_values(coeffs_grid, radius, theta_grid, phi_grid,
+                            nmin=3, nmax=4))
+
     def test_synth_values_inputs(self):
 
         theta = 79.

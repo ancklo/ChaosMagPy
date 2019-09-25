@@ -8,6 +8,7 @@ Version 0.2
 
 Features
 ^^^^^^^^
+* Added option ``nmin`` to synth_values.
 * Vectorized ``mjd2000``, ``mjd_to_dyear`` and ``dyear_to_mjd``.
 * New function ``local_time`` for a simple computation of the local time.
 * New function ``zenith_angle`` for computing the solar zenith angle.

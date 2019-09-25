@@ -324,8 +324,8 @@ class BaseModel(Base):
 
         return coeffs
 
-    def synth_values(self, time, radius, theta, phi, *, nmax=None, deriv=None,
-                     grid=None, extrapolate=None):
+    def synth_values(self, time, radius, theta, phi, *, nmax=None,
+                     deriv=None, grid=None, extrapolate=None):
         """
         Compute magnetic field components.
 

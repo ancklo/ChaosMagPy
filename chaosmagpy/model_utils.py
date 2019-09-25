@@ -295,7 +295,7 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
 
 
 def synth_values(coeffs, radius, theta, phi, *,
-                 nmax=None, source=None, grid=None):
+                 nmax=None, nmin=None, source=None, grid=None):
     """
     Computes radial, colatitude and azimuthal field components from the
     magnetic potential field in terms of spherical harmonic coefficients.
@@ -317,6 +317,11 @@ def synth_values(coeffs, radius, theta, phi, *,
         Maximum degree up to which expansion is to be used (default is given by
         the ``coeffs``, but can also be smaller if specified
         :math:`N` :math:`\\geq` ``nmax`` (``nmax`` + 2)
+    nmin : int, positive, optional
+        Minimum degree from which expansion is to be used (defaults to 1).
+        Note that it will just skip the degrees smaller than ``nmin``, the
+        whole sequence of coefficients 1 through ``nmax`` must still be given
+        in ``coeffs``.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -411,15 +416,27 @@ def synth_values(coeffs, radius, theta, phi, *,
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 
+    if nmin is None:
+        nmin = 1
+    else:
+        assert nmin > 0, 'Only positive nmin allowed.'
+
     # handle optional argument: nmax
-    nmax_coeffs = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # degree for coeffs
+    nmax_coeffs = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # degree
     if nmax is None:
         nmax = nmax_coeffs
-    elif nmax > nmax_coeffs:
-        warnings.warn('Supplied nmax = {0} is incompatible with number of '
-                      'model coefficients. Using nmax = {1} instead.'.format(
-                        nmax, nmax_coeffs))
+    else:
+        assert nmax > 0, 'Only positive nmax allowed.'
+
+    if nmax > nmax_coeffs:
+        warnings.warn('Supplied nmax = {0} and nmin = {1} is '
+                      'incompatible with number of model coefficients. '
+                      'Using nmax = {2} instead.'.format(
+                        nmax, nmin, nmax_coeffs))
         nmax = nmax_coeffs
+
+    if nmax < nmin:
+        raise ValueError(f'Nothing to compute: nmax < nmin ({nmax} < {nmin}.)')
 
     # handle optional argument: source
     if source is None:
@@ -449,9 +466,9 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     # initialize radial dependence given the source
     if source == 'internal':
-        r_n = radius**(-3)
+        r_n = radius**(-(nmin+2))
     elif source == 'external':
-        r_n = np.ones(radius.shape)
+        r_n = radius**(nmin-1)
     else:
         raise ValueError("Source must be either 'internal' or 'external'.")
 
@@ -471,8 +488,8 @@ def synth_values(coeffs, radius, theta, phi, *,
     B_theta = np.zeros(grid_shape)
     B_phi = np.zeros(grid_shape)
 
-    num = 0
-    for n in range(1, nmax+1):
+    num = nmin**2 - 1
+    for n in range(nmin, nmax+1):
         if source == 'internal':
             B_radius += (n+1) * Pnm[n, 0] * r_n * coeffs[..., num]
         elif source == 'external':
