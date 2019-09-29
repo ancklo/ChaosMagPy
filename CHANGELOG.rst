@@ -3,7 +3,7 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** September 23, 2019
+| **Date:** September 30, 2019
 | **Release:** v0.2
 
 Features
@@ -23,6 +23,11 @@ Deprecations
 * Rewrote ``load_matfile``: now traverses matfile and outputs dictionary.
 * Removed ``breaks_euler`` and ``coeffs_euler`` from ``CHAOS`` class
   attributes. Euler angles are now handled as ``Base`` class instance.
+
+Bugfixes
+^^^^^^^^
+* Fixed collocation matrix for unordered collocation sites. Endpoint now
+  correctly taken into account.
 
 Version 0.1
 -------------

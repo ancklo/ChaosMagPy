@@ -177,7 +177,7 @@ def colloc_matrix(x, knots, order):
 
             coll[:, shift] = b(x)
 
-    coll[-1, -1] = 1.0  # include last point
+    coll[x == knots[-1], -1] = 1.0  # include last point
     np.nan_to_num(coll, copy=False)
 
     # assert that collocation is a partition of one
