@@ -890,7 +890,7 @@ class CHAOS(object):
         Print model version and initialization timestamp.
         """
 
-        string = (f"This is {self.name} ({self.version})"
+        string = (f"This is {self.name} (v{self.version})"
                   f" initialized on {self.timestamp} UTC.")
 
         return string
