@@ -76,7 +76,7 @@ The directory contains the files/directories:
    example 6: Calculate external and associated induced fields described in SM
               and GSM reference systems and plot maps
 
-3. "data/CHAOS-6-x9.mat": mat-file containing CHAOS-6 model (extension 9)
+3. "data/CHAOS-7.mat": mat-file containing CHAOS-7 model
 
 4. "SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf":
    cdf-file containing Swarm A magnetic field data from August 1, 2018.
