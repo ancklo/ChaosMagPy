@@ -24,7 +24,7 @@ conda activate $env_name
 conda env list
 
 while true; do
-    read -p "Do you wish to proceed installing ChaosMagPy? y/n: " yn
+    read -p "Do you wish to proceed installing ChaosMagPy (y/n)?: " yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) echo Abort.; exit;;

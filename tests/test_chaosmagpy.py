@@ -75,9 +75,9 @@ class ChaosMagPyTestCase(TestCase):
                 self.assertIsNone(
                     np.testing.assert_allclose(x, y, atol=1e-10, verbose=True))
 
-        chaos = du.loadmat(CHAOS_PATH, variable_names=[
+        chaos = du.load_matfile(CHAOS_PATH, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])
-        chaos_out = du.loadmat(filepath, variable_names=[
+        chaos_out = du.load_matfile(filepath, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])
 
         pp = chaos['pp']

@@ -149,7 +149,7 @@ class ModelUtilsTestCase(TestCase):
         print("  Time for 'grid=False' computation: ", e - s)
 
         s = timer()
-        B_grid = m.synth_values(
+        B_grid2 = m.synth_values(
             coeffs, radius, theta[..., None], phi[None, ...], grid=False)
         e = timer()
         print("  Time for broadcasted 'grid=False' computation: ", e - s)
@@ -160,7 +160,10 @@ class ModelUtilsTestCase(TestCase):
         e = timer()
         print("  Time for 'grid=True' computation: ", e - s)
 
-        for comp, comp_grid in zip(B, B_grid):
+        for comp, comp_grid in zip(B_grid, B_grid2):
+            self.assertIsNone(np.testing.assert_allclose(comp, comp_grid))
+
+        for comp, comp_grid in zip(B_grid2, B):
             self.assertIsNone(np.testing.assert_allclose(comp, comp_grid))
 
     def test_design_matrix(self):
@@ -204,9 +207,12 @@ class ModelUtilsTestCase(TestCase):
         print("  Time for design_matrix computation (Matlab):  {:}".format(
             runtime[0, 0]))
 
-        self.assertIsNone(np.testing.assert_allclose(G_radius, G_radius_mat))
-        self.assertIsNone(np.testing.assert_allclose(G_theta, G_theta_mat))
-        self.assertIsNone(np.testing.assert_allclose(G_phi, G_phi_mat))
+        self.assertIsNone(
+            np.testing.assert_allclose(G_radius, G_radius_mat, atol=1e-5))
+        self.assertIsNone(
+            np.testing.assert_allclose(G_theta, G_theta_mat, atol=1e-5))
+        self.assertIsNone(
+            np.testing.assert_allclose(G_phi, G_phi_mat, atol=1e-5))
 
 
 if __name__ == '__main__':

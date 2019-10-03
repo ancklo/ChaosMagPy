@@ -333,8 +333,7 @@ class CoordinateUtilsTestCase(TestCase):
 
     def test_gg_to_geo(self):
 
-        mat = d.loadmat(MATFILE_PATH, variable_names=['test_gg_to_geo'])
-        mat = mat['test_gg_to_geo']
+        mat = load_matfile(MATFILE_PATH, 'test_gg_to_geo')
 
         radius, theta = c.gg_to_geo(mat['height'], mat['beta'])
 
@@ -343,8 +342,7 @@ class CoordinateUtilsTestCase(TestCase):
 
     def test_geo_to_gg(self):
 
-        mat = d.loadmat(MATFILE_PATH, variable_names=['test_geo_to_gg'])
-        mat = mat['test_geo_to_gg']
+        mat = load_matfile(MATFILE_PATH, 'test_geo_to_gg')
 
         height, beta = c.geo_to_gg(mat['radius'], mat['theta'])
 
@@ -353,8 +351,7 @@ class CoordinateUtilsTestCase(TestCase):
 
     def test_gg_geo_gg(self):
 
-        mat = d.loadmat(MATFILE_PATH, variable_names=['test_gg_to_geo'])
-        mat = mat['test_gg_to_geo']
+        mat = load_matfile(MATFILE_PATH, 'test_gg_to_geo')
 
         radius, theta = c.gg_to_geo(mat['height'], mat['beta'])
 
