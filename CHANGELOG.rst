@@ -3,12 +3,13 @@ Changelog
 
 Version 0.2
 -------------
-| **Date:** September 30, 2019
+| **Date:** October 3, 2019
 | **Release:** v0.2
 
 Features
 ^^^^^^^^
-* Added option ``nmin`` to synth_values.
+* Updated RC-index file to recent version (August 2019)
+* Added option ``nmin`` to ``synth_values``.
 * Vectorized ``mjd2000``, ``mjd_to_dyear`` and ``dyear_to_mjd``.
 * New function ``local_time`` for a simple computation of the local time.
 * New function ``zenith_angle`` for computing the solar zenith angle.
