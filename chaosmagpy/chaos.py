@@ -1943,11 +1943,13 @@ def load_CHAOS_matfile(filepath, name=None, version=None):
     satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
                   'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
 
-    # append generic satellite name if more data available
+    # append generic satellite name if more data available or reduce
     t_break_Euler = model_euler['t_break_Euler']
     n = len(t_break_Euler)
     m = len(satellites)
-    if n > m:
+    if n < m:
+        satellites = satellites[:n]
+    elif n > m:
         for counter in range(m+1, n+1):
             satellites.append(f'satellite_{counter}')
 

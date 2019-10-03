@@ -102,7 +102,7 @@ mv -i $tempdir/$out build/$out
 
 # clean up
 while true; do
-    read -p "Do you wish to delete temporary files in '$tempdir'? y/n: " yn
+    read -p "Do you wish to delete temporary files in '$tempdir' (y/n)?: " yn
     case $yn in
         [Yy]* ) rm -r $tempdir; rm example1_output.txt; break;;
         [Nn]* ) echo Exit.; exit;;

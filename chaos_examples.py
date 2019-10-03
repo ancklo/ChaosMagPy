@@ -4,7 +4,7 @@ from chaosmagpy import load_CHAOS_matfile
 from chaosmagpy.coordinate_utils import transform_points
 from chaosmagpy.data_utils import mjd2000
 
-FILEPATH_CHAOS = 'data/CHAOS-6-x9.mat'
+FILEPATH_CHAOS = 'data/CHAOS-7.mat'
 
 R_REF = 6371.2
 
