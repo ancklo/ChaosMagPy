@@ -1940,7 +1940,8 @@ def load_CHAOS_matfile(filepath, name=None, version=None):
     coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
     # define satellite names
-    satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c']
+    satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
+                  'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
 
     # append generic satellite name if more data available
     t_break_Euler = model_euler['t_break_Euler']
@@ -2086,10 +2087,15 @@ def _guess_version(filepath):
     """
 
     # search for CHAOS-{numeral}-x{numeral}, not followed by path separator
-    match = re.search(r'CHAOS-(\d+)[-.](x\d+)(?!\w*[{:}])'.format(os.sep),
-                      filepath)
+    head, tail = os.path.split(filepath)
+    match = re.search(r'CHAOS-(\d+)[-.]?(x\d+)?(\.?\w*)', tail)
+
     if match:
-        version = '.'.join(match.group(1, 2))
+        first, second = match.group(1, 2)
+        if second is None:
+            version = first
+        else:
+            version = '.'.join([first, second])
     else:
         warnings.warn(
             'Unknown CHAOS model version. Setting version to {:}.'.format(

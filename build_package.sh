@@ -23,11 +23,11 @@ cat example1_output.txt
 tempdir=$(mktemp -t -d XXXXXX)
 
 # copy files to tmp directory
-cp dist/chaosmagpy-$version.tar.gz $tempdir/chaosmagpy-$version.tar.gz
-cp chaos_examples.py $tempdir/chaos_examples.py
-cp example1_output.txt $tempdir/example1_output.txt
+cp dist/chaosmagpy-$version.tar.gz $tempdir/
+cp chaos_examples.py $tempdir/
+cp example1_output.txt $tempdir/
 mkdir $tempdir/data $tempdir/html
-cp data/CHAOS-6-x9.mat $tempdir/data/CHAOS-6-x9.mat
+cp data/CHAOS-7.mat $tempdir/data/
 cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf
 cp -r docs/build/html/* $tempdir/html/
 
