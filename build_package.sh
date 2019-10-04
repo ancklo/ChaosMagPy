@@ -111,4 +111,5 @@ while true; do
 done
 
 # upload to PyPI
+# twine check dist/chaosmagpy-$version*
 # twine upload dist/chaosmagpy-$version*

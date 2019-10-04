@@ -3,11 +3,9 @@ Overview
 ========
 
 ChaosMagPy is a simple Python package for evaluating the
-`CHAOS <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_ geomagnetic
-field model. To get quickly started, download a complete working example
-including the latest model `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/chaosmagpy_package.zip>`_.
-
-.. include:: ../../CITATION
+`CHAOS-7 <http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/>`_ geomagnetic
+field model. To quickly get started, download a complete working example
+including the latest model under the "Forward code" section.
 
 Documentation
 -------------
