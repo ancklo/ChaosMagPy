@@ -180,9 +180,6 @@ def colloc_matrix(x, knots, order):
     coll[x == knots[-1], -1] = 1.0  # include last point
     np.nan_to_num(coll, copy=False)
 
-    # assert that collocation is a partition of one
-    np.testing.assert_allclose(coll.sum(axis=-1), np.ones(x.shape))
-
     return coll
 
 
