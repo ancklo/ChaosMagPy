@@ -1,8 +1,16 @@
 Changelog
 =========
 
+Version 0.3
+-----------
+| **Date:** October 7, 2019
+| **Release:** v0.3
+
+Features
+^^^^^^^^
+
 Version 0.2
--------------
+-----------
 | **Date:** October 3, 2019
 | **Release:** v0.2
 
@@ -31,7 +39,7 @@ Bugfixes
   correctly taken into account.
 
 Version 0.1
--------------
+-----------
 | **Date:** May 10, 2019
 | **Release:** v0.1
 
