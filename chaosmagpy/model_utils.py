@@ -133,7 +133,7 @@ def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
     return G_radius, G_theta, G_phi
 
 
-def colloc_matrix(x, knots, order):
+def colloc_matrix(x, knots, order, deriv=None):
     """
     Create collocation matrix of a univariate function on `x` in terms  of a
     B-spline representation of order `k`.
@@ -149,6 +149,8 @@ def colloc_matrix(x, knots, order):
         multiplicity).
     order : int, positive
         Order `k` of the B-spline (4 = cubic).
+    deriv: int, positive, optional
+        Derivative of the B-spline partition (defaults to 0).
 
     Returns
     -------
@@ -161,26 +163,25 @@ def colloc_matrix(x, knots, order):
 
     """
 
-    # create spline using scipy.interpolate
-    coll = np.empty((x.size, knots.size - order))
+    if deriv is None:
+        deriv = 0
 
-    if order == 1:  # end-points are non-zero for order=1 (bug?)
-        for shift in range(knots.size - order):
-
-            index = np.logical_and(x >= knots[shift], x < knots[shift+1])
-            coll[:, shift] = np.where(index, 1.0, 0.0)  # put 1.0 else 0.0
+    if deriv >= order:
+        return np.zeros((x.size, knots.size - order))
 
     else:
-        for shift in range(knots.size - order):
-            b = BSpline.basis_element(knots[shift:shift+order+1],
-                                      extrapolate=False)
+        # create spline using scipy.interpolate
+        coll = np.empty((x.size, knots.size - order))
 
-            coll[:, shift] = b(x)
+        for n in range(knots.size - order):
+            c = np.zeros(knots.size - order)
+            c[n] = 1.
 
-    coll[x == knots[-1], -1] = 1.0  # include last point
-    np.nan_to_num(coll, copy=False)
+            b = BSpline.construct_fast(knots, c, order-1, extrapolate=False)
 
-    return coll
+            coll[:, n] = b(x, nu=deriv)
+
+        return coll
 
 
 def augment_breaks(breaks, order):

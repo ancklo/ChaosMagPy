@@ -8,6 +8,8 @@ Version 0.3
 
 Features
 ^^^^^^^^
+* Added optional derivative to ``colloc_matrix`` of the B-Spline collocation.
+  New implementation does not have the missing endpoint problem.
 
 Version 0.2
 -----------
