@@ -6,4 +6,4 @@ from chaosmagpy.model_utils import synth_values
 __all__ = ["CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile",
            "basicConfig", "synth_values"]
 
-__version__ = "0.2"
+__version__ = "0.3"
