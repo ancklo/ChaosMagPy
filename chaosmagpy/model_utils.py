@@ -336,7 +336,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     Notes
     -----
     The function can work with different grid shapes, but the inputs have to
-    satisfy NumPy's `broadcasting rules \
+    satisfy NumPy's broadcasting rules \
     <https://docs.scipy.org/doc/numpy-1.15.0/user/basics.broadcasting.html>`_
     (``grid=False``, default). This also applies to the dimension of the
     coefficients ``coeffs`` excluding the last dimension.
@@ -530,7 +530,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     return B_radius, B_theta, B_phi
 
 
-def design_gauss(radius, theta, phi, nmax, source=None):
+def design_gauss(radius, theta, phi, nmax, source=None, mmax=None):
     """
     Computes matrices to connect the radial, colatitude and azimuthal field
     components to the magnetic potential field in terms of spherical harmonic
@@ -550,11 +550,15 @@ def design_gauss(radius, theta, phi, nmax, source=None):
         Maximum degree of the sphercial harmonic expansion.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
-
+    mmax : int, optional
+        Maximum order of the spherical harmonic expansion (defaults to
+        ``nmax``). For ``mmax = 0`` only the zonal terms are returned.
     Returns
     -------
     A_radius, A_theta, A_phi : ndarray, shape (N, ``nmax`` * (``nmax`` + 2))
-        Matrices for radial, colatitude and azimuthal field components.
+        Matrices for radial, colatitude and azimuthal field components. If
+        ``mmax`` is given, the number of columns will be reduced to
+        ``nmax`` * (``nmax`` + 2) + (``nmax`` - ``max``) * (2 * ``mmax`` + 1).
 
     """
 
@@ -566,10 +570,16 @@ def design_gauss(radius, theta, phi, nmax, source=None):
     assert radius.shape == theta.shape == phi.shape
     assert radius.ndim == 1
     assert np.amin(theta) >= 0. and np.amax(theta) <= degrees(pi)
+    assert nmax > 0, "Degree must be greater than zero."
 
     # set internal source as default
     if source is None:
         source = 'internal'
+
+    if mmax is None:
+        mmax = nmax
+
+    assert mmax <= nmax, "Maximum order must be smaller than maximum degree."
 
     # initialize radial dependence of expansion
     if source == 'internal':
@@ -586,13 +596,15 @@ def design_gauss(radius, theta, phi, nmax, source=None):
     phi = radians(phi)
 
     # calculate cos(m*phi) and sin(m*phi) as (m, phi-points)-array
-    cmp = np.cos(np.outer(np.arange(nmax+1), phi))
-    smp = np.sin(np.outer(np.arange(nmax+1), phi))
+    cmp = np.cos(np.outer(np.arange(mmax+1), phi))
+    smp = np.sin(np.outer(np.arange(mmax+1), phi))
+
+    dim = mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1)  # sum(n=1->N)(2*min(n,m)+1)
 
     # allocate A_radius, A_theta, A_phi in memeory
-    A_radius = np.zeros((theta.size, (nmax*(nmax+2))))
-    A_theta = np.zeros((theta.size, (nmax*(nmax+2))))
-    A_phi = np.zeros((theta.size, (nmax*(nmax+2))))
+    A_radius = np.zeros((theta.size, dim))
+    A_theta = np.zeros((theta.size, dim))
+    A_phi = np.zeros((theta.size, dim))
 
     num = 0
     for n in np.arange(1, nmax+1):
@@ -605,7 +617,7 @@ def design_gauss(radius, theta, phi, nmax, source=None):
 
         num += 1
 
-        for m in range(1, n+1):
+        for m in range(1, min(n, mmax)+1):
             if source == 'internal':
                 A_radius[:, num] = (n+1) * Pnm[n, m] * r_n * cmp[m]
                 A_radius[:, num+1] = (n+1) * Pnm[n, m] * r_n * smp[m]

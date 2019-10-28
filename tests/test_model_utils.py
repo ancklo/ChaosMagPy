@@ -27,6 +27,26 @@ class ModelUtilsTestCase(TestCase):
 
         print(f'\nRunning {self._testMethodName}:')
 
+    def test_design_gauss(self):
+
+        radius = 6371*np.ones((15,))
+        theta = np.arange(15)
+        phi = np.arange(15)
+
+        # order equal to zero
+        A = np.array(m.design_gauss(radius, theta, phi, nmax=3))
+        A2 = np.array(m.design_gauss(radius, theta, phi, nmax=3, mmax=0))
+
+        index = [0, 3, 8]
+        self.assertIsNone(np.testing.assert_equal(A[:, :, index], A2))
+
+        # order equal or less than 1
+        A = np.array(m.design_gauss(radius, theta, phi, nmax=3))
+        A2 = np.array(m.design_gauss(radius, theta, phi, nmax=3, mmax=1))
+
+        index = [0, 1, 2, 3, 4, 5, 8, 9, 10]
+        self.assertIsNone(np.testing.assert_equal(A[:, :, index], A2))
+
     def test_degree_correlation(self):
 
         nmax = 4

@@ -1,5 +1,5 @@
 import hdf5storage as hdf
-import numpy as np
+
 
 def load_matfile(filepath, test_name):
     """
@@ -22,7 +22,7 @@ def load_matfile(filepath, test_name):
     mat_contents = hdf.loadmat(str(filepath), variable_names=[str(test_name)])
     test = mat_contents[str(test_name)]
 
-    if test.ndim==2:
+    if test.ndim == 2:
         return test[0, 0]  # before v7.3
     else:
         return test[0]  # hdf5 compatible v7.3
