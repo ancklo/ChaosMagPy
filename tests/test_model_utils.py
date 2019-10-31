@@ -65,7 +65,27 @@ class ModelUtilsTestCase(TestCase):
 
         self.assertIsNone(np.testing.assert_equal(R_n.shape, (10, 2, N)))
 
-    def test_synth_values_min(self):
+    def test_synth_values_mmax(self):
+
+        theta = 79.
+        phi = 13.
+        radius = R_REF
+
+        # function for quick testing with "true" solution
+        def test(coeffs, nmax, mmax):
+            self.assertIsNone(np.testing.assert_allclose(
+                m.synth_values(coeffs, radius, theta, phi),
+                m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
+                               radius, theta, phi, nmax=nmax, mmax=mmax)))
+
+        test([1., 2., 3., 4., 5., 6., 7., 8.], nmax=None, mmax=None)
+        test([1., 2., 3., 0., 0., 0., 0., 0.], nmax=1, mmax=None)
+        test([1., 2., 3., 4., 5., 6., 0., 0.], nmax=2, mmax=1)
+        test([1., 2., 3., 0., 0., 0., 0., 0.], nmax=1, mmax=1)
+        test([1., 2., 3., 4., 5., 6., 0., 0.], nmax=None, mmax=1)
+        test([1., 0., 0., 0., 0., 0., 0., 0.], nmax=1, mmax=0)
+
+    def test_synth_values_nmin(self):
 
         theta = 79.
         phi = 13.

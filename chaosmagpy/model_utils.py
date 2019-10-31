@@ -292,8 +292,8 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
     return B_radius, B_theta, B_phi
 
 
-def synth_values(coeffs, radius, theta, phi, *,
-                 nmax=None, nmin=None, source=None, grid=None):
+def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
+                 mmax=None, source=None, grid=None):
     """
     Computes radial, colatitude and azimuthal field components from the
     magnetic potential field in terms of spherical harmonic coefficients.
@@ -320,6 +320,9 @@ def synth_values(coeffs, radius, theta, phi, *,
         Note that it will just skip the degrees smaller than ``nmin``, the
         whole sequence of coefficients 1 through ``nmax`` must still be given
         in ``coeffs``.
+    mmax : int, optional
+        Maximum order of the spherical harmonic expansion (defaults to
+        ``nmax``). For ``mmax = 0`` only the zonal terms are returned.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -419,22 +422,22 @@ def synth_values(coeffs, radius, theta, phi, *,
     else:
         assert nmin > 0, 'Only positive nmin allowed.'
 
-    # handle optional argument: nmax
-    nmax_coeffs = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # degree
-    if nmax is None:
-        nmax = nmax_coeffs
-    else:
-        assert nmax > 0, 'Only positive nmax allowed.'
+    # handle nmax and mmax
+    if (nmax is None) and (mmax is None):
+        nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+        mmax = nmax
+    elif mmax is None:
+        mmax = nmax
+    elif nmax is None:
+        nmax = int((coeffs.shape[-1] - mmax*(mmax+2)) / (2*mmax + 1) + mmax)
 
-    if nmax > nmax_coeffs:
-        warnings.warn('Supplied nmax = {0} and nmin = {1} is '
-                      'incompatible with number of model coefficients. '
-                      'Using nmax = {2} instead.'.format(
-                        nmax, nmin, nmax_coeffs))
-        nmax = nmax_coeffs
+    assert coeffs.shape[-1] >= (mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1)), \
+        (f'Incompatible spherical harmonic degree and order: ' +
+         f'nmax ({nmax}), mmax ({mmax}) do not match number of coefficients ' +
+         f'({coeffs.shape[-1]}).')
 
     if nmax < nmin:
-        raise ValueError(f'Nothing to compute: nmax < nmin ({nmax} < {nmin}.)')
+        raise ValueError(f'Nothing to compute: nmax ({nmax}) < nmin ({nmin}).')
 
     # handle optional argument: source
     if source is None:
@@ -478,8 +481,8 @@ def synth_values(coeffs, radius, theta, phi, *,
 
     # calculate cos(m*phi) and sin(m*phi) as (m, phi-points)-array
     phi = radians(phi)
-    cmp = np.cos(np.multiply.outer(np.arange(nmax+1), phi))
-    smp = np.sin(np.multiply.outer(np.arange(nmax+1), phi))
+    cmp = np.cos(np.multiply.outer(np.arange(mmax+1), phi))
+    smp = np.sin(np.multiply.outer(np.arange(mmax+1), phi))
 
     # allocate arrays in memory
     B_radius = np.zeros(grid_shape)
@@ -497,7 +500,7 @@ def synth_values(coeffs, radius, theta, phi, *,
 
         num += 1
 
-        for m in range(1, n+1):
+        for m in range(1, min(n, mmax)+1):
             if source == 'internal':
                 B_radius += ((n+1) * Pnm[n, m] * r_n
                              * (coeffs[..., num] * cmp[m]
@@ -514,7 +517,7 @@ def synth_values(coeffs, radius, theta, phi, *,
             with np.errstate(divide='ignore', invalid='ignore'):
                 # handle poles using L'Hopital's rule
                 div_Pnm = np.where(theta == 0., Pnm[m, n+1], Pnm[n, m] / sinth)
-                div_Pnm = np.where(theta == degrees(pi), -Pnm[m, n+1], div_Pnm)
+                div_Pnm = np.where(theta == 180., -Pnm[m, n+1], div_Pnm)
 
             B_phi += (m * div_Pnm * r_n
                       * (coeffs[..., num] * smp[m]
@@ -530,7 +533,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     return B_radius, B_theta, B_phi
 
 
-def design_gauss(radius, theta, phi, nmax, source=None, mmax=None):
+def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
     """
     Computes matrices to connect the radial, colatitude and azimuthal field
     components to the magnetic potential field in terms of spherical harmonic
@@ -548,11 +551,12 @@ def design_gauss(radius, theta, phi, nmax, source=None, mmax=None):
         Array containing the longitude in degrees.
     nmax : int, positive
         Maximum degree of the sphercial harmonic expansion.
-    source : {'internal', 'external'}, optional
-        Magnetic field source (default is an internal source).
     mmax : int, optional
         Maximum order of the spherical harmonic expansion (defaults to
         ``nmax``). For ``mmax = 0`` only the zonal terms are returned.
+    source : {'internal', 'external'}, optional
+        Magnetic field source (default is an internal source).
+
     Returns
     -------
     A_radius, A_theta, A_phi : ndarray, shape (N, ``nmax`` * (``nmax`` + 2))
