@@ -167,11 +167,11 @@ def colloc_matrix(x, knots, order, deriv=None):
         deriv = 0
 
     if deriv >= order:
-        return np.zeros((x.size, knots.size - order))
+        return np.zeros((np.max(x.size, 1), knots.size - order))
 
     else:
         # create spline using scipy.interpolate
-        coll = np.empty((x.size, knots.size - order))
+        coll = np.empty((np.max(x.size, 1), knots.size - order))
 
         for n in range(knots.size - order):
             c = np.zeros(knots.size - order)
