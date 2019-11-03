@@ -72,18 +72,35 @@ class ModelUtilsTestCase(TestCase):
         radius = R_REF
 
         # function for quick testing with "true" solution
-        def test(coeffs, nmax, mmax):
-            self.assertIsNone(np.testing.assert_allclose(
-                m.synth_values(coeffs, radius, theta, phi),
-                m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
-                               radius, theta, phi, nmax=nmax, mmax=mmax)))
+        self.assertIsNone(np.testing.assert_allclose(
+            m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
+                           radius, theta, phi),
+            m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
+                           radius, theta, phi, nmax=None, mmax=None)))
 
-        test([1., 2., 3., 4., 5., 6., 7., 8.], nmax=None, mmax=None)
-        test([1., 2., 3., 0., 0., 0., 0., 0.], nmax=1, mmax=None)
-        test([1., 2., 3., 4., 5., 6., 0., 0.], nmax=2, mmax=1)
-        test([1., 2., 3., 0., 0., 0., 0., 0.], nmax=1, mmax=1)
-        test([1., 2., 3., 4., 5., 6., 0., 0.], nmax=None, mmax=1)
-        test([1., 0., 0., 0., 0., 0., 0., 0.], nmax=1, mmax=0)
+        self.assertIsNone(np.testing.assert_allclose(
+            m.synth_values([1., 2., 3., 0., 0., 0., 0., 0.],
+                           radius, theta, phi),
+            m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
+                           radius, theta, phi, nmax=1, mmax=None)))
+
+        self.assertIsNone(np.testing.assert_allclose(
+            m.synth_values([1., 2., 3., 4., 5., 6., 0., 0.],
+                           radius, theta, phi),
+            m.synth_values([1., 2., 3., 4., 5., 6.],
+                           radius, theta, phi, nmax=2, mmax=1)))
+
+        self.assertIsNone(np.testing.assert_allclose(
+            m.synth_values([1., 0., 0., 0., 0., 0., 0., 0.],
+                           radius, theta, phi),
+            m.synth_values([1.],
+                           radius, theta, phi, nmax=1, mmax=0)))
+
+        self.assertIsNone(np.testing.assert_allclose(
+            m.synth_values([1., 2., 3., 4., 5., 6., 0., 0.],
+                           radius, theta, phi),
+            m.synth_values([1., 2., 3., 4., 5., 6.],
+                           radius, theta, phi, nmax=None, mmax=1)))
 
     def test_synth_values_nmin(self):
 
@@ -107,12 +124,10 @@ class ModelUtilsTestCase(TestCase):
         def test(field):
             self.assertIsNone(np.testing.assert_allclose(B, field))
 
-        test(m.synth_values(coeffs_grid_min, radius, theta_grid, phi_grid,
-                            nmin=1, nmax=4))
-        test(m.synth_values(coeffs_grid_min, radius, theta_grid, phi_grid,
+        test(m.synth_values(coeffs_grid[..., 8:], radius, theta_grid, phi_grid,
                             nmin=3, nmax=4))
-        test(m.synth_values(coeffs_grid, radius, theta_grid, phi_grid,
-                            nmin=3, nmax=4))
+        test(m.synth_values(coeffs_grid_min[..., 8:], radius, theta_grid,
+                            phi_grid, nmin=3, nmax=4))
 
     def test_synth_values_inputs(self):
 

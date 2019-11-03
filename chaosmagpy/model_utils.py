@@ -313,16 +313,13 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         Array containing the longitude in degrees.
     nmax : int, positive, optional
         Maximum degree up to which expansion is to be used (default is given by
-        the ``coeffs``, but can also be smaller if specified
-        :math:`N` :math:`\\geq` ``nmax`` (``nmax`` + 2)
+        the ``coeffs``, but can also be smaller if specified).
     nmin : int, positive, optional
-        Minimum degree from which expansion is to be used (defaults to 1).
-        Note that it will just skip the degrees smaller than ``nmin``, the
-        whole sequence of coefficients 1 through ``nmax`` must still be given
-        in ``coeffs``.
-    mmax : int, optional
+        Minimum degree of the expansion (defaults to 1).
+    mmax : int, positive, optional
         Maximum order of the spherical harmonic expansion (defaults to
-        ``nmax``). For ``mmax = 0`` only the zonal terms are returned.
+        ``nmax``). For ``mmax = 0``, for example, only the zonal terms are
+        returned.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -406,35 +403,40 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     """
 
     # ensure ndarray inputs
-    coeffs = np.array(coeffs, dtype=np.float)
-    radius = np.array(radius, dtype=np.float) / basicConfig['params.r_surf']
-    theta = np.array(theta, dtype=np.float)
-    phi = np.array(phi, dtype=np.float)
+    coeffs = np.asarray(coeffs, dtype=np.float)
+    radius = np.asarray(radius, dtype=np.float) / basicConfig['params.r_surf']
+    theta = np.asarray(theta, dtype=np.float)
+    phi = np.asarray(phi, dtype=np.float)
 
-    if np.amin(theta) <= 0.0 or np.amax(theta) >= 180.0:
-        if np.amin(theta) == 0.0 or np.amax(theta) == 180.0:
+    theta_min = np.amin(theta)
+    theta_max = np.amax(theta)
+
+    if theta_min <= 0.0 or theta_max >= 180.0:
+        if theta_min == 0.0 or theta_max == 180.0:
             warnings.warn('The geographic poles are included.')
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 
-    if nmin is None:
-        nmin = 1
-    else:
-        assert nmin > 0, 'Only positive nmin allowed.'
+    nmin = 1 if nmin is None else int(nmin)
+    assert nmin > 0, 'Degree must be greater than zero.'
+
+    dim = coeffs.shape[-1]
 
     # handle nmax and mmax
     if (nmax is None) and (mmax is None):
-        nmax = int(np.sqrt(coeffs.shape[-1] + 1) - 1)
+        nmax = int(np.sqrt(dim + nmin**2) - 1)
         mmax = nmax
+
     elif mmax is None:
         mmax = nmax
-    elif nmax is None:
-        nmax = int((coeffs.shape[-1] - mmax*(mmax+2)) / (2*mmax + 1) + mmax)
 
-    assert coeffs.shape[-1] >= (mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1)), \
-        (f'Incompatible spherical harmonic degree and order: ' +
-         f'nmax ({nmax}), mmax ({mmax}) do not match number of coefficients ' +
-         f'({coeffs.shape[-1]}).')
+    elif nmax is None:
+
+        if mmax >= (nmin-1):
+            nmax = int((dim - mmax*(mmax+2) + nmin**2 - 1) / (2*mmax+1) + mmax)
+
+        else:
+            nmax = int(dim / (2*mmax+1) + nmin - 1)
 
     if nmax < nmin:
         raise ValueError(f'Nothing to compute: nmax ({nmax}) < nmin ({nmin}).')
@@ -489,11 +491,11 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     B_theta = np.zeros(grid_shape)
     B_phi = np.zeros(grid_shape)
 
-    num = nmin**2 - 1
+    num = 0
     for n in range(nmin, nmax+1):
         if source == 'internal':
             B_radius += (n+1) * Pnm[n, 0] * r_n * coeffs[..., num]
-        elif source == 'external':
+        else:
             B_radius += -n * Pnm[n, 0] * r_n * coeffs[..., num]
 
         B_theta += -Pnm[0, n+1] * r_n * coeffs[..., num]
@@ -515,9 +517,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
                            + coeffs[..., num+1] * smp[m]))
 
             with np.errstate(divide='ignore', invalid='ignore'):
-                # handle poles using L'Hopital's rule
-                div_Pnm = np.where(theta == 0., Pnm[m, n+1], Pnm[n, m] / sinth)
-                div_Pnm = np.where(theta == 180., -Pnm[m, n+1], div_Pnm)
+                div_Pnm = np.where(theta == 0., np.nan, Pnm[n, m] / sinth)
+                div_Pnm = np.where(theta == 180., np.nan, div_Pnm)
 
             B_phi += (m * div_Pnm * r_n
                       * (coeffs[..., num] * smp[m]
@@ -533,7 +534,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     return B_radius, B_theta, B_phi
 
 
-def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
+def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
+                 source=None):
     """
     Computes matrices to connect the radial, colatitude and azimuthal field
     components to the magnetic potential field in terms of spherical harmonic
@@ -551,45 +553,50 @@ def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
         Array containing the longitude in degrees.
     nmax : int, positive
         Maximum degree of the sphercial harmonic expansion.
-    mmax : int, optional
+    nmin : int, positive, optional
+        Minimum degree of the sphercial harmonic expansion (defaults to 1).
+    mmax : int, positive, optional
         Maximum order of the spherical harmonic expansion (defaults to
-        ``nmax``). For ``mmax = 0`` only the zonal terms are returned.
+        ``nmax``). For ``mmax = 0``, for example, only the zonal terms are
+        returned.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
 
     Returns
     -------
-    A_radius, A_theta, A_phi : ndarray, shape (N, ``nmax`` * (``nmax`` + 2))
-        Matrices for radial, colatitude and azimuthal field components. If
-        ``mmax`` is given, the number of columns will be reduced to
-        ``nmax`` * (``nmax`` + 2) + (``nmax`` - ``max``) * (2 * ``mmax`` + 1).
+    A_radius, A_theta, A_phi : ndarray, shape (N, M)
+        Matrices for radial, colatitude and azimuthal field components. The
+        second dimension ``M`` varies depending on ``nmax``, ``nmin`` and
+        ``mmax``.
 
     """
 
     # ensure ndarray inputs
-    radius = np.array(radius, dtype=np.float) / basicConfig['params.r_surf']
-    theta = np.array(theta, dtype=np.float)
-    phi = np.array(phi, dtype=np.float)
+    radius = np.asarray(radius, dtype=np.float) / basicConfig['params.r_surf']
+    theta = np.asarray(theta, dtype=np.float)
+    phi = np.asarray(phi, dtype=np.float)
 
     assert radius.shape == theta.shape == phi.shape
     assert radius.ndim == 1
-    assert np.amin(theta) >= 0. and np.amax(theta) <= degrees(pi)
-    assert nmax > 0, "Degree must be greater than zero."
+    assert np.amin(theta) >= 0. and np.amax(theta) <= 180.
 
     # set internal source as default
     if source is None:
         source = 'internal'
 
-    if mmax is None:
-        mmax = nmax
+    assert nmax > 0, "Degree must be greater than zero."
 
-    assert mmax <= nmax, "Maximum order must be smaller than maximum degree."
+    nmin = 1 if nmin is None else int(nmin)
+    assert nmin <= nmax, 'Minimum degree must be smaller than maximum degree.'
 
-    # initialize radial dependence of expansion
+    mmax = nmax if mmax is None else int(mmax)
+    assert mmax <= nmax, 'Maximum order must be smaller than maximum degree.'
+
+    # initialize radial dependence given the source
     if source == 'internal':
-        r_n = radius**(-3)
+        r_n = radius**(-(nmin+2))
     elif source == 'external':
-        r_n = np.ones(radius.shape)
+        r_n = radius**(nmin-1)
     else:
         raise ValueError("Source must be either 'internal' or 'external'.")
 
@@ -603,7 +610,11 @@ def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
     cmp = np.cos(np.outer(np.arange(mmax+1), phi))
     smp = np.sin(np.outer(np.arange(mmax+1), phi))
 
-    dim = mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1)  # sum(n=1->N)(2*min(n,m)+1)
+    # compute the number of dimensions based on nmax, nmin, mmax
+    if mmax >= (nmin-1):
+        dim = int(mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1) - nmin**2 + 1)
+    else:
+        dim = int((nmax-nmin+1)*(2*mmax+1))
 
     # allocate A_radius, A_theta, A_phi in memeory
     A_radius = np.zeros((theta.size, dim))
@@ -611,10 +622,10 @@ def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
     A_phi = np.zeros((theta.size, dim))
 
     num = 0
-    for n in np.arange(1, nmax+1):
+    for n in np.arange(nmin, nmax+1):
         if source == 'internal':
             A_radius[:, num] = (n+1) * Pnm[n, 0] * r_n
-        elif source == 'external':
+        else:
             A_radius[:, num] = -n * Pnm[n, 0] * r_n
 
         A_theta[:, num] = -Pnm[0, n+1] * r_n
@@ -625,7 +636,7 @@ def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
             if source == 'internal':
                 A_radius[:, num] = (n+1) * Pnm[n, m] * r_n * cmp[m]
                 A_radius[:, num+1] = (n+1) * Pnm[n, m] * r_n * smp[m]
-            elif source == 'external':
+            else:
                 A_radius[:, num] = -n * Pnm[n, m] * r_n * cmp[m]
                 A_radius[:, num+1] = -n * Pnm[n, m] * r_n * smp[m]
 
@@ -634,8 +645,8 @@ def design_gauss(radius, theta, phi, nmax, *, mmax=None, source=None):
 
             with np.errstate(divide='ignore', invalid='ignore'):
                 # handle poles using L'Hopital's rule
-                div_Pnm = np.where(theta == 0., Pnm[m, n+1], Pnm[n, m] / sinth)
-                div_Pnm = np.where(theta == degrees(pi), -Pnm[m, n+1], div_Pnm)
+                div_Pnm = np.where(theta == 0., np.nan, Pnm[n, m] / sinth)
+                div_Pnm = np.where(theta == 180., np.nan, div_Pnm)
 
             A_phi[:, num] = m * div_Pnm * r_n * smp[m]
             A_phi[:, num+1] = -m * div_Pnm * r_n * cmp[m]

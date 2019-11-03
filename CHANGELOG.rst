@@ -3,12 +3,13 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** October 31, 2019
+| **Date:** November 3, 2019
 | **Release:** v0.3
 
 Features
 ^^^^^^^^
-* Added optional ``mmax`` to ``design_gauss`` and ``synth_values``.
+* Added optional ``nmin`` and ``mmax`` to ``design_gauss`` and
+  ``synth_values`` (nmin has been redefined).
 * Added optional derivative to ``colloc_matrix`` of the B-Spline collocation.
   New implementation does not have the missing endpoint problem.
 
