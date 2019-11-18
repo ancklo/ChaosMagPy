@@ -3,7 +3,7 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** November 3, 2019
+| **Date:** November 18, 2019
 | **Release:** v0.3
 
 Features
@@ -12,6 +12,7 @@ Features
   ``synth_values`` (nmin has been redefined).
 * Added optional derivative to ``colloc_matrix`` of the B-Spline collocation.
   New implementation does not have the missing endpoint problem.
+* Added option to supply satellite names when loading CHAOS mat-file.
 
 Version 0.2
 -----------

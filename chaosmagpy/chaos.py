@@ -603,7 +603,7 @@ class CHAOS(object):
     breaks_delta : dict with ndarrays, shape (:math:`m_q` + 1,)
         Breaks of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
-    coeffs_delta : dict with ndarrays, shape (:math:`m_q`,)
+    coeffs_delta : dict with ndarrays, shape (1, :math:`m_q`)
         Coefficients of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
     breaks_euler : dict with ndarrays, shape (:math:`m_e` + 1,)
@@ -646,7 +646,7 @@ class CHAOS(object):
     breaks_delta : dict with ndarrays, shape (:math:`m_q` +1,)
         Breaks of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
-    coeffs_delta : dict with ndarrays, shape (:math:`m_q`,)
+    coeffs_delta : dict with ndarrays, shape (1, :math:`m_q`)
         Coefficients of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
     version : str
@@ -706,7 +706,7 @@ class CHAOS(object):
 
         # time-dependent internal field
         self.model_tdep = BaseModel('model_tdep', breaks, order, coeffs_tdep)
-        self.model_static = BaseModel('model_tdep', breaks[[0, -1]], 1,
+        self.model_static = BaseModel('model_static', breaks[[0, -1]], 1,
                                       coeffs_static)
 
         # helper for returning the degree of the provided coefficients
@@ -1765,7 +1765,7 @@ class CHAOS(object):
             os.path.join(os.getcwd(), filepath)))
 
     @classmethod
-    def from_mat(self, filepath, name=None, version=None):
+    def from_mat(self, filepath, name=None, version=None, satellites=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1779,6 +1779,12 @@ class CHAOS(object):
             ``basicConfig['params.version']``.
         version : str, optional
             Version specifier (e.g. ``'6.x9'``).
+        satellites : list of strings
+            List of satellite names whose Euler angles are stored in the
+            mat-file. This is needed for correct referencing as this
+            information is not given in the standard CHAOS mat-file format
+            (defaults to ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
+            'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
 
         Returns
         -------
@@ -1855,7 +1861,7 @@ class CHAOS(object):
                                   version=version)
 
 
-def load_CHAOS_matfile(filepath, name=None, version=None):
+def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
     """
     Load CHAOS model from mat-file.
 
@@ -1868,6 +1874,12 @@ def load_CHAOS_matfile(filepath, name=None, version=None):
         where <version> is the default in ``basicConfig['params.version']``.
     version : str, optional
         Version specifier (e.g. ``'6.x9'``).
+    satellites : list of strings
+        List of satellite names whose Euler angles are stored in the mat-file.
+        This is needed for correct referencing as this information is not
+        given in the standard CHAOS mat-file format (defaults to
+        ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
+        'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
 
     Returns
     -------
@@ -1940,8 +1952,9 @@ def load_CHAOS_matfile(filepath, name=None, version=None):
     coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
     # define satellite names
-    satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
-                  'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
+    if satellites is None:
+        satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
+                      'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
 
     # append generic satellite name if more data available or reduce
     t_break_Euler = model_euler['t_break_Euler']
