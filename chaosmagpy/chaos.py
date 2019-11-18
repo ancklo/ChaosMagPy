@@ -1809,7 +1809,8 @@ class CHAOS(object):
 
         """
 
-        return load_CHAOS_matfile(filepath, name=name, version=version)
+        return load_CHAOS_matfile(filepath, name=name, version=version,
+                                  satellites=satellites)
 
     @classmethod
     def from_shc(self, filepath, *, name=None, leap_year=None, version=None):
