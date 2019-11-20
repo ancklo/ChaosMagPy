@@ -42,13 +42,16 @@ class CoordinateUtilsTestCase(TestCase):
         Compared zenith angle with NOAA
         `https://www.esrl.noaa.gov/gmd/grad/antuv/SolarCalc.jsp`_ .
 
+        DANGER: longitude means the hour angle which is negative geographic
+        longitude
+
         """
 
         zeta = c.zenith_angle(d.mjd2000(2019, 8, 1), 90., 0.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 161.79462, rtol=1e-5))
 
-        zeta = c.zenith_angle(d.mjd2000(2013, 8, 1), 77., 54.)
+        zeta = c.zenith_angle(d.mjd2000(2013, 8, 1), 77., -54.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 117.00128, rtol=1e-5))
 

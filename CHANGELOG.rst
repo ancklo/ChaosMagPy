@@ -1,29 +1,51 @@
 Changelog
 =========
 
-Version 0.2
+Version 0.2.1
 -------------
+| **Date:** November 20, 2019
+| **Release:** v0.2.1
+
+Bugfixes
+^^^^^^^^
+* Corrected function :func:`chaosmagpy.coordinate_utils.zenith_angle` which was
+  computing the solar zenith angle from ``phi`` defined as the hour angle and
+  NOT the geographic longitude. The hour angle is measure positive towards West
+  and negative towards East.
+
+Version 0.2
+-----------
 | **Date:** October 3, 2019
 | **Release:** v0.2
 
 Features
 ^^^^^^^^
 * Updated RC-index file to recent version (August 2019)
-* Added option ``nmin`` to ``synth_values``.
-* Vectorized ``mjd2000``, ``mjd_to_dyear`` and ``dyear_to_mjd``.
-* New function ``local_time`` for a simple computation of the local time.
-* New function ``zenith_angle`` for computing the solar zenith angle.
-* New function ``gg_to_geo`` and  ``geo_to_gg`` for transforming geodetic and
+* Added option ``nmin`` to :func:`chaosmagpy.model_utils.synth_values`.
+* Vectorized :func:`chaosmagpy.data_utils.mjd2000`,
+  :func:`chaosmagpy.data_utils.mjd_to_dyear` and
+  :func:`chaosmagpy.data_utils.dyear_to_mjd`.
+* New function :func:`chaosmagpy.coordinate_utils.local_time` for a simple
+  computation of the local time.
+* New function :func:`chaosmagpy.coordinate_utils.zenith_angle` for computing
+  the solar zenith angle.
+* New function :func:`chaosmagpy.coordinate_utils.gg_to_geo` and
+  :func:`chaosmagpy.coordinate_utils.geo_to_gg` for transforming geodetic and
   geocentric coordinates.
-* Added keyword ``start_date`` to ``rotate_gauss_fft``
-* Improved performance of ``synth_coeffs_sm`` and ``synth_coeffs_gsm``.
-* Automatically import ``model_utils.synth_values``.
+* Added keyword ``start_date`` to
+  :func:`chaosmagpy.coordinate_utils.rotate_gauss_fft`
+* Improved performance of :meth:`chaosmagpy.chaos.CHAOS.synth_coeffs_sm` and
+  :meth:`chaosmagpy.chaos.CHAOS.synth_coeffs_gsm`.
+* Automatically import :func:`chaosmagpy.model_utils.synth_values`.
 
 Deprecations
 ^^^^^^^^^^^^
-* Rewrote ``load_matfile``: now traverses matfile and outputs dictionary.
-* Removed ``breaks_euler`` and ``coeffs_euler`` from ``CHAOS`` class
-  attributes. Euler angles are now handled as ``Base`` class instance.
+* Rewrote :func:`chaosmagpy.data_utils.load_matfile`: now traverses matfile
+  and outputs dictionary.
+* Removed ``breaks_euler`` and ``coeffs_euler`` from
+  :class:`chaosmagpy.chaos.CHAOS` class
+  attributes. Euler angles are now handled as :class:`chaosmagpy.chaos.Base`
+  class instance.
 
 Bugfixes
 ^^^^^^^^
@@ -37,22 +59,26 @@ Version 0.1
 
 Features
 ^^^^^^^^
-* New CHAOS class method ``synth_euler_angles`` to compute euler angles for
-  the satellites from the CHAOS model (used to rotate vectors from
-  magnetometer frame to the satellite frame).
-* Added CHAOS class methods ``synth_values_tdep``, ``synth_values_static``,
-  ``synth_values_gsm`` and ``synth_values_sm`` for field value computation.
+* New CHAOS class method :meth:`chaosmagpy.chaos.CHAOS.synth_euler_angles` to
+  compute euler angles for the satellites from the CHAOS model (used to rotate
+  vectors from magnetometer frame to the satellite frame).
+* Added CHAOS class methods :meth:`chaosmagpy.chaos.CHAOS.synth_values_tdep`,
+  :meth:`chaosmagpy.chaos.CHAOS.synth_values_static`,
+  :meth:`chaosmagpy.chaos.CHAOS.synth_values_gsm` and
+  :meth:`chaosmagpy.chaos.CHAOS.synth_values_sm` for field value computation.
 * RC index file now stored in HDF5 format.
-* Filepaths and other parameters are now handled by ``basicConfig``.
-* Added extrapolation keyword to CHAOS class method ``synth_coeffs``, linear by
-  default.
-* ``mjd2000`` now also accepts datetime class instances.
-* ``load_RC_datfile`` downloads latest RC-index file from the website if no
-  file is given.
+* Filepaths and other parameters are now handled by a configuration dictionary
+  called ``chaosmagpy.basicConfig``.
+* Added extrapolation keyword to the BaseModel class
+  :meth:`chaosmagpy.chaos.Base.synth_coeffs`, linear by default.
+* :func:`chaosmagpy.data_utils.mjd2000` now also accepts datetime class
+  instances.
+* :func:`chaosmagpy.data_utils.load_RC_datfile` downloads latest RC-index file
+  from the website if no file is given.
 
 Bugfixes
 ^^^^^^^^
-* Resolved issue in ``model_utils.degree_correlation``.
+* Resolved issue in :func:`chaosmagpy.model_utils.degree_correlation`.
 * Changed the date conversion to include hours and seconds not just the day
   when plotting the timeseries.
 
@@ -63,8 +89,9 @@ Version 0.1a3
 
 Features
 ^^^^^^^^
-* New CHAOS class method ``save_matfile`` to output MATLAB compatible
-  files of the CHAOS model (using the ``hdf5storage`` package).
+* New CHAOS class method :meth:`chaosmagpy.chaos.CHAOS.save_matfile` to output
+  MATLAB compatible files of the CHAOS model (using the ``hdf5storage``
+  package).
 * Added ``epoch`` keyword to basevector input arguments of GSM, SM and MAG
   coordinate systems.
 
@@ -80,7 +107,8 @@ Version 0.1a2
 
 Features
 ^^^^^^^^
-* ``mjd_to_dyear`` and ``dyear_to_mjd`` convert time with microseconds
+* :func:`chaosmagpy.data_utils.mjd_to_dyear` and
+  :func:`chaosmagpy.data_utils.dyear_to_mjd` convert time with microseconds
   precision to prevent round-off errors in seconds.
 * Time conversion now uses built-in ``calendar`` module to identify leap year.
 

@@ -249,7 +249,7 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
         Derivative to be taken (default is 0).
     grid : bool, optional
         If ``True``, field components are computed on a regular grid. Arrays
-        ``theta``and ``phi`` must have one dimension less than the output grid
+        ``theta`` and ``phi`` must have one dimension less than the output grid
         since the grid will be created as their outer product.
 
     Returns
@@ -326,7 +326,7 @@ def synth_values(coeffs, radius, theta, phi, *,
         Magnetic field source (default is an internal source).
     grid : bool, optional
         If ``True``, field components are computed on a regular grid. Arrays
-        ``theta``and ``phi`` must have one dimension less than the output grid
+        ``theta`` and ``phi`` must have one dimension less than the output grid
         since the grid will be created as their outer product (defaults to
         ``False``).
 
@@ -338,7 +338,7 @@ def synth_values(coeffs, radius, theta, phi, *,
     Notes
     -----
     The function can work with different grid shapes, but the inputs have to
-    satisfy NumPy's `broadcasting rules \
+    satisfy NumPy's `broadcasting rules \\
     <https://docs.scipy.org/doc/numpy-1.15.0/user/basics.broadcasting.html>`_
     (``grid=False``, default). This also applies to the dimension of the
     coefficients ``coeffs`` excluding the last dimension.

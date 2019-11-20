@@ -651,7 +651,7 @@ def zenith_angle(time, theta, phi):
     phi = radians(phi)
 
     cos_zeta = (np.cos(theta)*np.cos(colat) +
-                np.sin(theta)*np.sin(colat) * np.cos(azim + phi))
+                np.sin(theta)*np.sin(colat)*np.cos(azim - phi))
 
     return degrees(np.arccos(cos_zeta))
 
