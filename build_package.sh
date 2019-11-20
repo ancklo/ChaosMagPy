@@ -6,6 +6,15 @@ out=chaosmagpy_package_$version.zip
 
 echo -------ChaosMagPy Version $version-------
 
+while true; do
+    read -p "Do you wish to continue building v$version (y/n)?: " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) echo Exit.; exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
 # build distribution
 python setup.py sdist bdist_wheel
 

@@ -89,8 +89,7 @@ class Base(object):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
-'off'} or int, optional
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
             Extrapolate to times outside of the piecewise polynomial bounds.
             Specify polynomial degree as string or any order as integer.
             Defaults to ``'linear'`` (equiv. to order 2 polynomials).
@@ -289,8 +288,7 @@ class BaseModel(Base):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
-'off'} or int, optional
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
             Extrapolate to times outside of the model bounds. Specify
             polynomial degree as string or any order as integer. Defaults to
             ``'linear'`` (equiv. to order 2 polynomials).
@@ -349,8 +347,7 @@ class BaseModel(Base):
             If ``True``, field components are computed on a regular grid.
             Arrays ``theta`` and ``phi`` must have one dimension less than the
             output grid since the grid will be created as their outer product.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
-'off'} or int, optional
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
             Extrapolate to times outside of the model bounds. Specify
             polynomial degree as string or any order as integer. Defaults to
             ``'linear'`` (equiv. to order 2 polynomials).

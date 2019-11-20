@@ -5,61 +5,6 @@ Here are some simple examples on how to use the package. This only requires a
 CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory
 which can be downloaded `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_.
 
-Plotting the map of the time-dependent internal field
------------------------------------------------------
-
-Here, we make a map of the first time-derivative of the time-dependent internal
-part of the model. We will plot it on the surface at 3485 km (core-mantle
-boundary) from the center of Earth and on January 1, 2000:
-
-.. code-block:: python
-
-   import chaosmagpy as cp
-
-   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
-
-   radius = 3485.0  # km, here core-mantle boundary
-   time = 0.0  # mjd2000, here Jan 1, 2000 0:00 UTC
-
-   model.plot_maps_tdep(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
-
-.. figure:: images/plot_maps_tdep.png
-   :align: center
-
-   Secular variation at the core-mantle-boundary up to degree 16 in
-   January 1, 2000 0:00 UTC.
-
-Save Gauss coefficients of the time-dependent internal (i.e. large-scale core)
-field in shc-format to a file:
-
-.. code-block:: python
-
-   model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
-
-Plotting the map of the static internal field
----------------------------------------------
-
-Similarly, the static internal (i.e. small-scale crustal) part of the model can
-be plotted on a map:
-
-.. code-block:: python
-
-   import chaosmagpy as cp
-
-   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
-   model.plot_maps_static(radius=6371.2, nmax=85)
-
-.. figure:: images/plot_maps_static.png
-  :align: center
-
-  Static internal small-scale field at Earth's surface up to degree 85.
-
-and saved
-
-.. code-block:: python
-
-   model.save_shcfile('CHAOS-6-x7_static.shc', model='static')
-
 Computing field components on a grid
 ------------------------------------
 
@@ -106,9 +51,9 @@ The same computation can be done with other sources described by the model:
 +----------+-----------------+---------------------------------------------------+
 |  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
 +==========+=================+===================================================+
-| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_coeffs_tdep`            |
+| internal | time-dependent  | :meth:`~.CHAOS.synth_coeffs_tdep`                 |
 +          +-----------------+---------------------------------------------------+
-|          | static          | :meth:`~chaos.CHAOS.synth_coeffs_static`          |
+|          | static          | :meth:`~.CHAOS.synth_coeffs_static`               |
 +----------+-----------------+---------------------------------------------------+
 | external | time-dep. (GSM) | :meth:`~.CHAOS.synth_coeffs_gsm`                  |
 +          +-----------------+---------------------------------------------------+
@@ -122,9 +67,9 @@ methods:
 +----------+-----------------+---------------------------------------------------+
 |  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
 +==========+=================+===================================================+
-| internal | time-dependent  | :meth:`~chaos.CHAOS.synth_values_tdep`            |
+| internal | time-dependent  | :meth:`~.CHAOS.synth_values_tdep`                 |
 +          +-----------------+---------------------------------------------------+
-|          | static          | :meth:`~chaos.CHAOS.synth_values_static`          |
+|          | static          | :meth:`~.CHAOS.synth_values_static`               |
 +----------+-----------------+---------------------------------------------------+
 | external | time-dep. (GSM) | :meth:`~.CHAOS.synth_values_gsm`                  |
 +          +-----------------+---------------------------------------------------+
@@ -181,4 +126,57 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 
    Timeseries of the secular variation at two ground observatory stations.
 
-The same procedure can be repeated with any number of stations.
+Plotting the map of the time-dependent internal field
+-----------------------------------------------------
+
+Here, we make a map of the first time-derivative of the time-dependent internal
+part of the model. We will plot it on the surface at 3485 km (core-mantle
+boundary) from the center of Earth and on January 1, 2000:
+
+.. code-block:: python
+
+   import chaosmagpy as cp
+
+   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+
+   radius = 3485.0  # km, here core-mantle boundary
+   time = 0.0  # mjd2000, here Jan 1, 2000 0:00 UTC
+
+   model.plot_maps_tdep(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
+
+.. figure:: images/plot_maps_tdep.png
+   :align: center
+
+   Secular variation at the core-mantle-boundary up to degree 16 in
+   January 1, 2000 0:00 UTC.
+
+Save Gauss coefficients of the time-dependent internal (i.e. large-scale core)
+field in shc-format to a file:
+
+.. code-block:: python
+
+   model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
+
+Plotting the map of the static internal field
+---------------------------------------------
+
+Similarly, the static internal (i.e. small-scale crustal) part of the model can
+be plotted on a map:
+
+.. code-block:: python
+
+   import chaosmagpy as cp
+
+   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+   model.plot_maps_static(radius=6371.2, nmax=85)
+
+.. figure:: images/plot_maps_static.png
+  :align: center
+
+  Static internal small-scale field at Earth's surface up to degree 85.
+
+and saved
+
+.. code-block:: python
+
+   model.save_shcfile('CHAOS-6-x7_static.shc', model='static')
