@@ -1759,7 +1759,7 @@ class CHAOS(object):
 
             hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
 
-        if self.meta['params']:
+        if self.meta:
             hdf.write(self.meta['params'], path='/params', filename=filepath,
                       matlab_compatible=True)
 
@@ -2005,10 +2005,11 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
 
     try:
         params = mat_contents['params']
-    except KeyError:
-        params = {'Euler_prerotation': np.zeros((len(satellites), 3))}
+        dict_params = {'Euler_prerotation': params['Euler_prerotation']}
 
-    dict_params = dict(Euler_prerotation=params['Euler_prerotation'])
+    except KeyError:
+        dict_params = {'Euler_prerotation': None}
+
     meta = dict(params=dict_params,
                 satellites=tuple(satellites))
 
