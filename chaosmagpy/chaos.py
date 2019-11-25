@@ -1688,75 +1688,80 @@ class CHAOS(object):
         # write time-dependent internal field model to matfile
         self.model_tdep.save_matfile(filepath)
 
-        # write time-dependent external field model to matfile
-        q10 = self.coeffs_delta['q10'].reshape((-1, 1))
-        q11 = np.ravel(self.coeffs_delta['q11'])
-        s11 = np.ravel(self.coeffs_delta['s11'])
-        qs11 = np.stack((q11, s11), axis=-1)
+        if self.coeffs_delta:
+            # write time-dependent external field model to matfile
+            q10 = self.coeffs_delta['q10'].reshape((-1, 1))
+            q11 = np.ravel(self.coeffs_delta['q11'])
+            s11 = np.ravel(self.coeffs_delta['s11'])
+            qs11 = np.stack((q11, s11), axis=-1)
 
-        t_break_q10 = self.breaks_delta['q10'].reshape(
-            (-1, 1)).astype(float)
-        t_break_q11 = self.breaks_delta['q11'].reshape(
-            (-1, 1)).astype(float)
+            t_break_q10 = self.breaks_delta['q10'].reshape(
+                (-1, 1)).astype(float)
+            t_break_q11 = self.breaks_delta['q11'].reshape(
+                (-1, 1)).astype(float)
 
-        m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
-        m_sm = np.append(m_sm, self.coeffs_sm[3:]).reshape((-1, 1))
+            m_sm = np.array([np.mean(q10), np.mean(q11), np.mean(s11)])
+            m_sm = np.append(m_sm, self.coeffs_sm[3:]).reshape((-1, 1))
 
-        m_Dst = self.coeffs_sm[:3].reshape((3, 1))
+            m_Dst = self.coeffs_sm[:3].reshape((3, 1))
 
-        # process gsm coefficients
-        m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
+            # process gsm coefficients
+            m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
 
-        model_ext = dict(
-            t_break_q10=t_break_q10,
-            q10=q10,
-            t_break_qs11=t_break_q11,
-            qs11=qs11,
-            m_sm=m_sm,
-            m_gsm=m_gsm,
-            m_Dst=m_Dst)
+            model_ext = dict(
+                t_break_q10=t_break_q10,
+                q10=q10,
+                t_break_qs11=t_break_q11,
+                qs11=qs11,
+                m_sm=m_sm,
+                m_gsm=m_gsm,
+                m_Dst=m_Dst)
 
-        hdf.write(model_ext, path='/model_ext', filename=filepath,
-                  matlab_compatible=True)
+            hdf.write(model_ext, path='/model_ext', filename=filepath,
+                      matlab_compatible=True)
 
-        # write Euler angles to matfile for each satellite
-        satellites = self.meta['satellites']
+        if self.model_euler:
+            # write Euler angles to matfile for each satellite
+            satellites = self.meta['satellites']
 
-        t_break_Euler = []  # list of Euler angle breaks for satellites
-        alpha = []  # list of alpha for each satellite
-        beta = []  # list of beta for each satellite
-        gamma = []  # list of gamma for each satellite
-        for num, satellite in enumerate(satellites):
+            t_break_Euler = []  # list of Euler angle breaks for satellites
+            alpha = []  # list of alpha for each satellite
+            beta = []  # list of beta for each satellite
+            gamma = []  # list of gamma for each satellite
+            for num, satellite in enumerate(satellites):
 
-            # reduce breaks if start end end are equal
-            breaks = self.model_euler[satellite].breaks
-            if breaks[0] == breaks[-1]:
-                breaks = breaks[0]
+                # reduce breaks if start end end are equal
+                breaks = self.model_euler[satellite].breaks
+                if breaks[0] == breaks[-1]:
+                    breaks = breaks[0]
 
-            t_break_Euler.append(breaks.reshape((-1, 1)).astype(float))
-            alpha.append(self.model_euler[satellite].coeffs[0, :, 0].reshape(
-                (-1, 1)).astype(float))
-            beta.append(self.model_euler[satellite].coeffs[0, :, 1].reshape(
-                (-1, 1)).astype(float))
-            gamma.append(self.model_euler[satellite].coeffs[0, :, 2].reshape(
-                (-1, 1)).astype(float))
+                t_break_Euler.append(breaks.reshape((-1, 1)).astype(float))
+                alpha.append(self.model_euler[satellite].coeffs[
+                    0, :, 0].reshape((-1, 1)).astype(float))
+                beta.append(self.model_euler[satellite].coeffs[
+                    0, :, 1].reshape((-1, 1)).astype(float))
+                gamma.append(self.model_euler[satellite].coeffs[
+                    0, :, 2].reshape((-1, 1)).astype(float))
 
-        hdf.write(np.array(t_break_Euler), path='/model_Euler/t_break_Euler/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(alpha), path='/model_Euler/alpha/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(beta), path='/model_Euler/beta/',
-                  filename=filepath, matlab_compatible=True)
-        hdf.write(np.array(gamma), path='/model_Euler/gamma/',
-                  filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(t_break_Euler),
+                      path='/model_Euler/t_break_Euler/',
+                      filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(alpha), path='/model_Euler/alpha/',
+                      filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(beta), path='/model_Euler/beta/',
+                      filename=filepath, matlab_compatible=True)
+            hdf.write(np.array(gamma), path='/model_Euler/gamma/',
+                      filename=filepath, matlab_compatible=True)
 
-        # write static internal field model to matfile
-        g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
+        if self.model_static.coeffs:
+            # write static internal field model to matfile
+            g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
 
-        hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
+            hdf.write(g, path='/g', filename=filepath, matlab_compatible=True)
 
-        hdf.write(self.meta['params'], path='/params', filename=filepath,
-                  matlab_compatible=True)
+        if self.meta['params']:
+            hdf.write(self.meta['params'], path='/params', filename=filepath,
+                      matlab_compatible=True)
 
         print('CHAOS saved to {}.'.format(
             os.path.join(os.getcwd(), filepath)))
@@ -1911,9 +1916,6 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         'g', 'pp', 'model_ext', 'model_Euler', 'params'])
 
     pp = mat_contents['pp']
-    model_ext = mat_contents['model_ext']
-    model_euler = mat_contents['model_Euler']
-    params = mat_contents['params']
 
     order = int(pp['order'])
     pieces = int(pp['pieces'])
@@ -1921,63 +1923,90 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
     breaks = pp['breaks']  # flatten 2-D array
     coefs = pp['coefs']
 
-    coeffs_static = mat_contents['g'].reshape((1, 1, -1))
-
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
-    # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
-    coeffs_sm = np.copy(model_ext['m_sm'])
-    coeffs_sm[:3] = model_ext['m_Dst']  # replace with m_Dst
+    try:
+        coeffs_static = mat_contents['g'].reshape((1, 1, -1))
+    except KeyError:
+        warnings.warn('Missing static internal field coefficients.')
+        coeffs_static = None
 
-    # external field (GSM): n=1, 2
-    n_gsm = int(2)
-    coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # appropriate number of coeffs
-    # only m=0 are non-zero
-    coeffs_gsm[[0, 3]] = model_ext['m_gsm']
+    try:
+        model_ext = mat_contents['model_ext']
 
-    # coefficients and breaks of external SM field offsets for q10, q11, s11
-    breaks_delta = dict()
-    breaks_delta['q10'] = model_ext['t_break_q10']
-    breaks_delta['q11'] = model_ext['t_break_qs11']
-    breaks_delta['s11'] = model_ext['t_break_qs11']
+        # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
+        coeffs_sm = np.copy(model_ext['m_sm'])
+        coeffs_sm[:3] = model_ext['m_Dst']  # replace with m_Dst
 
-    # reshape to comply with scipy PPoly coefficients
-    coeffs_delta = dict()
-    coeffs_delta['q10'] = model_ext['q10'].reshape((1, -1))
-    qs11 = model_ext['qs11']
-    coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
-    coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
+        # external field (GSM): n=1, 2
+        n_gsm = int(2)
+        coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # correct number of coeffs
+        # only m=0 are non-zero
+        coeffs_gsm[[0, 3]] = model_ext['m_gsm']
+
+        # coefficients and breaks of external SM offsets for q10, q11, s11
+        breaks_delta = dict()
+        breaks_delta['q10'] = model_ext['t_break_q10']
+        breaks_delta['q11'] = model_ext['t_break_qs11']
+        breaks_delta['s11'] = model_ext['t_break_qs11']
+
+        # reshape to comply with scipy PPoly coefficients
+        coeffs_delta = dict()
+        coeffs_delta['q10'] = model_ext['q10'].reshape((1, -1))
+        qs11 = model_ext['qs11']
+        coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
+        coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
+
+    except KeyError:
+        warnings.warn('Missing external field coefficients.')
+        coeffs_delta = None
+        breaks_delta = None
+        coeffs_gsm = None
+        coeffs_sm = None
 
     # define satellite names
     if satellites is None:
         satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
                       'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
 
-    # append generic satellite name if more data available or reduce
-    t_break_Euler = model_euler['t_break_Euler']
-    n = len(t_break_Euler)
-    m = len(satellites)
-    if n < m:
-        satellites = satellites[:n]
-    elif n > m:
-        for counter in range(m+1, n+1):
-            satellites.append(f'satellite_{counter}')
+    try:
+        model_euler = mat_contents['model_Euler']
 
-    # coefficients and breaks of euler angles
-    breaks_euler = dict()
-    for num, satellite in enumerate(satellites):
-        breaks_euler[satellite] = t_break_Euler[num].squeeze()
+        # append generic satellite name if more data available or reduce
+        t_break_Euler = model_euler['t_break_Euler']
+        n = len(t_break_Euler)
+        m = len(satellites)
+        if n < m:
+            satellites = satellites[:n]
+        elif n > m:
+            for counter in range(m+1, n+1):
+                satellites.append(f'satellite_{counter}')
 
-    # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
-    # so first dimension: order, second: number of intervals, third: 3 angles
-    coeffs_euler = dict()
-    for num, satellite in enumerate(satellites):
-        euler = [model_euler[angle][num].reshape((1, -1)) for
-                 angle in ['alpha', 'beta', 'gamma']]
-        euler = np.stack(euler, axis=-1).astype(np.float)  # because no sac-c
+        # coefficients and breaks of euler angles
+        breaks_euler = dict()
+        for num, satellite in enumerate(satellites):
+            breaks_euler[satellite] = t_break_Euler[num].squeeze()
 
-        coeffs_euler[satellite] = euler
+        # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
+        # first dimension: order, second: number of intervals, third: 3 angles
+        coeffs_euler = dict()
+        for num, satellite in enumerate(satellites):
+            euler = [model_euler[angle][num].reshape((1, -1)) for
+                     angle in ['alpha', 'beta', 'gamma']]
+            euler = np.stack(euler, axis=-1).astype(np.float)  # no sac-c
+
+            coeffs_euler[satellite] = euler
+
+    except KeyError:
+        warnings.warn('Missing Euler angles.')
+        coeffs_euler = None
+        breaks_euler = None
+
+    try:
+        params = mat_contents['params']
+    except KeyError:
+        params = {'Euler_prerotation': np.zeros((len(satellites), 3))}
 
     dict_params = dict(Euler_prerotation=params['Euler_prerotation'])
     meta = dict(params=dict_params,
