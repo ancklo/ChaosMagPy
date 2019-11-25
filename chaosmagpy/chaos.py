@@ -1912,8 +1912,7 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
     if version is None:
         version = _guess_version(filepath)
 
-    mat_contents = du.load_matfile(filepath, variable_names=[
-        'g', 'pp', 'model_ext', 'model_Euler', 'params'])
+    mat_contents = du.load_matfile(filepath)
 
     pp = mat_contents['pp']
 
