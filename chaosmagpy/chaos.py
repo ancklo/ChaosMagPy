@@ -27,12 +27,12 @@ import h5py
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
-import chaosmagpy.plot_utils as pu
 import matplotlib.pyplot as plt
-from chaosmagpy.config_utils import basicConfig
-from chaosmagpy.plot_utils import defaultkeys
 from datetime import datetime
 from timeit import default_timer as timer
+from chaosmagpy.config_utils import basicConfig
+from chaosmagpy.plot_utils import (defaultkeys, plot_power_spectrum,
+                                   plot_timeseries, plot_maps)
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -436,7 +436,7 @@ class BaseModel(Base):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        pu.plot_power_spectrum(R_n, **kwargs)
+        plot_power_spectrum(R_n, **kwargs)
         plt.show()
 
     def plot_maps(self, time, radius, **kwargs):
@@ -506,7 +506,7 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             grid=True, extrapolate=None)
 
-        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
+        plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
@@ -571,7 +571,7 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             extrapolate=extrapolate)
 
-        pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
+        plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
 
 
@@ -1536,7 +1536,7 @@ class CHAOS(object):
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+        plot_maps(theta, phi, B_radius, B_theta, B_phi,
                      titles=titles, label=units)
         plt.show()
 
@@ -1753,7 +1753,7 @@ class CHAOS(object):
             hdf.write(np.array(gamma), path='/model_Euler/gamma/',
                       filename=filepath, matlab_compatible=True)
 
-        if self.model_static.coeffs:
+        if self.model_static.coeffs is not None:
             # write static internal field model to matfile
             g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
 

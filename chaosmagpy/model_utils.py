@@ -688,7 +688,7 @@ def legendre_poly(nmax, theta):
     sinth = np.sqrt(1-costh**2)
 
     Pnm = np.zeros((nmax+1, nmax+2) + costh.shape)
-    Pnm[0, 0] = 1  # is copied into trailing dimenions
+    Pnm[0, 0] = 1.  # is copied into trailing dimenions
     Pnm[1, 1] = sinth  # write theta into trailing dimenions via broadcasting
 
     rootn = np.sqrt(np.arange(2 * nmax**2 + 1))
