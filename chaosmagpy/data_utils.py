@@ -31,7 +31,7 @@ from datetime import datetime, timedelta
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
 
-def load_matfile(filepath, variable_names=None):
+def load_matfile(filepath, variable_names=None, **kwargs):
     """
     Load mat-file and return dictionary.
 
@@ -40,7 +40,7 @@ def load_matfile(filepath, variable_names=None):
     kind of data is read in correctly. The data dtype can also vary depending
     on the mat-file (v7.3 returns floats instead of integers). But it should
     work identically for v7.3 and prior mat-files. Arrays are squeezed if
-    possible.
+    possible. Relies on the :mod:`hdf5storage` package.
 
     Parameters
     ----------
@@ -48,6 +48,8 @@ def load_matfile(filepath, variable_names=None):
         Filepath and name of mat-file.
     variable_names : list of strings
         Top-level variables to be loaded.
+    **kwargs : keywords
+        Addidional keyword arguments are passed to :func:`hdf5storage.loadmat`.
 
     Returns
     -------
@@ -88,7 +90,7 @@ def load_matfile(filepath, variable_names=None):
         else:
             return struct
 
-    output = hdf.loadmat(filepath, variable_names=variable_names)
+    output = hdf.loadmat(filepath, variable_names=variable_names, **kwargs)
 
     # loadmat returns dictionary, go through keys and call traverse_struct
     for key, value in output.items():
