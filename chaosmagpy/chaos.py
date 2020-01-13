@@ -774,7 +774,8 @@ class CHAOS(object):
         Examples
         --------
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> Br, Bt, Bp = model(0., 6371.2, 45., 0., source_list=['tdep', 'static'])  # only internal sources
+        >>> Br, Bt, Bp = model(0., 6371.2, 45., 0., source_list=['tdep', \
+'static'])  # only internal sources
         >>> Br
         array(-40418.23217586)
 
