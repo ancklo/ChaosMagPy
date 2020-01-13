@@ -89,7 +89,8 @@ class Base(object):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
             Extrapolate to times outside of the piecewise polynomial bounds.
             Specify polynomial degree as string or any order as integer.
             Defaults to ``'linear'`` (equiv. to order 2 polynomials).
@@ -288,7 +289,8 @@ class BaseModel(Base):
         deriv : int, positive, optional
             Derivative in time (None defaults to 0). For secular variation,
             choose ``deriv=1``.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
             Extrapolate to times outside of the model bounds. Specify
             polynomial degree as string or any order as integer. Defaults to
             ``'linear'`` (equiv. to order 2 polynomials).
@@ -327,35 +329,7 @@ class BaseModel(Base):
         """
         Compute magnetic field components.
 
-        Parameters
-        ----------
-        time : ndarray, shape (...) or float
-            Array containing the time in modified Julian dates.
-        radius : ndarray, shape (...) or float
-            Radius of station in kilometers.
-        theta : ndarray, shape (...) or float
-            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
-        phi : ndarray, shape (...) or float
-            Longitude in degrees.
-        nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
-        deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
-            choose ``deriv=1``.
-        grid : bool, optional
-            If ``True``, field components are computed on a regular grid.
-            Arrays ``theta`` and ``phi`` must have one dimension less than the
-            output grid since the grid will be created as their outer product.
-        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', 'off'} or int, optional
-            Extrapolate to times outside of the model bounds. Specify
-            polynomial degree as string or any order as integer. Defaults to
-            ``'linear'`` (equiv. to order 2 polynomials).
-
-        Returns
-        -------
-        B_radius, B_theta, B_phi : ndarray, shape (...)
-            Radial, colatitude and azimuthal field components.
+        See :meth:`CHAOS.synth_values_tdep`.
 
         """
 
@@ -395,7 +369,7 @@ class BaseModel(Base):
 
         See Also
         --------
-        model_utils.power_spectrum
+        chaosmagpy.model_utils.power_spectrum
 
         """
 
@@ -470,7 +444,7 @@ class BaseModel(Base):
 
         See Also
         --------
-        plot_utils.plot_maps
+        chaosmagpy.plot_utils.plot_maps
 
         """
 
@@ -546,7 +520,7 @@ class BaseModel(Base):
 
         See Also
         --------
-        plot_utils.plot_timeseries
+        chaosmagpy.plot_utils.plot_timeseries
 
         """
 
@@ -652,11 +626,21 @@ class CHAOS(object):
 
     Examples
     --------
-    Create a time-dependent internal field model as a piecewise polynomial of
-    order 4 (i.e. cubic) having 10 pieces, spanning the first 50 days in the
-    year 2000 (breaks in modified Julian date 2000). As example, choose random
-    coefficients for the time-dependent field of spherical harmonic degree 1
-    (= 3 coefficients).
+    Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+    directory like this:
+
+    .. code-block:: python
+
+       from chaosmagpy import CHAOS
+
+       model = CHAOS.from_mat('CHAOS-6-x7.mat')
+       print(model)
+
+    Or create manually a time-dependent internal field model as a piecewise
+    polynomial of order 4 (i.e. cubic) having 10 pieces, spanning the first 50
+    days in the year 2000 (breaks in modified Julian date 2000). As example,
+    choose random coefficients for the time-dependent field of spherical
+    harmonic degree 1 (= 3 coefficients).
 
     .. code-block:: python
 
@@ -784,8 +768,15 @@ class CHAOS(object):
 
         Returns
         -------
-        B_radius, B_theta, B_phi : ndarray, shape (grid_shape)
+        B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> Br, Bt, Bp = model(0., 6371.2, 45., 0., source_list=['tdep', 'static'])  # only internal sources
+        >>> Br
+        array(-40418.23217586)
 
         """
 
@@ -913,20 +904,89 @@ class CHAOS(object):
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
             Coefficients of the time-dependent internal field.
 
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> time = np.linspace(0., 10., num=2)
+
+        >>> model.synth_coeffs_tdep(time, nmax=1)  # dipole coefficients
+        array([[-29614.72797782,  -1728.47079907,   5185.50518939],
+               [-29614.33800306,  -1728.13680075,   5184.89196286]])
+
+        >>> model.synth_coeffs_tdep(time, nmax=1, deriv=1)  # SV coefficients
+        array([[ 14.25577646,  12.20214856, -22.43412895],
+               [ 14.2317297 ,  12.19625726, -22.36146885]])
+
         """
 
         return self.model_tdep.synth_coeffs(time, nmax=nmax, **kwargs)
 
-    def synth_values_tdep(self, *args, **kwargs):
+    def synth_values_tdep(self, time, radius, theta, phi, *, nmax=None,
+                          deriv=None, grid=None, extrapolate=None):
         """
         Compute magnetic components of the internal
         time-dependent field.
 
-        Convenience method. See :meth:`BaseModel.synth_values`.
+        Parameters
+        ----------
+        time : ndarray, shape (...) or float
+            Array containing the time in modified Julian dates.
+        radius : ndarray, shape (...) or float
+            Radius of station in kilometers.
+        theta : ndarray, shape (...) or float
+            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        phi : ndarray, shape (...) or float
+            Longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
+        grid : bool, optional
+            If ``True``, field components are computed on a regular grid.
+            Arrays ``theta`` and ``phi`` must have one dimension less than the
+            output grid since the grid will be created as their outer product.
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
+            Extrapolate to times outside of the model bounds. Specify
+            polynomial degree as string or any order as integer. Defaults to
+            ``'linear'`` (equiv. to order 2 polynomials).
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> time = np.linspace(0., 10., num=2)
+
+        Compute magnetic field components at specific location.
+
+        >>> Br, Bt, Bp = model.synth_values_tdep(time, 6371.2, 45., 0.)
+        >>> Br
+        array([-40422.44815265, -40423.15091334])
+
+        Only dipole contribution
+
+        >>> Br, Bt, Bp = model.synth_values_tdep(time, 6371.2, 45., 0., nmax=1)
+        >>> Br
+        array([-44325.97679843, -44324.95294588])
+
+        Secular variation of the dipole
+
+        >>> Br, Bt, Bp = model.synth_values_tdep(time, 6371.2, 45., 0.,\
+ deriv=1)
+        >>> Br
+        array([-25.64604374, -25.69002078])
 
         """
 
-        return self.model_tdep.synth_values(*args, **kwargs)
+        return self.model_tdep.synth_values(
+            time, radius, theta, phi, nmax=nmax, deriv=deriv, grid=grid,
+            extrapolate=extrapolate)
 
     def plot_timeseries_tdep(self, radius, theta, phi, **kwargs):
         """
@@ -1010,6 +1070,12 @@ class CHAOS(object):
         coeffs : ndarray, shape (``nmax`` * (``nmax`` + 2),)
             Coefficients of the static internal field.
 
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> model.synth_coeffs_static(nmax=50)
+        array([ 0.     , 0.     ,  0.     , ...,  0.01655, -0.06339,  0.00715])
+
         """
 
         time = self.model_static.breaks[0]
@@ -1038,6 +1104,13 @@ class CHAOS(object):
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> Br, Bt, Bp = model.synth_values_static(6371.2, 45., 0., nmax=50)
+        >>> Br
+        array(-7.5608993)
 
         """
 
@@ -1098,6 +1171,13 @@ class CHAOS(object):
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
             Coefficients of the external GSM field in term of geographic
             coordinates (GEO).
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> model.synth_coeffs_gsm(0.0)
+        array([11.63982782, -4.9276483 , -2.36281582,  0.46063709, -0.37934517,
+               -0.18234297,  0.06281656,  0.07757099])
 
         """
 
@@ -1200,6 +1280,14 @@ class CHAOS(object):
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
 
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> time = np.linspace(0., 10., num=2)
+        >>> Br, Bt, Bp = model.synth_values_gsm(time, 6371.2, 45., 0.)
+        >>> Br
+        array([-8.18751916, -8.25661729])
+
         """
 
         source = 'all' if source is None else source
@@ -1250,6 +1338,13 @@ class CHAOS(object):
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
             Coefficients of the external SM field coefficients in terms of
             geographic coordinates (GEO).
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> model.synth_coeffs_sm(0.0)
+        array([53.20309271,  3.79138724, -8.59458138, -0.62818711,  1.45506171,
+               -0.57977672, -0.31660638, -0.43888236])
 
         """
 
@@ -1428,6 +1523,14 @@ class CHAOS(object):
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
 
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> time = np.linspace(0., 10., num=2)
+        >>> Br, Bt, Bp = model.synth_values_sm(time, 6371.2, 45., 0.)
+        >>> Br
+        array([-18.85890361, -13.99893523])
+
         """
 
         source = 'all' if source is None else source
@@ -1537,7 +1640,7 @@ class CHAOS(object):
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
         plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                     titles=titles, label=units)
+                  titles=titles, label=units)
         plt.show()
 
     def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,
@@ -1566,6 +1669,17 @@ class CHAOS(object):
         angles : ndarray, shape (..., 3)
             Euler angles alpha, beta and gamma in degrees, stored in trailing
             dimension.
+
+        Examples
+        --------
+        >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> time = np.linspace(500., 600., num=2)
+        >>> model.meta['satellites']  # check satellite names
+        ('oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c')
+
+        >>> model.synth_euler_angles(time, 'swarm_a')
+        array([[-0.05521985, -1.5763316 ,  0.48787601],
+               [-0.05440427, -1.57966925,  0.49043057]])
 
         """
 

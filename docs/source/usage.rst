@@ -2,8 +2,8 @@ Usage
 =====
 
 Here are some simple examples on how to use the package. This only requires a
-CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory
-which can be downloaded `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-6/>`_.
+CHAOS model mat-file, e.g. "CHAOS-6-x7.mat" in the current working directory.
+The model coefficients can be downloaded `here <http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/>`_.
 
 Computing field components on a grid
 ------------------------------------
@@ -126,6 +126,8 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 
    Timeseries of the secular variation at two ground observatory stations.
 
+Any timeseries can be generated this way.
+
 Plotting the map of the time-dependent internal field
 -----------------------------------------------------
 
@@ -171,9 +173,9 @@ be plotted on a map:
    model.plot_maps_static(radius=6371.2, nmax=85)
 
 .. figure:: images/plot_maps_static.png
-  :align: center
+   :align: center
 
-  Static internal small-scale field at Earth's surface up to degree 85.
+   Static internal small-scale field at Earth's surface up to degree 85.
 
 and saved
 
