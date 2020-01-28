@@ -223,7 +223,7 @@ def load_shcfile(filepath, leap_year=None):
         spherical degree and order `nmax`.
     parameters : dict, {'SHC', 'nmin', 'nmax', 'N', 'order', 'step'}
         Dictionary containing parameters of the model snapshots and the
-        following keys: ``'SHC'`` shc-file name, `nmin` minimum degree,
+        following keys: ``'SHC'`` shc-file name, ``'nmin'`` minimum degree,
         ``'nmax'`` maximum degree, ``'N'`` number of snapshot models,
         ``'order'`` piecewise polynomial order and ``'step'`` number of
         snapshots until next break point. Extract break points of the
