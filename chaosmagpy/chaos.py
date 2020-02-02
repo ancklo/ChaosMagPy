@@ -773,6 +773,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> Br, Bt, Bp = model(0., 6371.2, 45., 0., source_list=['tdep', \
 'static'])  # only internal sources
@@ -907,6 +908,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.linspace(0., 10., num=2)
 
@@ -961,6 +963,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.linspace(0., 10., num=2)
 
@@ -970,13 +973,13 @@ class CHAOS(object):
         >>> Br
         array([-40422.44815265, -40423.15091334])
 
-        Only dipole contribution
+        Only dipole contribution:
 
         >>> Br, Bt, Bp = model.synth_values_tdep(time, 6371.2, 45., 0., nmax=1)
         >>> Br
         array([-44325.97679843, -44324.95294588])
 
-        Secular variation of the dipole
+        Secular variation:
 
         >>> Br, Bt, Bp = model.synth_values_tdep(time, 6371.2, 45., 0.,\
  deriv=1)
@@ -1108,6 +1111,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> Br, Bt, Bp = model.synth_values_static(6371.2, 45., 0., nmax=50)
         >>> Br
@@ -1175,6 +1179,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> model.synth_coeffs_gsm(0.0)
         array([11.63982782, -4.9276483 , -2.36281582,  0.46063709, -0.37934517,
@@ -1283,6 +1288,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.linspace(0., 10., num=2)
         >>> Br, Bt, Bp = model.synth_values_gsm(time, 6371.2, 45., 0.)
@@ -1342,6 +1348,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> model.synth_coeffs_sm(0.0)
         array([53.20309271,  3.79138724, -8.59458138, -0.62818711,  1.45506171,
@@ -1526,6 +1533,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.linspace(0., 10., num=2)
         >>> Br, Bt, Bp = model.synth_values_sm(time, 6371.2, 45., 0.)
@@ -1673,6 +1681,7 @@ class CHAOS(object):
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.linspace(500., 600., num=2)
         >>> model.meta['satellites']  # check satellite names
