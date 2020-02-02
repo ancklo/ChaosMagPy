@@ -110,6 +110,11 @@ html_theme = 'nature'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['.static']
 
+# add button to hide prompts and outputs in code examples
+# also required "copybutton.js" and "jquery.js" in .static directory
+def setup(app):
+    app.add_javascript('copybutton.js')
+
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
