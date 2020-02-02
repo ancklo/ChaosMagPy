@@ -8,6 +8,7 @@ Version 0.3
 
 Features
 ^^^^^^^^
+* Added more examples to the :class:`CHAOS` methods.
 * Added optional ``nmin`` and ``mmax`` to ``design_gauss`` and
   ``synth_values`` (nmin has been redefined).
 * Added optional derivative to ``colloc_matrix`` of the B-Spline collocation.
