@@ -269,6 +269,26 @@ class ModelUtilsTestCase(TestCase):
         self.assertIsNone(
             np.testing.assert_allclose(G_phi, G_phi_mat, atol=1e-5))
 
+    def test_colloc_matrix(self):
+
+        breaks = np.linspace(0., 300., 20)
+        order = 6
+        knots = m.augment_breaks(breaks, order)
+
+        x = np.linspace(0., 300., 1000)
+
+        test = load_matfile(MATFILE_PATH, 'test_colloc_matrix')
+
+        colloc_m = test['colloc']
+
+        for deriv in range(order):
+            print(f"Checking deriv = {deriv} of collocation matrix.")
+
+            colloc = m.colloc_matrix(x, knots, order, deriv=deriv)
+
+            self.assertIsNone(np.testing.assert_allclose(
+                colloc, colloc_m[deriv::order], atol=1e-5))
+
 
 if __name__ == '__main__':
     main()
