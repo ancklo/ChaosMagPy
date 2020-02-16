@@ -400,6 +400,34 @@ def mjd2000(*args, **kwargs):
     return delta / dt.timedelta(days=1)
 
 
+def _mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+
+    year = np.asarray(year)
+
+    if np.issubdtype(year.dtype, np.dtype(dt.datetime).type):
+        datetime = year.astype('datetime64[us]')
+
+    else:
+        # build iso datetime string with unicode
+        year = np.asarray(year, dtype=np.unicode_)
+        month = np.char.zfill(np.asarray(month, dtype=np.unicode_), 2)
+        day = np.char.zfill(np.asarray(day, dtype=np.unicode_), 2)
+
+        year_month = np.char.add(np.char.add(year, '-'), month)
+        datetime = np.char.add(np.char.add(year_month, '-'), day)
+
+        datetime = datetime.astype('datetime64[us]')
+
+        datetime += np.asarray(hour, dtype='timedelta64[h]')
+        datetime += np.asarray(minute, dtype='timedelta64[m]')
+        datetime += np.asarray(second, dtype='timedelta64[s]')
+        datetime += np.asarray(microsecond, dtype='timedelta64[us]')
+
+    microseconds = datetime - np.datetime64('2000-01-01', 'us')
+
+    return microseconds / np.timedelta64(1, 'D')  # fraction of days
+
+
 def datetime64(time):
     """
     Convert modified Julian date to NumPy's datetime format.
