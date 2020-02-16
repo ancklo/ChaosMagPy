@@ -11,6 +11,7 @@ offers functions to do simple time conversions.
     load_shcfile
     save_shcfile
     mjd2000
+    datetime64
     dyear_to_mjd
     mjd_to_dyear
     memory_usage
@@ -26,7 +27,7 @@ import warnings
 import h5py
 import os
 import calendar
-from datetime import datetime, timedelta
+import datetime as dt
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -327,7 +328,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
             ord = np.append(ord, [m, -m])
 
     comment = (header +
-               f"# Created on {datetime.utcnow()} UTC.\n"
+               f"# Created on {dt.datetime.utcnow()} UTC.\n"
                f"# Leap years are accounted for in "
                f"decimal years format ({leap_year}).\n"
                f"{nmin} {nmax} {time.size} {order} {order-1}\n")
@@ -379,6 +380,8 @@ def mjd2000(*args, **kwargs):
         Minutes of the hour `[0, 59]` (default is 0).
     second : int, ndarray, shape (...), optional
         Seconds of the minute `[0, 59]` (default is 0).
+    microsecond : int, ndarray, shape (...), optional
+        Seconds of the minute `[0, 999999]` (default is 0).
 
     Returns
     -------
@@ -387,14 +390,37 @@ def mjd2000(*args, **kwargs):
 
     """
 
-    if isinstance(args[0], datetime):
+    if isinstance(args[0], dt.datetime):
         time = args[0]
     else:
-        time = datetime(*args, **kwargs)
+        time = dt.datetime(*args, **kwargs)
 
-    delta = (time - datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
+    delta = (time - dt.datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
 
-    return delta.days + delta.seconds/86400
+    return delta / dt.timedelta(days=1)
+
+
+def datetime64(time):
+    """
+    Convert modified Julian date to NumPy's datetime format.
+
+    Parameters
+    ----------
+    time : ndarray, shape (...)
+        Modified Julian date (units of days).
+
+    Returns
+    -------
+    time : ndarray, shape (...)
+        Array of ``numpy.datetime64[us]``.
+
+    """
+
+    # convert mjd2000 to timedelta64[us]
+    us = np.asarray(time) * 86400e6 * np.timedelta64(1, 'us')
+
+    # add datetime offset
+    return us + np.datetime64('2000-01-01', 'us')
 
 
 @np.vectorize
@@ -427,9 +453,9 @@ def dyear_to_mjd(time, leap_year=None):
         year = int(time)
         days = 366 if calendar.isleap(year) else 365
         day = (time - year) * days
-        date = timedelta(days=day) + datetime(year, 1, 1)
+        date = dt.timedelta(days=day) + dt.datetime(year, 1, 1)
 
-        delta = date - datetime(2000, 1, 1)
+        delta = date - dt.datetime(2000, 1, 1)
 
         mjd = delta.days + (delta.seconds + delta.microseconds/1e6)/86400
 
@@ -471,10 +497,10 @@ def mjd_to_dyear(time, leap_year=None):
 
     # remainder is zero = leap year
     if leap_year:
-        date = timedelta(days=time) + datetime(2000, 1, 1)
+        date = dt.timedelta(days=time) + dt.datetime(2000, 1, 1)
         days = 366 if calendar.isleap(date.year) else 365
 
-        delta = date - datetime(date.year, 1, 1)
+        delta = date - dt.datetime(date.year, 1, 1)
 
         dyear = (date.year + delta.days/days
                  + (delta.seconds + delta.microseconds/1e6)/86400/days)
