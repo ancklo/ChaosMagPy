@@ -3,21 +3,24 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** Februar 16, 2020
+| **Date:** Februar 20, 2020
 | **Release:** v0.3
 
 Features
 ^^^^^^^^
+* Added ``verbose`` keyword to the ``call`` method of
+  :class:`chaosmagpy.chaos.CHAOS` class to avoid printing messages.
 * Added :func:`chaosmagpy.data_utils.datetime64` function to convert modified
   Julian date to NumPy's datetime format.
-* Added more examples to the :class:`CHAOS` methods.
+* Added more examples to the :class:`chaosmagpy.chaos.CHAOS` methods.
 * Added optional ``nmin`` and ``mmax`` to
   :func:`chaosmagpy.model_utils.design_gauss` and
   :func:`chaosmagpy.model_utils.synth_values` (nmin has been redefined).
 * Added optional derivative to :func:`chaosmagpy.model_utils.colloc_matrix`
   of the B-Spline collocation.
   New implementation does not have the missing endpoint problem.
-* Added option to supply satellite names when loading CHAOS mat-file.
+* Added ``satellite`` keyword to change default satellite names when loading
+  CHAOS mat-file.
 
 Version 0.2.1
 -------------

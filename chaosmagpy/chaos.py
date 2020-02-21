@@ -746,7 +746,8 @@ class CHAOS(object):
 
         self.meta = meta
 
-    def __call__(self, time, radius, theta, phi, source_list=None):
+    def __call__(self, time, radius, theta, phi, source_list=None,
+                 verbose=None):
         """
         Calculate the magnetic field of all sources from the CHAOS model.
 
@@ -763,8 +764,16 @@ class CHAOS(object):
             Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
         phi : ndarray, shape (...) or float
             Longitude in degrees.
-        source_list : list, ['tdep', 'static', 'gsm', 'sm']
-            Specify sources in any order. Default is all sources.
+        source_list : list, ['tdep', 'static', 'gsm', 'sm'] or \
+str, {'internal', 'external'}
+            Specify sources in any order. Default is all sources. Instead of a
+            list, pass ``source_list='internal'`` which is equivalent to
+            ``source_list=['tdep', 'static']`` (internal sources) or
+            ``source_list='external'`` which is the same as
+            ``source_list=['gsm', 'sm']`` (external sources including induced
+            part).
+        verbose : {False, True}, optional
+            Print messages (defaults to ``False``).
 
         Returns
         -------
@@ -790,7 +799,15 @@ class CHAOS(object):
         if source_list is None:
             source_list = ['tdep', 'static', 'gsm', 'sm']
 
+        elif source_list == 'internal':
+            source_list = ['tdep', 'static']
+
+        elif source_list == 'external':
+            source_list = ['gsm', 'sm']
+
         source_list = np.ravel(np.array(source_list))
+
+        verbose = bool(verbose)
 
         # get shape of broadcasted result
         try:
@@ -811,8 +828,9 @@ class CHAOS(object):
 
         if 'tdep' in source_list:
 
-            print(f'Computing time-dependent internal field'
-                  f' up to degree {self.model_tdep.nmax}.')
+            if verbose:
+                print(f'Computing time-dependent internal field'
+                      f' up to degree {self.model_tdep.nmax}.')
 
             s = timer()
             B_radius_new, B_theta_new, B_phi_new = self.synth_values_tdep(
@@ -823,14 +841,16 @@ class CHAOS(object):
             B_phi += B_phi_new
             e = timer()
 
-            print('Finished in {:.6} seconds.'.format(e-s))
+            if verbose:
+                print('Finished in {:.6} seconds.'.format(e-s))
 
         if 'static' in source_list:
 
             nmax_static = 85
 
-            print(f'Computing static internal (i.e. small-scale crustal) field'
-                  f' up to degree {nmax_static}.')
+            if verbose:
+                print(f'Computing static internal (i.e. small-scale crustal) '
+                      f'field up to degree {nmax_static}.')
 
             s = timer()
             B_radius_new, B_theta_new, B_phi_new = self.synth_values_static(
@@ -841,11 +861,13 @@ class CHAOS(object):
             B_phi += B_phi_new
             e = timer()
 
-            print('Finished in {:.6} seconds.'.format(e-s))
+            if verbose:
+                print('Finished in {:.6} seconds.'.format(e-s))
 
         if 'gsm' in source_list:
 
-            print(f'Computing GSM field up to degree {self.n_gsm}.')
+            if verbose:
+                print(f'Computing GSM field up to degree {self.n_gsm}.')
 
             s = timer()
             B_radius_new, B_theta_new, B_phi_new = self.synth_values_gsm(
@@ -856,11 +878,13 @@ class CHAOS(object):
             B_phi += B_phi_new
             e = timer()
 
-            print('Finished in {:.6} seconds.'.format(e-s))
+            if verbose:
+                print('Finished in {:.6} seconds.'.format(e-s))
 
         if 'sm' in source_list:
 
-            print(f'Computing SM field up to degree {self.n_sm}.')
+            if verbose:
+                print(f'Computing SM field up to degree {self.n_sm}.')
 
             s = timer()
             B_radius_new, B_theta_new, B_phi_new = self.synth_values_sm(
@@ -871,7 +895,8 @@ class CHAOS(object):
             B_phi += B_phi_new
             e = timer()
 
-            print('Finished in {:.6} seconds.'.format(e-s))
+            if verbose:
+                print('Finished in {:.6} seconds.'.format(e-s))
 
         return B_radius, B_theta, B_phi
 
