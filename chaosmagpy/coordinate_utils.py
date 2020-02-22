@@ -8,7 +8,7 @@ following.
 GEO : geocentric, orthogonal coordinate system
     With z-axis along Earth's rotation axis, x-axis pointing to Greenwich and
     y-axis completing right-handed coordinate system.
-GG : geographic or geodetic, orthogonal corrdinate system. Earth is
+GG : geographic or geodetic, orthogonal coordinate system. Earth is
     approximated by a spheroid (ellipsoid of revolution) with equatorial radius
     `a` and polar radius `b`, `b < a`.
 USE : local orthogonal coordinate system on spherical surface

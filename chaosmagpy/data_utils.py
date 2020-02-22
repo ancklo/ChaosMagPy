@@ -11,7 +11,7 @@ offers functions to do simple time conversions.
     load_shcfile
     save_shcfile
     mjd2000
-    datetime64
+    datetime
     dyear_to_mjd
     mjd_to_dyear
     memory_usage
@@ -358,8 +358,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         os.path.join(os.getcwd(), filepath)))
 
 
-@np.vectorize
-def mjd2000(*args, **kwargs):
+def mjd2000(year, month, day, hour=0, minute=0, second=0, microsecond=0):
     """
     Computes the modified Julian date as floating point number.
 
@@ -375,13 +374,13 @@ def mjd2000(*args, **kwargs):
     day : int, ndarray, shape (...)
         Day of the corresponding month.
     hour : int , ndarray, shape (...), optional
-        Hour of the day `[0, 23]` (default is 0).
+        Hour of the day (default is 0).
     minute : int, ndarray, shape (...), optional
-        Minutes of the hour `[0, 59]` (default is 0).
+        Minutes (default is 0).
     second : int, ndarray, shape (...), optional
-        Seconds of the minute `[0, 59]` (default is 0).
+        Seconds (default is 0).
     microsecond : int, ndarray, shape (...), optional
-        Seconds of the minute `[0, 999999]` (default is 0).
+        Microseconds (default is 0).
 
     Returns
     -------
@@ -389,18 +388,6 @@ def mjd2000(*args, **kwargs):
         Modified Julian date (units of days).
 
     """
-
-    if isinstance(args[0], dt.datetime):
-        time = args[0]
-    else:
-        time = dt.datetime(*args, **kwargs)
-
-    delta = (time - dt.datetime(2000, 1, 1))  # starting 0h00 January 1, 2000
-
-    return delta / dt.timedelta(days=1)
-
-
-def _mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
 
     year = np.asarray(year)
 
@@ -428,7 +415,7 @@ def _mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
     return microseconds / np.timedelta64(1, 'D')  # fraction of days
 
 
-def datetime64(time):
+def datetime(time):
     """
     Convert modified Julian date to NumPy's datetime format.
 
