@@ -29,8 +29,6 @@ import h5py
 import os
 import datetime as dt
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
-
 
 def load_matfile(filepath, variable_names=None, **kwargs):
     """

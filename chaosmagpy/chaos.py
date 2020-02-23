@@ -34,8 +34,6 @@ from chaosmagpy.config_utils import basicConfig
 from chaosmagpy.plot_utils import (defaultkeys, plot_power_spectrum,
                                    plot_timeseries, plot_maps)
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
-
 
 class Base(object):
     """
