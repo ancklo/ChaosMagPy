@@ -12,6 +12,7 @@ offers functions to do simple time conversions.
     save_shcfile
     mjd2000
     datetime
+    is_leap_year
     dyear_to_mjd
     mjd_to_dyear
     memory_usage
@@ -26,7 +27,6 @@ import hdf5storage as hdf
 import warnings
 import h5py
 import os
-import calendar
 import datetime as dt
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -391,7 +391,8 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0, microsecond=0):
 
     year = np.asarray(year)
 
-    if np.issubdtype(year.dtype, np.dtype(dt.datetime).type):
+    if (np.issubdtype(year.dtype, np.dtype(dt.datetime).type) or
+            np.issubdtype(year.dtype, np.datetime64)):
         datetime = year.astype('datetime64[us]')
 
     else:
@@ -438,7 +439,27 @@ def datetime(time):
     return us + np.datetime64('2000-01-01', 'us')
 
 
-@np.vectorize
+def is_leap_year(year):
+    """
+    Determine if input year is a leap year.
+
+    Parameters
+    ----------
+    year : ndarray, shape (...)
+        Years to test for leap year.
+
+    Returns
+    -------
+    leap_year : ndarray of bools, shape (...)
+        ``True`` for leap year in array.
+
+    """
+
+    return np.logical_and(np.remainder(year, 4) == 0,
+                          np.logical_or(np.remainder(year, 100) != 0,
+                                        np.remainder(year, 400) == 0))
+
+
 def dyear_to_mjd(time, leap_year=None):
     """
     Convert time from decimal years to modified Julian date 2000.
@@ -465,19 +486,20 @@ def dyear_to_mjd(time, leap_year=None):
 
     # remainder is zero = leap year
     if leap_year:
-        year = int(time)
-        days = 366 if calendar.isleap(year) else 365
-        day = (time - year) * days
-        date = dt.timedelta(days=day) + dt.datetime(year, 1, 1)
+        year = np.asarray(time, dtype=np.int)
+        frac_of_year = np.remainder(time, 1.)
 
-        delta = date - dt.datetime(2000, 1, 1)
+        isleap = is_leap_year(year)
+        days_per_year = np.where(isleap, 366., 365.)
 
-        mjd = delta.days + (delta.seconds + delta.microseconds/1e6)/86400
+        days = frac_of_year * days_per_year
+
+        mjd = mjd2000(year, 1, 1) + days
 
     elif not leap_year:
-        days = 365.25
+        days_per_year = 365.25
 
-        mjd = (time - 2000.0) * days
+        mjd = (time - 2000.0) * days_per_year
 
     else:
         raise ValueError('Unknown leap year option: use either True or False')
@@ -485,10 +507,9 @@ def dyear_to_mjd(time, leap_year=None):
     return mjd
 
 
-@np.vectorize
 def mjd_to_dyear(time, leap_year=None):
     """
-    Convert time in modified Julian date 2000 to decimal years.
+    Convert time from modified Julian date 2000 to decimal years.
 
     Leap years are accounted for by default.
 
@@ -512,21 +533,23 @@ def mjd_to_dyear(time, leap_year=None):
 
     # remainder is zero = leap year
     if leap_year:
-        date = dt.timedelta(days=time) + dt.datetime(2000, 1, 1)
-        days = 366 if calendar.isleap(date.year) else 365
+        date = (np.asarray(time, dtype=np.int)*np.timedelta64(1, 'D')
+                + np.datetime64('2000-01-01'))  # only precise to date
 
-        delta = date - dt.datetime(date.year, 1, 1)
+        year = date.astype('datetime64[Y]').astype(np.int) + 1970
+        days = time - mjd2000(year, 1, 1)  # days of that year
 
-        dyear = (date.year + delta.days/days
-                 + (delta.seconds + delta.microseconds/1e6)/86400/days)
+        isleap = is_leap_year(year)
+        days_per_year = np.where(isleap, 366., 365.)
+
+        dyear = year + days / days_per_year
 
     elif not leap_year:
-        days = 365.25
+        days_per_year = 365.25
 
-        dyear = time/days + 2000.0
+        dyear = time/days_per_year + 2000.
 
     else:
-        print(leap_year)
         raise ValueError('Unknown leap year option: use either True or False')
 
     return dyear
