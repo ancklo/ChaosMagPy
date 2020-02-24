@@ -2123,6 +2123,7 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         t_break_Euler = model_euler['t_break_Euler']
         n = len(t_break_Euler)
         m = len(satellites)
+
         if n < m:
             satellites = satellites[:n]
         elif n > m:
@@ -2134,15 +2135,15 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         for num, satellite in enumerate(satellites):
             breaks_euler[satellite] = t_break_Euler[num].squeeze()
 
-        # reshape angles to be (1, N) then stack last axis to get (1, N, 3)
-        # first dimension: order, second: number of intervals, third: 3 angles
-        coeffs_euler = dict()
-        for num, satellite in enumerate(satellites):
-            euler = [model_euler[angle][num].reshape((1, -1)) for
-                     angle in ['alpha', 'beta', 'gamma']]
-            euler = np.stack(euler, axis=-1).astype(np.float)  # no sac-c
+        # reshape angles to be (1, N, 1) then concatenate last axis to get
+        # (no. of satellites, N, 3)
+        euler = np.stack([np.atleast_3d(model_euler[angle]) for
+                          angle in ['alpha', 'beta', 'gamma']], axis=0)
 
-            coeffs_euler[satellite] = euler
+        euler = euler.astype(np.float, copy=False)
+
+        # first dimension: order, second: number of intervals, third: 3 angles
+        coeffs_euler = dict(zip(satellites, np.expand_dims(euler, axis=1)))
 
     except KeyError:
         warnings.warn('Missing Euler angles.')
