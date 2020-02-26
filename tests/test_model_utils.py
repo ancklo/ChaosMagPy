@@ -1,6 +1,5 @@
 import numpy as np
 import os
-from numpy import degrees
 from unittest import TestCase, main
 from chaosmagpy import model_utils as m
 from timeit import default_timer as timer
@@ -224,7 +223,7 @@ class ModelUtilsTestCase(TestCase):
     def test_design_matrix(self):
         """
         Test matrices for time-dependent field model using B-spline basis.
-        Compare with output of identically named data code in ../data/.
+
         """
 
         n_data = int(300)
@@ -233,8 +232,8 @@ class ModelUtilsTestCase(TestCase):
         n_breaks = int((t_end - t_start) / 0.5 + 1)
         time = np.linspace(t_start, t_end, num=n_data)
         radius = R_REF * np.ones(time.shape)
-        theta = degrees(RAD * np.linspace(1, 179, num=n_data))
-        phi = degrees(RAD * np.linspace(-180, 179, num=n_data))
+        theta = np.linspace(1, 179, num=n_data)
+        phi = np.linspace(-180, 179, num=n_data)
         n_static = int(80)
         n_tdep = int(20)
         order = int(6)  # order of spline basis functions (4 = cubic)

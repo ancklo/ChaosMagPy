@@ -2074,8 +2074,8 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
 
     try:
         coeffs_static = mat_contents['g'].reshape((1, 1, -1))
-    except KeyError:
-        warnings.warn('Missing static internal field coefficients.')
+    except KeyError as err:
+        warnings.warn(f'Missing static internal field coefficients: {err}')
         coeffs_static = None
 
     try:
@@ -2104,8 +2104,8 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
         coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
-    except KeyError:
-        warnings.warn('Missing external field coefficients.')
+    except KeyError as err:
+        warnings.warn(f'Missing external field coefficients: {err}')
         coeffs_delta = None
         breaks_delta = None
         coeffs_gsm = None
@@ -2145,8 +2145,8 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         # first dimension: order, second: number of intervals, third: 3 angles
         coeffs_euler = dict(zip(satellites, np.expand_dims(euler, axis=1)))
 
-    except KeyError:
-        warnings.warn('Missing Euler angles.')
+    except KeyError as err:
+        warnings.warn(f'Missing Euler angles: {err}')
         coeffs_euler = None
         breaks_euler = None
 
@@ -2154,7 +2154,8 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
         params = mat_contents['params']
         dict_params = {'Euler_prerotation': params['Euler_prerotation']}
 
-    except KeyError:
+    except KeyError as err:
+        warnings.warn(f'Missing params dictionary: {err}')
         dict_params = {'Euler_prerotation': None}
 
     meta = dict(params=dict_params,
