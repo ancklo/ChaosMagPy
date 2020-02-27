@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import textwrap
 from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
@@ -24,7 +25,11 @@ if os.path.isfile(MATFILE_PATH) is False:
 class ChaosMagPyTestCase(TestCase):
     def setUp(self):
 
-        print(f'\nRunning {self._testMethodName}:')
+        print(textwrap.dedent(f"""\
+
+            {"":-^70}
+            Running {self._testMethodName}:
+            """))
 
     def test_synth_euler_angles(self):
 

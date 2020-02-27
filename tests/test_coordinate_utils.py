@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import textwrap
 from unittest import TestCase, main
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import data_utils as d
@@ -21,7 +22,11 @@ if os.path.isfile(MATFILE_PATH) is False:
 class CoordinateUtilsTestCase(TestCase):
     def setUp(self):
 
-        print(f'\nRunning {self._testMethodName}:')
+        print(textwrap.dedent(f"""\
+
+            {"":-^70}
+            Running {self._testMethodName}:
+            """))
 
     def test_dipole_to_unit(self):
 

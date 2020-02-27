@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import textwrap
 from unittest import TestCase, main
 from datetime import datetime, timedelta
 from chaosmagpy import data_utils as d
@@ -15,7 +16,11 @@ if os.path.isfile(MATFILE_PATH) is False:
 class DataUtilsTestCase(TestCase):
     def setUp(self):
 
-        print(f'\nRunning {self._testMethodName}:')
+        print(textwrap.dedent(f"""\
+
+            {"":-^70}
+            Running {self._testMethodName}:
+            """))
 
     def test_time_conversion(self):
 
