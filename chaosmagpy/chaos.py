@@ -584,11 +584,9 @@ class CHAOS(object):
         angles alpha, beta and gamma as trailing dimension (keys are
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
         ``'swarm_c'``).
-    version : str, optional
-        Version specifier (e.g. ``'6.x9'``).
     name : str, optional
         User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the default in ``basicConfig['params.version']``.
+        where <version> is the version in ``basicConfig['params.version']``.
     meta : dict, optional
         Dictionary containing additional information about the model.
 
@@ -618,9 +616,8 @@ class CHAOS(object):
     coeffs_delta : dict with ndarrays, shape (1, :math:`m_q`)
         Coefficients of baseline corrections of static external field in SM
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
-    version : str
-        Version specifier (``None`` evaluates to
-        ``basicConfig['params.version']`` by default).
+    name : str, optional
+        User defined name of the model.
 
     Examples
     --------
@@ -675,7 +672,7 @@ class CHAOS(object):
                  coeffs_sm=None, coeffs_gsm=None,
                  breaks_delta=None, coeffs_delta=None,
                  breaks_euler=None, coeffs_euler=None,
-                 version=None, name=None, meta=None):
+                 name=None, meta=None):
         """
         Initialize the CHAOS model.
 
@@ -728,17 +725,9 @@ class CHAOS(object):
                              meta={'Euler_prerotation': Euler_prerotation})
                 self.model_euler[satellite] = model
 
-        # set version of CHAOS model
-        if version is None:
-            version = basicConfig['params.version']
-            print(f'Setting default CHAOS version to {version}.')
-            self.version = version
-        else:
-            self.version = str(version)
-
         # give the model a name: CHAOS-x.x or user input
         if name is None:
-            self.name = f'CHAOS-{self.version}'
+            self.name = f"CHAOS-{basicConfig['params.version']}"
         else:
             self.name = name
 
@@ -903,7 +892,7 @@ str, {'internal', 'external'}
         Print model version and initialization timestamp.
         """
 
-        string = (f"This is {self.name} (v{self.version})"
+        string = (f"This is {self.name} (v{basicConfig['params.version']})"
                   f" initialized on {self.timestamp} UTC.")
 
         return string
@@ -1914,7 +1903,7 @@ str, {'internal', 'external'}
             os.path.join(os.getcwd(), filepath)))
 
     @classmethod
-    def from_mat(self, filepath, name=None, version=None, satellites=None):
+    def from_mat(self, filepath, name=None, satellites=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1926,8 +1915,6 @@ str, {'internal', 'external'}
             User defined name of the model. Defaults to ``'CHAOS-<version>'``,
             where <version> is the default in
             ``basicConfig['params.version']``.
-        version : str, optional
-            Version specifier (e.g. ``'6.x9'``).
         satellites : list of strings
             List of satellite names whose Euler angles are stored in the
             mat-file. This is needed for correct referencing as this
@@ -1958,11 +1945,10 @@ str, {'internal', 'external'}
 
         """
 
-        return load_CHAOS_matfile(filepath, name=name, version=version,
-                                  satellites=satellites)
+        return load_CHAOS_matfile(filepath, name=name, satellites=satellites)
 
     @classmethod
-    def from_shc(self, filepath, *, name=None, leap_year=None, version=None):
+    def from_shc(self, filepath, *, name=None, leap_year=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -1977,8 +1963,6 @@ str, {'internal', 'external'}
         leap_year : {True, False}, optional
             Take leap year in time conversion into account (default).
             Otherwise, use conversion factor of 365.25 days per year.
-        version : str, optional
-            Version specifier (e.g. ``'6.x9'``).
 
         Returns
         -------
@@ -2007,11 +1991,10 @@ str, {'internal', 'external'}
 
         leap_year = True if leap_year is None else leap_year
 
-        return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year,
-                                  version=version)
+        return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year)
 
 
-def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
+def load_CHAOS_matfile(filepath, name=None, satellites=None):
     """
     Load CHAOS model from mat-file.
 
@@ -2022,8 +2005,6 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
     name : str, optional
         User defined name of the model. Defaults to ``'CHAOS-<version>'``,
         where <version> is the default in ``basicConfig['params.version']``.
-    version : str, optional
-        Version specifier (e.g. ``'6.x9'``).
     satellites : list of strings
         List of satellite names whose Euler angles are stored in the mat-file.
         This is needed for correct referencing as this information is not
@@ -2055,9 +2036,6 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
     """
 
     filepath = str(filepath)
-
-    if version is None:
-        version = _guess_version(filepath)
 
     mat_contents = du.load_matfile(filepath)
 
@@ -2171,14 +2149,13 @@ def load_CHAOS_matfile(filepath, name=None, version=None, satellites=None):
                   coeffs_delta=coeffs_delta,
                   breaks_euler=breaks_euler,
                   coeffs_euler=coeffs_euler,
-                  version=version,
                   name=name,
                   meta=meta)
 
     return model
 
 
-def load_CHAOS_shcfile(filepath, name=None, leap_year=None, version=None):
+def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     """
     Load CHAOS model from shc-file.
 
@@ -2196,8 +2173,6 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None, version=None):
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
-    version : str, optional
-        Version specifier (e.g. ``'6.x9'``).
 
     Returns
     -------
@@ -2228,9 +2203,6 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None, version=None):
 
     time, coeffs, params = du.load_shcfile(str(filepath), leap_year=leap_year)
 
-    if version is None:
-        version = _guess_version(filepath)
-
     if time.size == 1:  # static field
 
         nmin = params['nmin']
@@ -2238,9 +2210,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None, version=None):
         coeffs_static = np.zeros((nmax*(nmax+2),))
         coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
         coeffs_static = coeffs_static.reshape((1, 1, -1))
-        model = CHAOS(breaks=np.array(time),
-                      coeffs_static=coeffs_static,
-                      version=version)
+        model = CHAOS(breaks=np.array(time), coeffs_static=coeffs_static)
 
     else:  # time-dependent field
 
@@ -2262,7 +2232,6 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None, version=None):
         model = CHAOS(breaks=breaks,
                       order=order,
                       coeffs_tdep=coeffs_pp,
-                      version=version,
                       name=name)
 
     return model

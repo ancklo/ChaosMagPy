@@ -18,7 +18,7 @@ keywords.
  'params.ellipsoid'    `list`,        Equatorial (index 0) and polar radius
                        `ndarray`      (index 1) of the spheroid describing
                        `shape (2,)`   Earth (WGS84) in units of kilometers.
- 'params.version'      `str`          Default version of the CHAOS model, e.g.
+ 'params.version'      `str`          Current version of the CHAOS model, e.g.
                                       ``'6.x7'``.
  'params.cdf_to_mjd'   `int`          Number of days on Jan 01, 2000 since Jan
                                       01, 0000 (CDF start epoch)
@@ -135,7 +135,7 @@ DEFAULTS = {
                       lambda x: check_vector(x, len=3)],
     'params.ellipsoid': [np.array([6378.137, 6356.752]),
                          lambda x: check_vector(x, len=2)],
-    'params.version': ['6.x7', check_version_string],
+    'params.version': ['7', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files

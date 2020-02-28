@@ -3,14 +3,14 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** Februar 20, 2020
+| **Date:** February 28, 2020
 | **Release:** v0.3
 
 Features
 ^^^^^^^^
 * Added ``verbose`` keyword to the ``call`` method of
   :class:`chaosmagpy.chaos.CHAOS` class to avoid printing messages.
-* Added :func:`chaosmagpy.data_utils.datetime64` function to convert modified
+* Added :func:`chaosmagpy.data_utils.datetime` function to convert modified
   Julian date to NumPy's datetime format.
 * Added more examples to the :class:`chaosmagpy.chaos.CHAOS` methods.
 * Added optional ``nmin`` and ``mmax`` to
@@ -81,7 +81,7 @@ Version 0.1
 Features
 ^^^^^^^^
 * New CHAOS class method :meth:`chaosmagpy.chaos.CHAOS.synth_euler_angles` to
-  compute euler angles for the satellites from the CHAOS model (used to rotate
+  compute Euler angles for the satellites from the CHAOS model (used to rotate
   vectors from magnetometer frame to the satellite frame).
 * Added CHAOS class methods :meth:`chaosmagpy.chaos.CHAOS.synth_values_tdep`,
   :meth:`chaosmagpy.chaos.CHAOS.synth_values_static`,
