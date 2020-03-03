@@ -22,7 +22,7 @@ if os.path.isfile(MATFILE_PATH) is False:
     MATFILE_PATH = str(input('Matfile path for chaosmagpy test?: '))
 
 
-class ChaosMagPyTestCase(TestCase):
+class ChaosMagPy(TestCase):
     def setUp(self):
 
         print(textwrap.dedent(f"""\

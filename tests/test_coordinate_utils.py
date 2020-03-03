@@ -19,7 +19,7 @@ if os.path.isfile(MATFILE_PATH) is False:
     MATFILE_PATH = str(input('Matfile path for coordinate_utils test?: '))
 
 
-class CoordinateUtilsTestCase(TestCase):
+class CoordinateUtils(TestCase):
     def setUp(self):
 
         print(textwrap.dedent(f"""\

@@ -22,7 +22,7 @@ if os.path.isfile(MATFILE_PATH) is False:
     MATFILE_PATH = str(input('Matfile path for coordinate_utils test?: '))
 
 
-class ModelUtilsTestCase(TestCase):
+class ModelUtils(TestCase):
     def setUp(self):
 
         print(textwrap.dedent(f"""\

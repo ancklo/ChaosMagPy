@@ -13,7 +13,7 @@ if os.path.isfile(MATFILE_PATH) is False:
     MATFILE_PATH = str(input('Matfile path for data_utils test?: '))
 
 
-class DataUtilsTestCase(TestCase):
+class DataUtils(TestCase):
     def setUp(self):
 
         print(textwrap.dedent(f"""\
