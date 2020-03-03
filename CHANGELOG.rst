@@ -8,6 +8,8 @@ Version 0.3
 
 Features
 ^^^^^^^^
+* Removed version keyword of :class:`chaosmagpy.chaos.CHAOS` to avoid
+  confusion.
 * Added ``verbose`` keyword to the ``call`` method of
   :class:`chaosmagpy.chaos.CHAOS` class to avoid printing messages.
 * Added :func:`chaosmagpy.data_utils.datetime` function to convert modified
