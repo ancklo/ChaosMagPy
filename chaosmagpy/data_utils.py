@@ -356,7 +356,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         os.path.join(os.getcwd(), filepath)))
 
 
-def mjd2000(year, month, day, hour=0, minute=0, second=0, microsecond=0):
+def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
     """
     Computes the modified Julian date as floating point number.
 
@@ -367,10 +367,10 @@ def mjd2000(year, month, day, hour=0, minute=0, second=0, microsecond=0):
     time : :class:`datetime.datetime`, ndarray, shape (...)
         Datetime class instance, `OR ...`
     year : int, ndarray, shape (...)
-    month : int, ndarray, shape (...)
-        Month of the year `[1, 12]`.
-    day : int, ndarray, shape (...)
-        Day of the corresponding month.
+    month : int, ndarray, shape (...), optional
+        Month of the year `[1, 12]` (defaults to 1).
+    day : int, ndarray, shape (...), optional
+        Day of the corresponding month (defaults to 1).
     hour : int , ndarray, shape (...), optional
         Hour of the day (default is 0).
     minute : int, ndarray, shape (...), optional
