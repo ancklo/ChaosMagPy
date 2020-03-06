@@ -12,7 +12,7 @@ Features
   confusion.
 * Added ``verbose`` keyword to the ``call`` method of
   :class:`chaosmagpy.chaos.CHAOS` class to avoid printing messages.
-* Added :func:`chaosmagpy.data_utils.datetime` function to convert modified
+* Added :func:`chaosmagpy.data_utils.timestamp` function to convert modified
   Julian date to NumPy's datetime format.
 * Added more examples to the :class:`chaosmagpy.chaos.CHAOS` methods.
 * Added optional ``nmin`` and ``mmax`` to

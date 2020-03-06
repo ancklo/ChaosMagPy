@@ -11,7 +11,7 @@ offers functions to do simple time conversions.
     load_shcfile
     save_shcfile
     mjd2000
-    datetime
+    timestamp
     is_leap_year
     dyear_to_mjd
     mjd_to_dyear
@@ -414,7 +414,7 @@ def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
     return microseconds / np.timedelta64(1, 'D')  # fraction of days
 
 
-def datetime(time):
+def timestamp(time):
     """
     Convert modified Julian date to NumPy's datetime format.
 
