@@ -5,6 +5,7 @@ Version 0.3
 -----------
 | **Date:** February 28, 2020
 | **Release:** v0.3
+| **Version of CHAOS** CHAOS-7 (0701)
 
 Features
 ^^^^^^^^
@@ -28,6 +29,7 @@ Version 0.2.1
 -------------
 | **Date:** November 20, 2019
 | **Release:** v0.2.1
+| **Version of CHAOS** CHAOS-7 (0701)
 
 Bugfixes
 ^^^^^^^^
@@ -40,10 +42,11 @@ Version 0.2
 -----------
 | **Date:** October 3, 2019
 | **Release:** v0.2
+| **Version of CHAOS** CHAOS-7 (0701)
 
 Features
 ^^^^^^^^
-* Updated RC-index file to recent version (August 2019)
+* Updated RC-index file to recent version (August 2019, v6)
 * Added option ``nmin`` to :func:`chaosmagpy.model_utils.synth_values`.
 * Vectorized :func:`chaosmagpy.data_utils.mjd2000`,
   :func:`chaosmagpy.data_utils.mjd_to_dyear` and
@@ -79,6 +82,7 @@ Version 0.1
 -----------
 | **Date:** May 10, 2019
 | **Release:** v0.1
+| **Version of CHAOS** CHAOS-6-x9
 
 Features
 ^^^^^^^^
