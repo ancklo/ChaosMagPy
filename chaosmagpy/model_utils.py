@@ -742,8 +742,34 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
 
     Returns
     -------
-    R_n : ndarray, shape (..., ``nmax``)
+    W_n : ndarray, shape (..., ``nmax``)
         Power spectrum for degrees up to degree ``nmax``
+
+    Notes
+    -----
+    The spatial power spectrum for a potential field is defined as
+
+    .. math::
+
+        W_n(r) &= \\langle|\\mathbf{B}|^2\\rangle
+             = \\frac{1}{4\\pi}\\iint_\\Omega |\\mathbf{B}|^2 \\mathrm{d}
+               \\Omega \\\\
+             &= W_n^i(r) + W_n^e(n)
+
+    where the internal :math:`W_n^i` and external spectrum :math:`W_n^e` are
+
+    .. math::
+
+        W_n^\\mathrm{i}(r) &= (n+1)\\left(\\frac{a}{r}\\right)^{2n+4}
+                              \\sum_{m=0}^n [(g_n^m)^2 + (h_n^m)^2] \\\\
+        W_n^\\mathrm{e}(r) &= n\\left(\\frac{r}{a}\\right)^{n-2}\\sum_{m=0}^n
+                              [(q_n^m)^2 + (s_n^m)^2]
+
+    References
+    ----------
+    Sabaka, T. J.; Hulot, G. & Olsen, N.,
+    `Mathematical properties relevant to geomagnetic field modeling`,
+    Handbook of geomathematics, Springer, 2010, 503-538
 
     """
 
@@ -769,15 +795,15 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     else:
         raise ValueError('Wrong source. Use `internal` or `external`.')
 
-    R_n = np.empty(coeffs.shape[:-1] + (nmax,))
+    W_n = np.empty(coeffs.shape[:-1] + (nmax,))
 
     for n in range(1, nmax+1):
         min = n**2 - 1
         max = min + (2*n + 1)
-        R_n[..., n-1] = factor(n, ratio)*np.sum(coeffs[..., min:max]**2,
+        W_n[..., n-1] = factor(n, ratio)*np.sum(coeffs[..., min:max]**2,
                                                 axis=-1)
 
-    return R_n
+    return W_n
 
 
 def degree_correlation(coeffs_1, coeffs_2):
