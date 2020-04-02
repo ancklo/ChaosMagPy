@@ -211,12 +211,8 @@ Plotting the global map together with polar views
    # create figure
    fig = plt.figure(figsize=(16, 10))
 
-   # add 2x2 axes
-   gs = gridspec.GridSpec(2, 2, width_ratios=[0.5, 0.5], height_ratios=[0.35, 0.65])
-
    # make array of axes
-   gs = gridspec.GridSpec(2, 2, width_ratios=[0.5, 0.5],
-                          height_ratios=[0.35, 0.65])
+   gs = gridspec.GridSpec(2, 2, width_ratios=[0.5, 0.5], height_ratios=[0.35, 0.65])
 
    axes = []
    axes.append(plt.subplot(gs[0, 0], projection=ccrs.NearsidePerspective(central_latitude=90.)))
