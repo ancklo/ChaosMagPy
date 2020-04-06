@@ -397,7 +397,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
       B = cpm.synth_values(coeffs, radius_grid, theta, phi, grid=True)
       print([B[num].shape for num in range(3)])  # NxN output
 
-    Remember that ``grid=False`` (or left out completely) will result in
+    Remember that ``grid=False`` (default) will result in
     (N,)-shaped outputs as in the first example.
 
     """
@@ -682,13 +682,20 @@ def legendre_poly(nmax, theta):
           dimensions. `P(n,m)` := ``Pnm[n, m, ...]`` and `dP(n,m)` :=
           ``Pnm[m, n+1, ...]``
 
+    References
+    ----------
+    Based on Equations 26-29 and Table 2 in:
+
+    Langel, R. A., "Geomagnetism - The main field", Academic Press, 1987,
+    chapter 4
+
     """
 
     costh = np.cos(radians(theta))
     sinth = np.sqrt(1-costh**2)
 
     Pnm = np.zeros((nmax+1, nmax+2) + costh.shape)
-    Pnm[0, 0] = 1.  # is copied into trailing dimenions
+    Pnm[0, 0] = 1.  # is copied into trailing dimensions
     Pnm[1, 1] = sinth  # write theta into trailing dimenions via broadcasting
 
     rootn = np.sqrt(np.arange(2 * nmax**2 + 1))
@@ -768,7 +775,7 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     References
     ----------
     Sabaka, T. J.; Hulot, G. & Olsen, N.,
-    `Mathematical properties relevant to geomagnetic field modeling`,
+    "Mathematical properties relevant to geomagnetic field modeling",
     Handbook of geomathematics, Springer, 2010, 503-538
 
     """

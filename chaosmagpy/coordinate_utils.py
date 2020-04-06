@@ -787,7 +787,7 @@ def geo_to_gg(radius, theta):
     Function uses Heikkinen's algorithm taken from:
 
     Zhu, J., "Conversion of Earth-centered Earth-fixed coordinates to geodetic
-    coordinates", IEEE Transactions on Aerospace and Electronic Systems}, 1994,
+    coordinates", IEEE Transactions on Aerospace and Electronic Systems, 1994,
     vol. 30, num. 3, pp. 957-961
 
     """

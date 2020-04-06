@@ -600,8 +600,7 @@ class CHAOS(object):
         Static internal field model.
     model_euler : dict of :class:`Base` instances
         Dictionary containing the satellite's name as key and the Euler angles
-        as :class:`Base` class instance. (CHAOS-6: keys are ``'oersted'``,
-        ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``).
+        as :class:`Base` class instance.
     n_sm : int, positive
         Maximum spherical harmonic degree of external field in SM coordinates.
     coeffs_sm : ndarray, shape (``n_sm`` * (``n_sm`` + 2),)
