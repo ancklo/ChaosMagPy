@@ -5,7 +5,6 @@ from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
 from chaosmagpy import data_utils as du
-from chaosmagpy.chaos import _guess_version, basicConfig
 from unittest import TestCase, main
 try:
     from tests.helpers import load_matfile
@@ -42,22 +41,6 @@ class ChaosMagPy(TestCase):
 
         self.assertIsNone(np.testing.assert_allclose(
             swarm_c, test['swarm_c']))
-
-    def test_guess_version(self):
-
-        self.assertEqual(_guess_version('CHAOS-6-x7.mat'), '6.x7')
-        self.assertEqual(_guess_version('CHAOS-6-x7'), '6.x7')
-        self.assertEqual(_guess_version('CHAOS/CHAOS-6-x7.mat'), '6.x7')
-        self.assertEqual(_guess_version('CHAOS-643-x788.mat'), '643.x788')
-        self.assertEqual(_guess_version('CHAOS-6-x7_2.mat'), '6.x7')
-        self.assertEqual(_guess_version('CHAOS-6.x7.mat'), '6.x7')
-        self.assertEqual(_guess_version('CHAOS-7.mat'), '7')
-        self.assertEqual(_guess_version('CHAOS-7'), '7')
-
-        with self.assertWarns(Warning):
-            self.assertEqual(_guess_version('CHAOS-CS'),
-                             basicConfig['params.version'])
-            self.assertEqual(_guess_version(''), basicConfig['params.version'])
 
     def test_save_matfile(self):
 
