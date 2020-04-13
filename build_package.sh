@@ -119,6 +119,15 @@ while true; do
     esac
 done
 
+echo --------------------------------------------
+echo Check license date.
+echo Check changelog date.
+echo Check link to CHAOS in usage section.
+echo Check overview section in the documentation.
+echo Check Python example content.
+echo Check basicConfig default CHAOS version.
+echo ---------------------------------------------
+
 # upload to PyPI
 # twine check dist/chaosmagpy-$version*
 # twine upload dist/chaosmagpy-$version*

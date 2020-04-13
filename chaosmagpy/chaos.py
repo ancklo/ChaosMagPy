@@ -19,7 +19,6 @@ Classes and functions to read the CHAOS model.
 
 import numpy as np
 import os
-import re
 import warnings
 import scipy.interpolate as sip
 import hdf5storage as hdf
@@ -2051,6 +2050,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
     try:
         coeffs_static = mat_contents['g'].reshape((1, 1, -1))
+
     except KeyError as err:
         warnings.warn(f'Missing static internal field coefficients: {err}')
         coeffs_static = None
@@ -2234,31 +2234,3 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
                       name=name)
 
     return model
-
-
-def _guess_version(filepath):
-    """
-    Extract version from filename.
-
-    For example from the file 'CHAOS-6-x7.mat', it returns '6.x7'. If not
-    successful, version is set to default in ``basicConfig['params.version']``.
-
-    """
-
-    # search for CHAOS-{numeral}-x{numeral}, not followed by path separator
-    head, tail = os.path.split(filepath)
-    match = re.search(r'CHAOS-(\d+)[-.]?(x\d+)?(\.?\w*)', tail)
-
-    if match:
-        first, second = match.group(1, 2)
-        if second is None:
-            version = first
-        else:
-            version = '.'.join([first, second])
-    else:
-        warnings.warn(
-            'Unknown CHAOS model version. Setting version to {:}.'.format(
-                basicConfig['params.version']))
-        version = basicConfig['params.version']
-
-    return version

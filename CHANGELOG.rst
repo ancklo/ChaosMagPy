@@ -3,9 +3,18 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** February 28, 2020
+| **Date:** April 13, 2020
 | **Release:** v0.3
-| **Version of CHAOS:** CHAOS-7 (0701)
+| **Version of CHAOS:** CHAOS-7.2 (0702)
+
+News
+^^^^
+The version identifier of the CHAOS model using ``x`` to mean an extension
+of the model has been replaced in favor of a simple version numbering.
+For example, ``CHAOS-6.x9`` is the 9th extension of the CHAOS-6 series.
+But starting with the release of the CHAOS-7 series, the format ``CHAOS-7.1``
+has been adopted to mean the first release of the series, ``CHAOS-7.2`` the
+second release (formerly the first extension) and so on.
 
 Features
 ^^^^^^^^
@@ -29,7 +38,7 @@ Version 0.2.1
 -------------
 | **Date:** November 20, 2019
 | **Release:** v0.2.1
-| **Version of CHAOS:** CHAOS-7 (0701)
+| **Version of CHAOS:** CHAOS-7.1 (0701)
 
 Bugfixes
 ^^^^^^^^
@@ -42,7 +51,7 @@ Version 0.2
 -----------
 | **Date:** October 3, 2019
 | **Release:** v0.2
-| **Version of CHAOS:** CHAOS-7 (0701)
+| **Version of CHAOS:** CHAOS-7.1 (0701)
 
 Features
 ^^^^^^^^
