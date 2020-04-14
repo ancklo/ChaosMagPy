@@ -9,12 +9,12 @@ Version 0.3
 
 News
 ^^^^
-The version identifier of the CHAOS model using ``x`` to mean an extension
-of the model has been replaced in favor of a simple version numbering.
-For example, ``CHAOS-6.x9`` is the 9th extension of the CHAOS-6 series.
-But starting with the release of the CHAOS-7 series, the format ``CHAOS-7.1``
-has been adopted to mean the first release of the series, ``CHAOS-7.2`` the
-second release (formerly the first extension) and so on.
+The version identifier of the CHAOS model using ``x``, which stands for an
+extension of the model, has been replaced in favor of a simple version
+numbering. For example, ``CHAOS-6.x9`` is the 9th extension of the CHAOS-6
+series. But starting with the release of the CHAOS-7 series, the format
+``CHAOS-7.1`` has been adopted to indicate the first release of the series,
+``CHAOS-7.2`` the second release (formerly the first extension) and so on.
 
 Features
 ^^^^^^^^

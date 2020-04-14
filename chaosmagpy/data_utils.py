@@ -28,6 +28,7 @@ import warnings
 import h5py
 import os
 import datetime as dt
+import textwrap
 
 
 def load_matfile(filepath, variable_names=None, **kwargs):
@@ -325,11 +326,11 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         for m in range(1, n+1):
             ord = np.append(ord, [m, -m])
 
-    comment = (header +
-               f"# Created on {dt.datetime.utcnow()} UTC.\n"
-               f"# Leap years are accounted for in "
-               f"decimal years format ({leap_year}).\n"
-               f"{nmin} {nmax} {time.size} {order} {order-1}\n")
+    comment = header + textwrap.dedent(f"""\
+        # Created on {dt.datetime.utcnow()} UTC.
+        # Leap years are accounted for in decimal years format ({leap_year}).
+        {nmin} {nmax} {time.size} {order} {order-1}
+        """)
 
     with open(filepath, 'w') as f:
         # write comment line
