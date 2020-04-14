@@ -45,10 +45,8 @@ class ChaosMagPy(TestCase):
     def test_save_matfile(self):
 
         seq = np.random.randint(0, 10, size=(5,))
-        filename = 'CHAOS-6-x7_'
-        for char in seq:
-            filename += str(char)
-        filepath = os.path.join(ROOT, filename + '.mat')
+        filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.mat'
+        filepath = os.path.join(ROOT, filename)
 
         model = load_CHAOS_matfile(CHAOS_PATH)
         print('  ', end='')  # indent line by two withespaces
@@ -57,11 +55,9 @@ class ChaosMagPy(TestCase):
         def test(x, y):
             if isinstance(x, str) or isinstance(y, str):
                 # convert unicode to str
-                self.assertIsNone(
-                    np.testing.assert_string_equal(str(x), str(y)))
+                np.testing.assert_string_equal(str(x), str(y))
             else:
-                self.assertIsNone(
-                    np.testing.assert_allclose(x, y, atol=1e-10, verbose=True))
+                np.testing.assert_allclose(x, y, atol=1e-10)
 
         chaos = du.load_matfile(CHAOS_PATH, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])
@@ -100,10 +96,8 @@ class ChaosMagPy(TestCase):
     def test_save_shcfile(self):
 
         seq = np.random.randint(0, 10, size=(5,))
-        filename = 'CHAOS-6-x7_'
-        for char in seq:
-            filename += str(char)
-        filepath = os.path.join(ROOT, filename + '.shc')
+        filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.shc'
+        filepath = os.path.join(ROOT, filename)
 
         model_mat = load_CHAOS_matfile(CHAOS_PATH)
 
@@ -118,8 +112,8 @@ class ChaosMagPy(TestCase):
         print('  Max Error =',
               np.amax(np.abs(coeffs_tdep_shc - coeffs_tdep_mat)))
 
-        self.assertIsNone(np.testing.assert_allclose(
-            coeffs_tdep_shc, coeffs_tdep_mat, rtol=1e-2, atol=1e-3))
+        np.testing.assert_allclose(
+            coeffs_tdep_shc, coeffs_tdep_mat, rtol=1e-2, atol=1e-3)
 
         print('  On static part:')
         print('  ', end='')
@@ -132,8 +126,8 @@ class ChaosMagPy(TestCase):
         print('  Max Error =',
               np.amax(np.abs(coeffs_static_shc - coeffs_static_mat)))
 
-        self.assertIsNone(np.testing.assert_allclose(
-            coeffs_static_shc, coeffs_static_mat, rtol=1e-2, atol=1e-3))
+        np.testing.assert_allclose(
+            coeffs_static_shc, coeffs_static_mat, rtol=1e-2, atol=1e-3)
 
         print(f"  Removing file {filepath}")
         os.remove(filepath)
