@@ -622,12 +622,9 @@ class CHAOS(object):
     Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
-    .. code-block:: python
-
-       from chaosmagpy import CHAOS
-
-       model = CHAOS.from_mat('CHAOS-6-x7.mat')
-       print(model)
+    >>> from chaosmagpy import CHAOS
+    >>> model = CHAOS.from_mat('CHAOS-6-x7.mat')
+    >>> print(model)
 
     Or create manually a time-dependent internal field model as a piecewise
     polynomial of order 4 (i.e. cubic) having 10 pieces, spanning the first 50
@@ -1930,12 +1927,9 @@ str, {'internal', 'external'}
         Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
         directory like this:
 
-        .. code-block:: python
-
-           from chaosmagpy import CHAOS
-
-           model = CHAOS.from_mat('CHAOS-6-x7.mat')
-           print(model)
+        >>> from chaosmagpy import CHAOS
+        >>> model = CHAOS.from_mat('CHAOS-6-x7.mat')
+        >>> print(model)
 
         See Also
         --------
@@ -1974,12 +1968,9 @@ str, {'internal', 'external'}
         working directory, containing the coefficients of time-dependent
         internal part of the CHAOS-6-x7 model.
 
-        .. code-block:: python
-
-           import chaosmagpy as cp
-
-           model = cp.CHAOS.from_shc('CHAOS-6-x7_tdep.shc')
-           print(model)
+        >>> import chaosmagpy as cp
+        >>> model = cp.CHAOS.from_shc('CHAOS-6-x7_tdep.shc')
+        >>> print(model)
 
         See Also
         --------
@@ -2020,12 +2011,9 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
-    .. code-block:: python
-
-       import chaosmagpy as cp
-
-       model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
-       print(model)
+    >>> import chaosmagpy as cp
+    >>> model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+    >>> print(model)
 
     See Also
     --------
@@ -2185,12 +2173,9 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     working directory, containing the coefficients of time-dependent internal
     part of the CHAOS-6-x7 model.
 
-    .. code-block:: python
-
-       import chaosmagpy as cp
-
-       model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
-       print(model)
+    >>> import chaosmagpy as cp
+    >>> model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
+    >>> print(model)
 
     See Also
     --------

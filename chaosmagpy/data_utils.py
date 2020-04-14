@@ -386,6 +386,25 @@ def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
     time : ndarray, shape (...)
         Modified Julian date (units of days).
 
+    Examples
+    --------
+    >>> a = np.array([datetime.datetime(2000, 1, 1), \
+datetime.datetime(2002, 3, 4)])
+    >>> mjd2000(a)
+        array([  0., 793.])
+
+    >>> mjd2000(2003, 5, 3, 13, 52, 15)  # May 3rd, 2003, 13:52:15 (hh:mm:ss)
+        1218.5779513888888
+
+    >>> mjd2000(np.arange(2000, 2005))  # 1st of January
+        array([   0.,  366.,  731., 1096., 1461.])
+
+    >>> mjd2000(np.arange(2000, 2005), 2, 1)  # 1st of February
+        array([  31.,  397.,  762., 1127., 1492.])
+
+    >>> mjd2000(np.arange(2000, 2005), 2, np.arange(1, 6))
+        array([  31.,  398.,  764., 1130., 1496.])
+
     """
 
     year = np.asarray(year)
@@ -429,6 +448,15 @@ def timestamp(time):
     time : ndarray, shape (...)
         Array of ``numpy.datetime64[us]``.
 
+    Examples
+    --------
+    >>> timestamp(0.53245)
+        numpy.datetime64('2000-01-01T12:46:43.680000')
+
+    >>> timestamp(np.linspace(0., 1.5, 2))
+        array(['2000-01-01T00:00:00.000000', '2000-01-02T12:00:00.000000'], \
+dtype='datetime64[us]')
+
     """
 
     # convert mjd2000 to timedelta64[us]
@@ -451,6 +479,11 @@ def is_leap_year(year):
     -------
     leap_year : ndarray of bools, shape (...)
         ``True`` for leap year in array.
+
+    Examples
+    --------
+    >>> is_leap_year([2000, 2001, 2004])
+        array([ True, False,  True])
 
     """
 
@@ -479,11 +512,18 @@ def dyear_to_mjd(time, leap_year=None):
     time : ndarray, shape (...)
         Time in modified Julian date 2000.
 
+    Examples
+    --------
+    >>> dyear_to_mjd([2000.5, 2001.5])  # account for leap years
+        array([183. , 548.5])
+
+    >>> dyear_to_mjd([2000.5, 2001.5], leap_year=False)
+        array([182.625, 547.875])
+
     """
 
     leap_year = True if leap_year is None else leap_year
 
-    # remainder is zero = leap year
     if leap_year:
         year = np.asarray(time, dtype=np.int)
         frac_of_year = np.remainder(time, 1.)
@@ -498,7 +538,7 @@ def dyear_to_mjd(time, leap_year=None):
     elif not leap_year:
         days_per_year = 365.25
 
-        mjd = (time - 2000.0) * days_per_year
+        mjd = (np.asarray(time) - 2000.0) * days_per_year
 
     else:
         raise ValueError('Unknown leap year option: use either True or False')
@@ -526,17 +566,24 @@ def mjd_to_dyear(time, leap_year=None):
     time : ndarray, shape (...)
         Time in decimal years.
 
+    Examples
+    --------
+    >>> mjd_to_dyear([183. , 548.5])  # account for leap years
+        array([2000.5, 2001.5])
+
+    >>> mjd_to_dyear([182.625, 547.875], leap_year=False)
+        array([2000.5, 2001.5])
+
     """
 
     leap_year = True if leap_year is None else leap_year
 
-    # remainder is zero = leap year
     if leap_year:
         date = (np.asarray(time, dtype=np.int)*np.timedelta64(1, 'D')
                 + np.datetime64('2000-01-01'))  # only precise to date
 
         year = date.astype('datetime64[Y]').astype(np.int) + 1970
-        days = time - mjd2000(year, 1, 1)  # days of that year
+        days = np.asarray(time) - mjd2000(year, 1, 1)  # days of that year
 
         isleap = is_leap_year(year)
         days_per_year = np.where(isleap, 366., 365.)
@@ -544,9 +591,7 @@ def mjd_to_dyear(time, leap_year=None):
         dyear = year + days / days_per_year
 
     elif not leap_year:
-        days_per_year = 365.25
-
-        dyear = time/days_per_year + 2000.
+        dyear = np.asarray(time) / 365.25 + 2000.
 
     else:
         raise ValueError('Unknown leap year option: use either True or False')
@@ -570,11 +615,32 @@ def memory_usage(pandas_obj):
     return "{:03.2f} MB".format(usage_mb)
 
 
-def gauss_units(deriv):
+def gauss_units(deriv=None):
     """
     Return string of the magnetic field units given the derivative with time.
 
-    String is meant to be parsed to plot labels.
+    String is meant to be used in plot labels.
+
+    Parameters
+    ----------
+    deriv : int, optional
+        Derivative (defaults to 0).
+
+    Returns
+    -------
+    units : str
+        Tex-style unit string.
+
+    Examples
+    --------
+    >>> gauss_units()
+        'nT'
+
+    >>> gauss_units(1)
+        '$\\\\mathrm{nT}\\\\cdot\\\\mathrm{yr}^{-1}$'
+
+    >>> gauss_units(2)
+        '$\\\\mathrm{nT}\\\\cdot\\\\mathrm{yr}^{-2}$'
 
     """
 
@@ -583,6 +649,6 @@ def gauss_units(deriv):
     if deriv == 0:
         units = 'nT'
     else:
-        units = '$\\mathrm{{nT}}\\cdot \\mathrm{{yr}}^{{{:}}}$'.format(-deriv)
+        units = '$\\mathrm{{nT}}\\cdot\\mathrm{{yr}}^{{{:}}}$'.format(-deriv)
 
     return units
