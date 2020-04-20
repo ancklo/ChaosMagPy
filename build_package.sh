@@ -3,8 +3,10 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
+chaos=data/CHAOS-7.2.mat
 
-echo -------ChaosMagPy Version $version-------
+echo ---------------- ChaosMagPy Version $version ----------------
+echo "Building package with CHAOS-matfile in '$chaos'."
 
 while true; do
     read -p "Do you wish to continue building v$version (y/n)?: " yn
@@ -36,7 +38,7 @@ cp dist/chaosmagpy-$version.tar.gz $tempdir/
 cp chaos_examples.py $tempdir/
 cp example1_output.txt $tempdir/
 mkdir $tempdir/data $tempdir/html
-cp data/CHAOS-7.mat $tempdir/data/
+cp $chaos $tempdir/data/
 cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf
 cp -r docs/build/html/* $tempdir/html/
 
@@ -85,7 +87,7 @@ The directory contains the files/directories:
    example 6: Calculate external and associated induced fields described in SM
               and GSM reference systems and plot maps
 
-3. "data/CHAOS-7.mat": mat-file containing CHAOS-7 model
+3. "data/CHAOS-x.x.mat": mat-file containing the CHAOS model version x.x.
 
 4. "SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf":
    cdf-file containing Swarm A magnetic field data from August 1, 2018.
