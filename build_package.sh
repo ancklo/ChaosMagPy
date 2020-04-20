@@ -21,7 +21,7 @@ done
 python setup.py sdist bdist_wheel
 
 # clean build and compile documentary as html
-make --directory ./docs clean
+rm -r ./docs/build/
 make --directory ./docs html
 
 # make temporary directory
@@ -116,7 +116,7 @@ mv -i $tempdir/$out build/$out
 while true; do
     read -p "Do you wish to delete temporary files in '$tempdir' (y/n)?: " yn
     case $yn in
-        [Yy]* ) rm -r $tempdir; rm example1_output.txt; break;;
+        [Yy]* ) rm -r $tempdir; break;;
         [Nn]* ) echo Exit.; exit;;
         * ) echo "Please answer yes or no.";;
     esac
