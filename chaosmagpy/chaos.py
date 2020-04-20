@@ -2185,7 +2185,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 
     leap_year = True if leap_year is None else leap_year
 
-    time, coeffs, params = du.load_shcfile(str(filepath), leap_year=leap_year)
+    time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
 
     if time.size == 1:  # static field
 

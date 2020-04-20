@@ -24,21 +24,22 @@ python setup.py sdist bdist_wheel
 make --directory ./docs clean
 make --directory ./docs html
 
-# run example
-python chaos_examples.py
-
-# print example file output for checking
-cat example1_output.txt
-
 # make temporary directory
 tempdir=$(mktemp -t -d XXXXXX)
+echo "Created temporary directory '$tempdir'"
+mkdir $tempdir/data $tempdir/html
 
 # copy files to tmp directory
-cp dist/chaosmagpy-$version.tar.gz $tempdir/
-cp chaos_examples.py $tempdir/
-cp example1_output.txt $tempdir/
-mkdir $tempdir/data $tempdir/html
-cp $chaos $tempdir/data/
+cp dist/chaosmagpy-$version.tar.gz $tempdir/.
+cp chaos_examples.py $tempdir/.
+cp $chaos $tempdir/data/.
+
+# run example
+cd $tempdir/
+python $tempdir/chaos_examples.py
+cat example1_output.txt  # print example file output for checking
+cd -
+
 cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf
 cp -r docs/build/html/* $tempdir/html/
 

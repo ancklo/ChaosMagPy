@@ -1,10 +1,11 @@
 import numpy as np
+import glob
 import matplotlib.pyplot as plt
 from chaosmagpy import load_CHAOS_matfile
 from chaosmagpy.coordinate_utils import transform_points
 from chaosmagpy.data_utils import mjd2000
 
-FILEPATH_CHAOS = 'data/CHAOS-7.mat'
+FILEPATH_CHAOS = glob.glob('data/CHAOS-*.mat')[0]
 
 R_REF = 6371.2
 
