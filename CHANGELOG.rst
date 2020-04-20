@@ -3,7 +3,7 @@ Changelog
 
 Version 0.3
 -----------
-| **Date:** April 13, 2020
+| **Date:** April 20, 2020
 | **Release:** v0.3
 | **Version of CHAOS:** CHAOS-7.2 (0702)
 
@@ -18,6 +18,7 @@ series. But starting with the release of the CHAOS-7 series, the format
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2020_Feb_v4.dat.
 * Removed version keyword of :class:`chaosmagpy.chaos.CHAOS` to avoid
   confusion.
 * Added ``verbose`` keyword to the ``call`` method of
