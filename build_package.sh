@@ -17,8 +17,8 @@ while true; do
     esac
 done
 
-# build distribution
-python setup.py sdist bdist_wheel
+# build distribution, build binay in tmp/tmpwheel because of windows shared dir
+python setup.py sdist bdist_wheel --bdist-dir /tmp/tmpwheel
 
 # clean build and compile documentary as html
 rm -r ./docs/build/
@@ -123,14 +123,15 @@ while true; do
 done
 
 cat << EOF
---------------------------------------------
+-------------------------------------------------------------
+Check creation date of dist files (*.tar.gz and *.whl).
 Check license date.
 Check changelog date.
 Check link to CHAOS in usage section.
 Check overview section in the documentation.
 Check Python example content and copied data (CHAOS matfile).
 Check basicConfig default CHAOS version.
----------------------------------------------
+-------------------------------------------------------------
 EOF
 
 # upload to PyPI
