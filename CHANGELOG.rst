@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.4
+-----------
+| **Date:** April 21, 2020
+| **Release:** v0.4
+| **Version of CHAOS:** CHAOS-7.2 (0702)
+
+Features
+^^^^^^^^
+
 Version 0.3
 -----------
 | **Date:** April 20, 2020
