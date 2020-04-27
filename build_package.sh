@@ -17,16 +17,22 @@ while true; do
     esac
 done
 
+# delete old dist files if exist
+rm -f dist/chaosmagpy-$version-py3-none-any.whl
+rm -f dist/chaosmagpy-$version.tar.gz
+
 # build distribution, build binay in tmp/tmpwheel because of windows shared dir
-python setup.py sdist bdist_wheel --bdist-dir /tmp/tmpwheel
+tempdir=$(mktemp -t -d XXXXXX)
+echo "Creating temporary directory '$tempdir'"
+python setup.py sdist bdist_wheel --bdist-dir $tempdir
 
 # clean build and compile documentary as html
-rm -r ./docs/build/
+rm -rf ./docs/build/
 make --directory ./docs html
 
 # make temporary directory
 tempdir=$(mktemp -t -d XXXXXX)
-echo "Created temporary directory '$tempdir'"
+echo "Creating temporary directory '$tempdir'"
 mkdir $tempdir/data $tempdir/html
 
 # copy files to tmp directory

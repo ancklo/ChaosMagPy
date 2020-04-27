@@ -16,7 +16,10 @@ Documentation
 The documentation of the current release is available on
 `Read the Docs <https://chaosmagpy.readthedocs.io/en/stable/>`_.
 
-|doi| |docs| |license|
+|pypi| |docs| |doi| |license|
+
+.. |pypi| image:: https://badge.fury.io/py/chaosmagpy.svg
+    :target: https://badge.fury.io/py/chaosmagpy
 
 .. |docs| image:: https://readthedocs.org/projects/chaosmagpy/badge/?version=stable
    :target: https://chaosmagpy.readthedocs.io/en/stable/?badge=stable
