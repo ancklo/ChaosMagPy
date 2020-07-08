@@ -237,7 +237,7 @@ def load_shcfile(filepath, leap_year=None):
         data = np.array([])
         for line in f.readlines():
 
-            if line[0] == '#':
+            if line.strip().startswith('#'):
                 continue
 
             read_line = np.fromstring(line, sep=' ')
