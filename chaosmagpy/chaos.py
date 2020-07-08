@@ -110,7 +110,7 @@ class Base(object):
 
         Returns
         -------
-        coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
+        coeffs : ndarray, shape (..., ``dim``)
             Array containing the coefficients.
 
         """
