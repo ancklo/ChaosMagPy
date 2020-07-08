@@ -1992,8 +1992,8 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     filepath : str
         Path to mat-file containing the CHAOS model.
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the default in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to the filename without the
+        file extension.
     satellites : list of strings
         List of satellite names whose Euler angles are stored in the mat-file.
         This is needed for correct referencing as this information is not
@@ -2022,6 +2022,10 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     """
 
     filepath = str(filepath)
+
+    if name is None:
+        basename = os.path.basename(filepath)
+        name = os.path.splitext(basename)[0]  # get name without extension
 
     mat_contents = du.load_matfile(filepath)
 
@@ -2155,8 +2159,8 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     filepath : str
         Path to shc-file.
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the default in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to the filename without the
+        file extension.
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
@@ -2182,6 +2186,10 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     CHAOS, load_CHAOS_matfile
 
     """
+
+    if name is None:
+        basename = os.path.basename(filepath)
+        name = os.path.splitext(basename)[0]  # get name without extension
 
     leap_year = True if leap_year is None else leap_year
 

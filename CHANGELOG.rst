@@ -9,6 +9,7 @@ Version 0.4
 
 Features
 ^^^^^^^^
+* Model name defaults to the filename it was loaded from.
 
 Version 0.3
 -----------
