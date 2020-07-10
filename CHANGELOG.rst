@@ -3,13 +3,19 @@ Changelog
 
 Version 0.4
 -----------
-| **Date:** April 21, 2020
+| **Date:** July 10, 2020
 | **Release:** v0.4dev
 | **Version of CHAOS:** CHAOS-7.2 (0702)
 
 Features
 ^^^^^^^^
 * Model name defaults to the filename it was loaded from.
+* Added function to read Cov-Obs
+  (:func:`chaosmagpy.chaos.load_CovObs_txtfile`) model parameter files.
+* Added function to read gufm1
+  (:func:`chaosmagpy.chaos.load_gufm1_txtfile`) model parameter files.
+* Added class method to initialize :class:`chaosmagpy.chaos.BaseModel` from a
+  B-spline representation.
 
 Version 0.3
 -----------

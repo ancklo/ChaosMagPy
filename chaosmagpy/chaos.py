@@ -14,6 +14,8 @@ Classes and functions to read the CHAOS model.
 
     load_CHAOS_matfile
     load_CHAOS_shcfile
+    load_CovObs_txtfile
+    load_gufm1_txtfile
 
 """
 
@@ -46,7 +48,7 @@ class Base(object):
 
         # ensure breaks is None or has 2 elements
         if breaks is not None:
-            breaks = np.array(breaks, dtype=np.float)
+            breaks = np.asarray(breaks, dtype=np.float)
             if breaks.size == 1:
                 breaks = np.append(breaks, breaks)
 
@@ -60,7 +62,7 @@ class Base(object):
             self.dim = None
 
         else:
-            coeffs = np.array(coeffs, dtype=np.float)
+            coeffs = np.asarray(coeffs, dtype=np.float)
 
             if order is None:
                 self.order = coeffs.shape[0]
@@ -577,6 +579,54 @@ class BaseModel(Base):
 
         plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
+
+    @classmethod
+    def from_bspline(cls, name, knots, coeffs, order, source=None, meta=None):
+        """
+        Return BaseModel instance from a B-spline representation.
+
+        Parameters
+        ----------
+        name : str
+            User specified name of the model.
+        knots: ndarray, shape (N,)
+            B-spline knots. Knots must have endpoint multiplicity equal to
+            ``order``. Zero-pad ``coeffs`` if needed.
+        coeffs: ndarray, shape (M, D)
+            Bspline coefficients for the `M` B-splines parameterizing
+            `D` dimensions.
+        order: int
+            Order of the B-spline.
+        source : {'internal', 'external'}
+            Internal or external source (defaults to ``'internal'``)
+        meta : dict, optional
+            Dictionary containing additional information about the model.
+
+        Returns
+        -------
+        model: :class:`BaseModel`
+            Class :class:`BaseModel` instance.
+
+        """
+
+        degree = order - 1
+        breaks = np.unique(knots)  # remove endpoint multiplicity
+        pieces = breaks.size - 1  # number of polynomial pieces
+        dim = coeffs.shape[-1]  # dimension = number of Gauss coefficients
+
+        coeffs_pp = np.zeros((order, pieces, dim))
+
+        # have to do it manually for each dimension, scipy only univariate
+        for d in range(dim):
+
+            bs = sip.BSpline(knots, coeffs[:, d], degree)
+            pp = sip.PPoly.from_spline(bs, extrapolate=False)
+
+            # remove multiple pp-coefficients at endpoints
+            coeffs_pp[:, :, d] = pp.c[:, degree:(degree+pieces)]
+
+        return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
+                   source=source, meta=meta)
 
 
 class CHAOS(object):
@@ -2057,8 +2107,8 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     filepath = str(filepath)
 
     if name is None:
-        basename = os.path.basename(filepath)
-        name = os.path.splitext(basename)[0]  # get name without extension
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
 
     mat_contents = du.load_matfile(filepath)
 
@@ -2221,8 +2271,8 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     """
 
     if name is None:
-        basename = os.path.basename(filepath)
-        name = os.path.splitext(basename)[0]  # get name without extension
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
 
     leap_year = True if leap_year is None else leap_year
 
@@ -2260,3 +2310,163 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
                       name=name)
 
     return model
+
+
+def load_CovObs_txtfile(filepath, name=None):
+    """
+    Load model parameter file of the COV-OBS model.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to txt-file.
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model: :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    Examples
+    --------
+    Load the model and plot the degree-1 secular variation. Here, the
+    model parameter file, e.g. "COV-OBS.x2-int", is in the current working
+    directory.
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_CovObs_txtfile('COV-OBS.x2-int')  # load model txt-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        # sample model timespan a bit away from endpoints
+        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
+        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+
+        ax.plot(cp.data_utils.timestamp(time), coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('Time (years)')
+        ax.set_ylabel('nT/yr')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    tmp = np.fromstring(lines[1], sep=' ')  # read parameters and breaks
+
+    nmax = int(tmp[0])
+    order = int(tmp[2])
+    degree = order - 1  # polynomial degree
+
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(tmp[3:], leap_year=False)
+
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    data = np.fromstring(' '.join(lines[2:]), sep=' ')
+
+    # add zeros at endpoints to match manually extended knots
+    coeffs = np.zeros((knots.size - order, nmax*(nmax+2)))
+
+    # insert actual coefficients, endpoint coefficients are now zero
+    coeffs[degree:-degree, :] = data.reshape(
+        (breaks.size - order, nmax*(nmax+2)))
+
+    return BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal', meta=None)
+
+
+def load_gufm1_txtfile(filepath, name=None):
+    """
+    Load model parameter file of the gufm1 model.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to txt-file.
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model: :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    Examples
+    --------
+    Load the model and plot the degree-1 secular variation. Here, the
+    model parameter file, e.g. "gufm1", is in the current working directory.
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_gufm1_txtfile('gufm1')  # load model txt-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        # sample model timespan a bit away from endpoints
+        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
+        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+
+        ax.plot(cp.data_utils.timestamp(time), coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('Time (years)')
+        ax.set_ylabel('nT/yr')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    data = np.fromstring('  '.join(lines[1:]), sep=' ')
+
+    nmax = int(data[0])
+    order = 4  # hard-coded since not really provided in file
+    nbreaks = int(data[1]) + order  # data[1] is number of B-spline functions?
+    degree = order - 1  # polynomial degree
+
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(data[2:(nbreaks + 2)], leap_year=False)
+
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    # add zeros at endpoints to match manually extended knots
+    coeffs = np.zeros((knots.size - order, nmax*(nmax + 2)))
+
+    # insert actual coefficients, endpoint coefficients are now zero
+    coeffs[degree:-degree, :] = data[(nbreaks + 2):].reshape(
+        (breaks.size - order, nmax*(nmax + 2)))
+
+    return BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal', meta=None)
