@@ -11,8 +11,8 @@ ChaosMagPy documentation
 
    readme
    installation
-   configuration
    usage
+   configuration
    references
    changelog
    license

@@ -705,43 +705,11 @@ class CHAOS(object):
     Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
-    >>> from chaosmagpy import CHAOS
-    >>> model = CHAOS.from_mat('CHAOS-6-x7.mat')
+    >>> import chaosmagpy as cp
+    >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
     >>> print(model)
 
-    Or create manually a time-dependent internal field model as a piecewise
-    polynomial of order 4 (i.e. cubic) having 10 pieces, spanning the first 50
-    days in the year 2000 (breaks in modified Julian date 2000). As example,
-    choose random coefficients for the time-dependent field of spherical
-    harmonic degree 1 (= 3 coefficients).
-
-    .. code-block:: python
-
-      import chaosmagpy as cp
-      import numpy as np
-
-      # define model
-      m = 10  # number of pieces
-      breaks = np.linspace(0, 50, m+1)
-      k = 4  # polynomial order
-      coeffs = np.random.random(size=(k, m, 3))
-
-      # create CHAOS class instance
-      model = cp.CHAOS(breaks, k, coeffs_tdep=coeffs)
-
-    Now, plot for example the field map on January 2, 2000 0:00 UTC
-
-    .. code-block:: python
-
-      model.plot_maps_tdep(time=1, radius=6371.2)
-
-    Save the Gauss coefficients of the time-dependent field in shc-format to
-    the current working directory.
-
-    .. code-block:: python
-
-      model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
-
+    For more examples, see the dcoumentation of the methods below.
 
     """
 
@@ -1993,7 +1961,7 @@ str, {'internal', 'external'}
             User defined name of the model. Defaults to ``'CHAOS-<version>'``,
             where <version> is the default in
             ``basicConfig['params.version']``.
-        satellites : list of strings
+        satellites : list of strings, optional
             List of satellite names whose Euler angles are stored in the
             mat-file. This is needed for correct referencing as this
             information is not given in the standard CHAOS mat-file format
@@ -2095,8 +2063,45 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     directory like this:
 
     >>> import chaosmagpy as cp
-    >>> model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+    >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
     >>> print(model)
+
+    Compute the Gauss coefficients of the time-dependent internal field on
+    January 1, 2018 at 0:00 UTC. First, convert the date to modified Julian
+    date:
+
+    >>> cp.data_utils.mjd2000(2018, 1, 1)
+    6575.0
+
+    Now, compute the Gauss coefficients:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575.)
+    >>> coeffs
+    array([-2.94172133e+04, -1.46670696e+03, ..., -8.23461504e-02])
+
+    Compute only the dipolar part by restricting the spherical harmonic degree
+    with the help of the ``nmax`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., nmax=1)
+    >>> coeffs
+    array([-29417.21325337,  -1466.70696158,   4705.96297947])
+
+    Compute the first time derivative of the internal Gauss coefficients in
+    nT/yr with the help of the ``deriv`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., deriv=1)  # nT/yr
+    >>> coeffs
+    array([ 6.45476360e+00,  8.56693199e+00, ..., 1.13856347e-03])
+
+    Compute values of the time-dependent internal magnetic field on
+    January 1, 2018 at 0:00 UTC at
+    :math:`(\\theta, \\phi) = (90^\\circ, 0^\\circ)` on Earth's surface
+    (:math:`r=6371.2` km):
+
+    >>> B_radius, B_theta, B_phi = model.synth_values_tdep(\
+6575., 6371.2, 90., 0.)
+    >>> B_theta
+    array(-27642.31732596)
 
     See Also
     --------
@@ -2263,6 +2268,43 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     >>> import chaosmagpy as cp
     >>> model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
     >>> print(model)
+
+    Compute the Gauss coefficients of the time-dependent internal field on
+    January 1, 2018 at 0:00 UTC. First, convert the date to modified Julian
+    date:
+
+    >>> cp.data_utils.mjd2000(2018, 1, 1)
+    6575.0
+
+    Now, compute the Gauss coefficients:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575.)
+    >>> coeffs
+    array([-2.94172133e+04, -1.46670696e+03, ..., -8.23461504e-02])
+
+    Compute only the dipolar part by restricting the spherical harmonic degree
+    with the help of the ``nmax`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., nmax=1)
+    >>> coeffs
+    array([-29417.21325337,  -1466.70696158,   4705.96297947])
+
+    Compute the first time derivative of the internal Gauss coefficients in
+    nT/yr with the help of the ``deriv`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., deriv=1)  # nT/yr
+    >>> coeffs
+    array([ 6.45476360e+00,  8.56693199e+00, ..., 1.13856347e-03])
+
+    Compute values of the time-dependent internal magnetic field on
+    January 1, 2018 at 0:00 UTC at
+    :math:`(\\theta, \\phi) = (90^\\circ, 0^\\circ)` on Earth's surface
+    (:math:`r=6371.2` km):
+
+    >>> B_radius, B_theta, B_phi = model.synth_values_tdep(\
+6575., 6371.2, 90., 0.)
+    >>> B_theta
+    array(-27642.31732596)
 
     See Also
     --------
