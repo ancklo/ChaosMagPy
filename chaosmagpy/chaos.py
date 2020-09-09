@@ -253,6 +253,8 @@ class BaseModel(Base):
         Coefficients of the time-dependent field.
     source : {'internal', 'external'}
         Internal or external source (defaults to ``'internal'``)
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     """
 
@@ -589,13 +591,13 @@ class BaseModel(Base):
         ----------
         name : str
             User specified name of the model.
-        knots: ndarray, shape (N,)
+        knots : ndarray, shape (N,)
             B-spline knots. Knots must have endpoint multiplicity equal to
             ``order``. Zero-pad ``coeffs`` if needed.
-        coeffs: ndarray, shape (M, D)
+        coeffs : ndarray, shape (M, D)
             Bspline coefficients for the `M` B-splines parameterizing
             `D` dimensions.
-        order: int
+        order : int
             Order of the B-spline.
         source : {'internal', 'external'}
             Internal or external source (defaults to ``'internal'``)
@@ -604,7 +606,7 @@ class BaseModel(Base):
 
         Returns
         -------
-        model: :class:`BaseModel`
+        model : :class:`BaseModel`
             Class :class:`BaseModel` instance.
 
         """
@@ -699,6 +701,8 @@ class CHAOS(object):
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
     name : str, optional
         User defined name of the model.
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     Examples
     --------
@@ -2361,15 +2365,24 @@ def load_CovObs_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file.
+        Path to txt-file (not part of ChaosMagPy).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
 
     Returns
     -------
-    model: :class:`BaseModel`
+    model : :class:`BaseModel`
         Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    For details on the COV-OBS model (COV-OBS.x2), see the original
+    publication:
+
+    Huder, L., Gillet, N., Finlay, C. C., Hammer, M. D. and H. Tchoungui
+    (2020), "COV-OBS.x2: 180 yr of geomagnetic field evolution from
+    ground-based and satellite observations", Earth, Planets and Space.
 
     Examples
     --------
@@ -2442,15 +2455,23 @@ def load_gufm1_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file.
+        Path to txt-file (not part of ChaosMagPy).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
 
     Returns
     -------
-    model: :class:`BaseModel`
+    model : :class:`BaseModel`
         Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    For details on the gufm1 model, see the original publication:
+
+    Andrew Jackson, Art R. T. Jonkers and Matthew R. Walker (2000),
+    "Four centuries of geomagnetic secular variation from historical records",
+    Phil. Trans. R. Soc. A.358957–990, http://doi.org/10.1098/rsta.2000.0569
 
     Examples
     --------
