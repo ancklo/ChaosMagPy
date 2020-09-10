@@ -26,7 +26,7 @@ import chaosmagpy
 # -- Project information -----------------------------------------------------
 
 project = 'ChaosMagPy'
-copyright = '2019, Clemens Kloss'
+copyright = '2020, Clemens Kloss'
 author = 'Clemens Kloss'
 
 # The short X.Y version

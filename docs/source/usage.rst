@@ -8,16 +8,14 @@ The model coefficients can be downloaded `here <http://www.spacecenter.dk/files/
 Computing the field components on a grid
 ----------------------------------------
 
-Instead of plotting the field components, we can just have ChaosMagPy return
-the numerical values of the different sources in the model. For
-example, the time-dependent internal field:
+Use ChaosMagPy to compute the magnetic field components of the different
+sources that are accounted for in the model. For example, the time-dependent
+internal field:
 
 .. code-block:: python
 
    import numpy as np
-   from chaosmagpy import load_CHAOS_matfile
-   from chaosmagpy.model_utils import synth_values
-   from chaosmagpy.data_utils import mjd2000
+   import chaosmagpy as cp
 
    # create full grid
    radius = 3485.  # km, core-mantle boundary
@@ -27,15 +25,19 @@ example, the time-dependent internal field:
    phi_grid, theta_grid = np.meshgrid(phi, theta)
    radius_grid = radius*np.ones(phi_grid.shape)
 
-   time = mjd2000(2000, 1, 1)  # modified Julian date
+   time = cp.data_utils.mjd2000(2000, 1, 1)  # modified Julian date
 
    # load the CHAOS model
-   model = load_CHAOS_matfile('CHAOS-6-x7.mat')
+   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   print('Computing core field.')
-   coeffs = model.synth_coeffs_tdep(time, nmax=16, deriv=1)  # SV max. degree 16
+   # compute the Gauss coefficients from the model
+   coeffs = model.synth_coeffs_tdep(time)
 
-   B_radius, B_theta, B_phi = synth_values(coeffs, radius_grid, theta_grid, phi_grid)
+   # compute field components on a grid using the Gauss coefficients
+   B_radius, B_theta, B_phi = cp.model_utils.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
+
+   # alternatively, compute the field components directly from the model
+   B_radius, B_theta, B_phi = model.synth_values_tdep(time, radius, theta, phi, grid=True)
 
 When using a fully specified regular grid, consider ``grid=True`` option for
 speed. It will internally compute a grid similar to :func:`numpy.meshgrid`
@@ -44,7 +46,7 @@ instead of ``theta_grid``):
 
 .. code-block:: python
 
-   B_radius, B_theta, B_phi = synth_values(coeffs, radius, theta, phi, grid=True)
+   B_radius, B_theta, B_phi = cp.model_utils.synth_values(coeffs, radius, theta, phi, grid=True)
 
 The same computation can be done with other sources described by the model:
 
@@ -60,7 +62,7 @@ The same computation can be done with other sources described by the model:
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_coeffs_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
-We can also directly calculate the magnetic field components without having to
+Directly calculate the magnetic field components without having to
 synthesize the spherical harmonic coefficients first. Use one of the following
 methods:
 
@@ -79,7 +81,7 @@ methods:
 Computing the timeseries of field components at two ground observatories
 ------------------------------------------------------------------------
 
-Compute the timeseries of the first time-derivative of the field components at
+Compute the time series of the first time-derivative of the field components at
 the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 
 .. code-block:: python

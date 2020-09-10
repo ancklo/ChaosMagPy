@@ -3,7 +3,7 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
-chaos=data/CHAOS-7.2.mat
+chaos=data/CHAOS-7.3.mat  # update model file here
 
 echo ---------------- ChaosMagPy Version $version ----------------
 echo "Building package with CHAOS-matfile in '$chaos'."
@@ -17,16 +17,22 @@ while true; do
     esac
 done
 
-# build distribution, build binay in tmp/tmpwheel because of windows shared dir
-python setup.py sdist bdist_wheel --bdist-dir /tmp/tmpwheel
+# delete old dist files if exist
+rm -f dist/chaosmagpy-$version-py3-none-any.whl
+rm -f dist/chaosmagpy-$version.tar.gz
+
+# build distribution, build binary in /tmp because of windows shared dir
+tempdir=$(mktemp -t -d XXXXXX)
+echo "Creating temporary directory '$tempdir'"
+python setup.py sdist bdist_wheel --bdist-dir $tempdir
 
 # clean build and compile documentary as html
-rm -r ./docs/build/
+rm -rf ./docs/build/
 make --directory ./docs html
 
 # make temporary directory
 tempdir=$(mktemp -t -d XXXXXX)
-echo "Created temporary directory '$tempdir'"
+echo "Creating temporary directory '$tempdir'"
 mkdir $tempdir/data $tempdir/html
 
 # copy files to tmp directory
@@ -91,7 +97,7 @@ The directory contains the files/directories:
 3. "data/CHAOS-x.x.mat": mat-file containing the CHAOS model version x.x.
 
 4. "SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf":
-   cdf-file containing Swarm A magnetic field data from August 1, 2018.
+   cdf-file containing Swarm-A magnetic field data from August 1, 2018.
 
 5. directory called "html" containing the built documentation as
    html-files. Open "index.html" in your browser to access the main site.
@@ -127,7 +133,7 @@ cat << EOF
 Check creation date of dist files (*.tar.gz and *.whl).
 Check license date.
 Check changelog date.
-Check link to CHAOS in usage section.
+Check url to CHAOS at the top of the usage section.
 Check overview section in the documentation.
 Check Python example content and copied data (CHAOS matfile).
 Check basicConfig default CHAOS version.

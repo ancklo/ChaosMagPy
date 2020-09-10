@@ -14,6 +14,8 @@ Classes and functions to read the CHAOS model.
 
     load_CHAOS_matfile
     load_CHAOS_shcfile
+    load_CovObs_txtfile
+    load_gufm1_txtfile
 
 """
 
@@ -46,7 +48,7 @@ class Base(object):
 
         # ensure breaks is None or has 2 elements
         if breaks is not None:
-            breaks = np.array(breaks, dtype=np.float)
+            breaks = np.asarray(breaks, dtype=np.float)
             if breaks.size == 1:
                 breaks = np.append(breaks, breaks)
 
@@ -60,7 +62,7 @@ class Base(object):
             self.dim = None
 
         else:
-            coeffs = np.array(coeffs, dtype=np.float)
+            coeffs = np.asarray(coeffs, dtype=np.float)
 
             if order is None:
                 self.order = coeffs.shape[0]
@@ -110,7 +112,7 @@ class Base(object):
 
         Returns
         -------
-        coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
+        coeffs : ndarray, shape (..., ``dim``)
             Array containing the coefficients.
 
         """
@@ -251,6 +253,8 @@ class BaseModel(Base):
         Coefficients of the time-dependent field.
     source : {'internal', 'external'}
         Internal or external source (defaults to ``'internal'``)
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     """
 
@@ -324,9 +328,42 @@ class BaseModel(Base):
     def synth_values(self, time, radius, theta, phi, *, nmax=None,
                      deriv=None, grid=None, extrapolate=None):
         """
-        Compute magnetic field components.
+        Compute magnetic components of the time-dependent field.
 
-        See :meth:`CHAOS.synth_values_tdep`.
+        Parameters
+        ----------
+        time : ndarray, shape (...) or float
+            Array containing the time in modified Julian dates.
+        radius : ndarray, shape (...) or float
+            Radius of station in kilometers.
+        theta : ndarray, shape (...) or float
+            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        phi : ndarray, shape (...) or float
+            Longitude in degrees.
+        nmax : int, positive, optional
+            Maximum degree harmonic expansion (default is given by the model
+            coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (None defaults to 0). For secular variation,
+            choose ``deriv=1``.
+        grid : bool, optional
+            If ``True``, field components are computed on a regular grid.
+            Arrays ``theta`` and ``phi`` must have one dimension less than the
+            output grid since the grid will be created as their outer product.
+        extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
+'off'} or int, optional
+            Extrapolate to times outside of the model bounds. Specify
+            polynomial degree as string or any order as integer. Defaults to
+            ``'linear'`` (equiv. to order 2 polynomials).
+
+        Returns
+        -------
+        B_radius, B_theta, B_phi : ndarray, shape (...)
+            Radial, colatitude and azimuthal field components.
+
+        See Also
+        --------
+        CHAOS.synth_values_tdep
 
         """
 
@@ -545,6 +582,54 @@ class BaseModel(Base):
         plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
 
+    @classmethod
+    def from_bspline(cls, name, knots, coeffs, order, source=None, meta=None):
+        """
+        Return BaseModel instance from a B-spline representation.
+
+        Parameters
+        ----------
+        name : str
+            User specified name of the model.
+        knots : ndarray, shape (N,)
+            B-spline knots. Knots must have endpoint multiplicity equal to
+            ``order``. Zero-pad ``coeffs`` if needed.
+        coeffs : ndarray, shape (M, D)
+            Bspline coefficients for the `M` B-splines parameterizing
+            `D` dimensions.
+        order : int
+            Order of the B-spline.
+        source : {'internal', 'external'}
+            Internal or external source (defaults to ``'internal'``)
+        meta : dict, optional
+            Dictionary containing additional information about the model.
+
+        Returns
+        -------
+        model : :class:`BaseModel`
+            Class :class:`BaseModel` instance.
+
+        """
+
+        degree = order - 1
+        breaks = np.unique(knots)  # remove endpoint multiplicity
+        pieces = breaks.size - 1  # number of polynomial pieces
+        dim = coeffs.shape[-1]  # dimension = number of Gauss coefficients
+
+        coeffs_pp = np.zeros((order, pieces, dim))
+
+        # have to do it manually for each dimension, scipy only univariate
+        for d in range(dim):
+
+            bs = sip.BSpline(knots, coeffs[:, d], degree)
+            pp = sip.PPoly.from_spline(bs, extrapolate=False)
+
+            # remove multiple pp-coefficients at endpoints
+            coeffs_pp[:, :, d] = pp.c[:, degree:(degree+pieces)]
+
+        return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
+                   source=source, meta=meta)
+
 
 class CHAOS(object):
     """
@@ -616,49 +701,19 @@ class CHAOS(object):
         coordinates. The dictionary keys are ``'q10'``, ``'q11'``, ``'s11'``.
     name : str, optional
         User defined name of the model.
+    meta : dict, optional
+        Dictionary containing additional information about the model.
 
     Examples
     --------
     Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
-    >>> from chaosmagpy import CHAOS
-    >>> model = CHAOS.from_mat('CHAOS-6-x7.mat')
+    >>> import chaosmagpy as cp
+    >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
     >>> print(model)
 
-    Or create manually a time-dependent internal field model as a piecewise
-    polynomial of order 4 (i.e. cubic) having 10 pieces, spanning the first 50
-    days in the year 2000 (breaks in modified Julian date 2000). As example,
-    choose random coefficients for the time-dependent field of spherical
-    harmonic degree 1 (= 3 coefficients).
-
-    .. code-block:: python
-
-      import chaosmagpy as cp
-      import numpy as np
-
-      # define model
-      m = 10  # number of pieces
-      breaks = np.linspace(0, 50, m+1)
-      k = 4  # polynomial order
-      coeffs = np.random.random(size=(k, m, 3))
-
-      # create CHAOS class instance
-      model = cp.CHAOS(breaks, k, coeffs_tdep=coeffs)
-
-    Now, plot for example the field map on January 2, 2000 0:00 UTC
-
-    .. code-block:: python
-
-      model.plot_maps_tdep(time=1, radius=6371.2)
-
-    Save the Gauss coefficients of the time-dependent field in shc-format to
-    the current working directory.
-
-    .. code-block:: python
-
-      model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
-
+    For more examples, see the dcoumentation of the methods below.
 
     """
 
@@ -1910,7 +1965,7 @@ str, {'internal', 'external'}
             User defined name of the model. Defaults to ``'CHAOS-<version>'``,
             where <version> is the default in
             ``basicConfig['params.version']``.
-        satellites : list of strings
+        satellites : list of strings, optional
             List of satellite names whose Euler angles are stored in the
             mat-file. This is needed for correct referencing as this
             information is not given in the standard CHAOS mat-file format
@@ -1992,8 +2047,8 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     filepath : str
         Path to mat-file containing the CHAOS model.
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the default in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to the filename without the
+        file extension.
     satellites : list of strings
         List of satellite names whose Euler angles are stored in the mat-file.
         This is needed for correct referencing as this information is not
@@ -2012,8 +2067,45 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     directory like this:
 
     >>> import chaosmagpy as cp
-    >>> model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+    >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
     >>> print(model)
+
+    Compute the Gauss coefficients of the time-dependent internal field on
+    January 1, 2018 at 0:00 UTC. First, convert the date to modified Julian
+    date:
+
+    >>> cp.data_utils.mjd2000(2018, 1, 1)
+    6575.0
+
+    Now, compute the Gauss coefficients:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575.)
+    >>> coeffs
+    array([-2.94172133e+04, -1.46670696e+03, ..., -8.23461504e-02])
+
+    Compute only the dipolar part by restricting the spherical harmonic degree
+    with the help of the ``nmax`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., nmax=1)
+    >>> coeffs
+    array([-29417.21325337,  -1466.70696158,   4705.96297947])
+
+    Compute the first time derivative of the internal Gauss coefficients in
+    nT/yr with the help of the ``deriv`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., deriv=1)  # nT/yr
+    >>> coeffs
+    array([ 6.45476360e+00,  8.56693199e+00, ..., 1.13856347e-03])
+
+    Compute values of the time-dependent internal magnetic field on
+    January 1, 2018 at 0:00 UTC at
+    :math:`(\\theta, \\phi) = (90^\\circ, 0^\\circ)` on Earth's surface
+    (:math:`r=6371.2` km):
+
+    >>> B_radius, B_theta, B_phi = model.synth_values_tdep(\
+6575., 6371.2, 90., 0.)
+    >>> B_theta
+    array(-27642.31732596)
 
     See Also
     --------
@@ -2022,6 +2114,10 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     """
 
     filepath = str(filepath)
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
 
     mat_contents = du.load_matfile(filepath)
 
@@ -2155,8 +2251,8 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     filepath : str
         Path to shc-file.
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the default in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to the filename without the
+        file extension.
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
@@ -2177,11 +2273,52 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     >>> model = cp.load_CHAOS_shcfile('CHAOS-6-x7_tdep.shc')
     >>> print(model)
 
+    Compute the Gauss coefficients of the time-dependent internal field on
+    January 1, 2018 at 0:00 UTC. First, convert the date to modified Julian
+    date:
+
+    >>> cp.data_utils.mjd2000(2018, 1, 1)
+    6575.0
+
+    Now, compute the Gauss coefficients:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575.)
+    >>> coeffs
+    array([-2.94172133e+04, -1.46670696e+03, ..., -8.23461504e-02])
+
+    Compute only the dipolar part by restricting the spherical harmonic degree
+    with the help of the ``nmax`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., nmax=1)
+    >>> coeffs
+    array([-29417.21325337,  -1466.70696158,   4705.96297947])
+
+    Compute the first time derivative of the internal Gauss coefficients in
+    nT/yr with the help of the ``deriv`` keyword argument:
+
+    >>> coeffs = model.synth_coeffs_tdep(6575., deriv=1)  # nT/yr
+    >>> coeffs
+    array([ 6.45476360e+00,  8.56693199e+00, ..., 1.13856347e-03])
+
+    Compute values of the time-dependent internal magnetic field on
+    January 1, 2018 at 0:00 UTC at
+    :math:`(\\theta, \\phi) = (90^\\circ, 0^\\circ)` on Earth's surface
+    (:math:`r=6371.2` km):
+
+    >>> B_radius, B_theta, B_phi = model.synth_values_tdep(\
+6575., 6371.2, 90., 0.)
+    >>> B_theta
+    array(-27642.31732596)
+
     See Also
     --------
     CHAOS, load_CHAOS_matfile
 
     """
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
 
     leap_year = True if leap_year is None else leap_year
 
@@ -2219,3 +2356,180 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
                       name=name)
 
     return model
+
+
+def load_CovObs_txtfile(filepath, name=None):
+    """
+    Load model parameter file of the COV-OBS model.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to txt-file (not part of ChaosMagPy).
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model : :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    For details on the COV-OBS model (COV-OBS.x2), see the original
+    publication:
+
+    Huder, L., Gillet, N., Finlay, C. C., Hammer, M. D. and H. Tchoungui
+    (2020), "COV-OBS.x2: 180 yr of geomagnetic field evolution from
+    ground-based and satellite observations", Earth, Planets and Space.
+
+    Examples
+    --------
+    Load the model and plot the degree-1 secular variation. Here, the
+    model parameter file, e.g. "COV-OBS.x2-int", is in the current working
+    directory.
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_CovObs_txtfile('COV-OBS.x2-int')  # load model txt-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        # sample model timespan a bit away from endpoints
+        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
+        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+
+        ax.plot(cp.data_utils.timestamp(time), coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('Time (years)')
+        ax.set_ylabel('nT/yr')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    tmp = np.fromstring(lines[1], sep=' ')  # read parameters and breaks
+
+    nmax = int(tmp[0])
+    order = int(tmp[2])
+    degree = order - 1  # polynomial degree
+
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(tmp[3:], leap_year=False)
+
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    data = np.fromstring(' '.join(lines[2:]), sep=' ')
+
+    # add zeros at endpoints to match manually extended knots
+    coeffs = np.zeros((knots.size - order, nmax*(nmax+2)))
+
+    # insert actual coefficients, endpoint coefficients are now zero
+    coeffs[degree:-degree, :] = data.reshape(
+        (breaks.size - order, nmax*(nmax+2)))
+
+    return BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal', meta=None)
+
+
+def load_gufm1_txtfile(filepath, name=None):
+    """
+    Load model parameter file of the gufm1 model.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to txt-file (not part of ChaosMagPy).
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model : :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    For details on the gufm1 model, see the original publication:
+
+    Andrew Jackson, Art R. T. Jonkers and Matthew R. Walker (2000),
+    "Four centuries of geomagnetic secular variation from historical records",
+    Phil. Trans. R. Soc. A.358957–990, http://doi.org/10.1098/rsta.2000.0569
+
+    Examples
+    --------
+    Load the model and plot the degree-1 secular variation. Here, the
+    model parameter file, e.g. "gufm1", is in the current working directory.
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_gufm1_txtfile('gufm1')  # load model txt-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        # sample model timespan a bit away from endpoints
+        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
+        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+
+        ax.plot(cp.data_utils.timestamp(time), coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('Time (years)')
+        ax.set_ylabel('nT/yr')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    with open(filepath, 'r') as f:
+        lines = f.readlines()
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    data = np.fromstring('  '.join(lines[1:]), sep=' ')
+
+    nmax = int(data[0])
+    order = 4  # hard-coded since not really provided in file
+    nbreaks = int(data[1]) + order  # data[1] is number of B-spline functions?
+    degree = order - 1  # polynomial degree
+
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(data[2:(nbreaks + 2)], leap_year=False)
+
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    # add zeros at endpoints to match manually extended knots
+    coeffs = np.zeros((knots.size - order, nmax*(nmax + 2)))
+
+    # insert actual coefficients, endpoint coefficients are now zero
+    coeffs[degree:-degree, :] = data[(nbreaks + 2):].reshape(
+        (breaks.size - order, nmax*(nmax + 2)))
+
+    return BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal', meta=None)

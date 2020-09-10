@@ -301,9 +301,9 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     Parameters
     ----------
 
-    coeffs : ndarray, shape (..., N)
+    coeffs : ndarray, shape (..., M)
         Coefficients of the spherical harmonic expansion. The last dimension is
-        equal to the number of coefficients, `N` at the grid points.
+        equal to the number of coefficients.
     radius : float or ndarray, shape (...)
         Array containing the radius in kilometers.
     theta : float or ndarray, shape (...)
@@ -313,13 +313,13 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         Array containing the longitude in degrees.
     nmax : int, positive, optional
         Maximum degree up to which expansion is to be used (default is given by
-        the ``coeffs``, but can also be smaller if specified).
+        the last dimenion of ``coeffs``, that is, ``M = nmax(nmax+2)``).
     nmin : int, positive, optional
         Minimum degree of the expansion (defaults to 1).
     mmax : int, positive, optional
         Maximum order of the spherical harmonic expansion (defaults to
-        ``nmax``). For ``mmax = 0``, for example, only the zonal terms are
-        returned.
+        ``nmax``). For ``mmax = 0``, for example, only the zonal part of the
+        expansion is used.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional

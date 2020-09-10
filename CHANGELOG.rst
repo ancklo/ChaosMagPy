@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Version 0.4
+-----------
+| **Date:** September 10, 2020
+| **Release:** v0.4dev
+| **Version of CHAOS:** CHAOS-7.3 (0703)
+
+Features
+^^^^^^^^
+* Updated RC-index file to RC_1997-2020_Aug_v4.dat.
+* Model name defaults to the filename it was loaded from.
+* Added function to read the COV-OBS.x2 model
+  (:func:`chaosmagpy.chaos.load_CovObs_txtfile`) from a text file.
+* Added function to read the gufm1 model
+  (:func:`chaosmagpy.chaos.load_gufm1_txtfile`) from a text file.
+* Added class method to initialize :class:`chaosmagpy.chaos.BaseModel` from a
+  B-spline representation.
+
 Version 0.3
 -----------
 | **Date:** April 20, 2020
