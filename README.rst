@@ -7,8 +7,8 @@ ChaosMagPy is a simple Python package for evaluating the
 field model. To quickly get started, download a complete working example
 including the latest model under the "Forward code" section.
 
-| **Release:** v0.4dev
-| **Version of CHAOS:** CHAOS-7.2 (0702)
+| **Release:** v0.4
+| **Version of CHAOS:** CHAOS-7.3 (0703)
 
 Documentation
 -------------

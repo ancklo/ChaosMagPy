@@ -11,6 +11,9 @@ R_REF = 6371.2
 
 
 def main():
+    """
+    Run examples by uncommenting lines below.
+    """
 
     example1()
     # example2()
