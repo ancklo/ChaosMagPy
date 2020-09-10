@@ -133,7 +133,7 @@ cat << EOF
 Check creation date of dist files (*.tar.gz and *.whl).
 Check license date.
 Check changelog date.
-Check link to CHAOS in usage section.
+Check url to CHAOS at the top of the usage section.
 Check overview section in the documentation.
 Check Python example content and copied data (CHAOS matfile).
 Check basicConfig default CHAOS version.

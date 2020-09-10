@@ -179,6 +179,14 @@ def save_RC_h5file(filepath, read_from=None):
     ['time', 'RC', 'RC_e', 'RC_i', 'flag']. Time is given in modified Julian
     dates 2000.
 
+    Examples
+    --------
+    Save RC-index txt-file (``RC_1997-2020_Aug_v4.dat``) as file in hdf format
+    (``RC_index.h5``).
+
+    >>> save_RC_h5file('RC_index.h5', read_from='RC_1997-2020_Aug_v4.dat')
+    Successfully saved to RC_index.h5.
+
     """
 
     try:
