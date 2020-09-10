@@ -25,7 +25,7 @@ class DataUtils(TestCase):
     def test_time_conversion(self):
 
         size = (10,)
-        days = np.random.randint(int(365.25*30), size=size)
+        days = np.random.randint(365., size=size)
         hours = np.random.randint(24, size=size)
         minutes = np.random.randint(60, size=size)
         seconds = np.random.randint(60, size=size)

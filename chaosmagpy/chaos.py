@@ -1916,7 +1916,7 @@ str, {'internal', 'external'}
             gamma = []  # list of gamma for each satellite
             for num, satellite in enumerate(satellites):
 
-                # reduce breaks if start end end are equal
+                # reduce breaks if start and end are equal
                 breaks = self.model_euler[satellite].breaks
                 if breaks[0] == breaks[-1]:
                     breaks = breaks[0]
@@ -1929,14 +1929,17 @@ str, {'internal', 'external'}
                 gamma.append(self.model_euler[satellite].coeffs[
                     0, :, 2].reshape((-1, 1)).astype(float))
 
-            hdf.write(np.array(t_break_Euler),
+            hdf.write(np.array(t_break_Euler, dtype='object'),
                       path='/model_Euler/t_break_Euler/',
                       filename=filepath, matlab_compatible=True)
-            hdf.write(np.array(alpha), path='/model_Euler/alpha/',
+            hdf.write(np.array(alpha, dtype='object'),
+                      path='/model_Euler/alpha/',
                       filename=filepath, matlab_compatible=True)
-            hdf.write(np.array(beta), path='/model_Euler/beta/',
+            hdf.write(np.array(beta, dtype='object'),
+                      path='/model_Euler/beta/',
                       filename=filepath, matlab_compatible=True)
-            hdf.write(np.array(gamma), path='/model_Euler/gamma/',
+            hdf.write(np.array(gamma, dtype='object'),
+                      path='/model_Euler/gamma/',
                       filename=filepath, matlab_compatible=True)
 
         if self.model_static.coeffs is not None:
