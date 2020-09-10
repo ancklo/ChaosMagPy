@@ -2,7 +2,7 @@ Changelog
 =========
 
 Version 0.5dev
------------
+--------------
 | **Date:** September 10, 2020
 | **Release:** v0.5dev
 | **Version of CHAOS:** CHAOS-7.3 (0703)
