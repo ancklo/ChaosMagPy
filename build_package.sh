@@ -3,7 +3,7 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
-chaos=data/CHAOS-7.2.mat
+chaos=data/CHAOS-7.3.mat  # update model file here
 
 echo ---------------- ChaosMagPy Version $version ----------------
 echo "Building package with CHAOS-matfile in '$chaos'."
@@ -97,7 +97,7 @@ The directory contains the files/directories:
 3. "data/CHAOS-x.x.mat": mat-file containing the CHAOS model version x.x.
 
 4. "SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf":
-   cdf-file containing Swarm A magnetic field data from August 1, 2018.
+   cdf-file containing Swarm-A magnetic field data from August 1, 2018.
 
 5. directory called "html" containing the built documentation as
    html-files. Open "index.html" in your browser to access the main site.
