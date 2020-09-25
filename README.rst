@@ -8,7 +8,7 @@ field model. To quickly get started, download a complete working example
 including the latest model under the "Forward code" section.
 
 | **Release:** v0.5dev
-| **Version of CHAOS:** CHAOS-7.3 (0703)
+| **Version of CHAOS:** CHAOS-7.3 (0703), CHAOS-7.4 (0704)
 
 Documentation
 -------------
