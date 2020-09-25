@@ -942,8 +942,7 @@ str, {'internal', 'external'}
         Print model version and initialization timestamp.
         """
 
-        string = (f"This is {self.name} (v{basicConfig['params.version']})"
-                  f" initialized on {self.timestamp} UTC.")
+        string = (f"This is {self.name} initialized on {self.timestamp} UTC.")
 
         return string
 
