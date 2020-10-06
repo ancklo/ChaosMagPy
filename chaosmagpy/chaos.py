@@ -2333,7 +2333,9 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
         coeffs_static = np.zeros((nmax*(nmax+2),))
         coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
         coeffs_static = coeffs_static.reshape((1, 1, -1))
-        model = CHAOS(breaks=np.array(time), coeffs_static=coeffs_static)
+        model = CHAOS(breaks=np.array(time),
+                      coeffs_static=coeffs_static,
+                      name=name)
 
     else:  # time-dependent field
 
