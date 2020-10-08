@@ -2363,12 +2363,13 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 
 def load_CovObs_txtfile(filepath, name=None):
     """
-    Load model parameter file of the COV-OBS model.
+    Load the ensemble mean of the internal model from the COV-OBS
+    txt-file in spline format.
 
     Parameters
     ----------
     filepath : str
-        Path to txt-file (not part of ChaosMagPy).
+        Path to spline-formatted txt-file (not part of ChaosMagPy).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2389,9 +2390,9 @@ def load_CovObs_txtfile(filepath, name=None):
 
     Examples
     --------
-    Load the model and plot the degree-1 secular variation. Here, the
-    model parameter file, e.g. "COV-OBS.x2-int", is in the current working
-    directory.
+    Load the ensemble mean internal model and plot the degree-1 secular
+    variation. Here, the model parameter file, e.g. "COV-OBS.x2-int", is in
+    the current working directory.
 
     .. code-block:: python
 
