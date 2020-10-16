@@ -411,14 +411,14 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     theta_min = np.amin(theta)
     theta_max = np.amax(theta)
 
-    if theta_min <= 0.0 or theta_max >= 180.0:
-        if theta_min == 0.0 or theta_max == 180.0:
+    if (theta_min <= 0.0) or (theta_max >= 180.0):
+        if (theta_min == 0.0) or (theta_max == 180.0):
             warnings.warn('The geographic poles are included.')
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 
     nmin = 1 if nmin is None else int(nmin)
-    assert nmin > 0, 'Degree must be greater than zero.'
+    assert nmin > 0, '"nmin" must be greater than zero.'
 
     dim = coeffs.shape[-1]
 
@@ -481,10 +481,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     # save sinth for fast access
     sinth = Pnm[1, 1]
 
-    # calculate cos(m*phi) and sin(m*phi) as (m, phi-points)-array
+    # convert phi to radians
     phi = radians(phi)
-    cmp = np.cos(np.multiply.outer(np.arange(mmax+1), phi))
-    smp = np.sin(np.multiply.outer(np.arange(mmax+1), phi))
 
     # allocate arrays in memory
     B_radius = np.zeros(grid_shape)
@@ -503,26 +501,27 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         num += 1
 
         for m in range(1, min(n, mmax)+1):
+
+            cmp = np.cos(m*phi)
+            smp = np.sin(m*phi)
+
             if source == 'internal':
                 B_radius += ((n+1) * Pnm[n, m] * r_n
-                             * (coeffs[..., num] * cmp[m]
-                                + coeffs[..., num+1] * smp[m]))
+                             * (coeffs[..., num] * cmp
+                                + coeffs[..., num+1] * smp))
             elif source == 'external':
                 B_radius += -(n * Pnm[n, m] * r_n
-                              * (coeffs[..., num] * cmp[m]
-                                 + coeffs[..., num+1] * smp[m]))
+                              * (coeffs[..., num] * cmp
+                                 + coeffs[..., num+1] * smp))
 
             B_theta += (-Pnm[m, n+1] * r_n
-                        * (coeffs[..., num] * cmp[m]
-                           + coeffs[..., num+1] * smp[m]))
+                        * (coeffs[..., num] * cmp
+                           + coeffs[..., num+1] * smp))
 
-            with np.errstate(divide='ignore', invalid='ignore'):
-                div_Pnm = np.where(theta == 0., np.nan, Pnm[n, m] / sinth)
-                div_Pnm = np.where(theta == 180., np.nan, div_Pnm)
-
-            B_phi += (m * div_Pnm * r_n
-                      * (coeffs[..., num] * smp[m]
-                         - coeffs[..., num+1] * cmp[m]))
+            # divide by sinth later
+            B_phi += (m * Pnm[n, m] * r_n
+                      * (coeffs[..., num] * smp
+                         - coeffs[..., num+1] * cmp))
 
             num += 2
 
@@ -530,6 +529,10 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
             r_n = r_n / radius  # equivalent to r_n = radius**(-(n+2))
         elif source == 'external':
             r_n = r_n * radius  # equivalent to r_n = radius**(n-1)
+
+    # divide by sinth here
+    sinth = np.where((theta == 0.) | (theta == 180.), np.nan, sinth)
+    B_phi /= sinth
 
     return B_radius, B_theta, B_phi
 
@@ -584,13 +587,15 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     if source is None:
         source = 'internal'
 
-    assert nmax > 0, "Degree must be greater than zero."
+    assert nmax > 0, '"nmax" must be greater than zero.'
 
     nmin = 1 if nmin is None else int(nmin)
-    assert nmin <= nmax, 'Minimum degree must be smaller than maximum degree.'
+    assert nmin <= nmax, '"nmin" must be smaller than "nmax".'
+    assert nmin > 0, '"nmin" must be greater than zero.'
 
     mmax = nmax if mmax is None else int(mmax)
-    assert mmax <= nmax, 'Maximum order must be smaller than maximum degree.'
+    assert mmax <= nmax, '"mmax" must be smaller than "nmax".'
+    assert mmax >= 0, '"mmax" must be greater than or equal to zero.'
 
     # initialize radial dependence given the source
     if source == 'internal':
@@ -606,10 +611,6 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
     phi = radians(phi)
 
-    # calculate cos(m*phi) and sin(m*phi) as (m, phi-points)-array
-    cmp = np.cos(np.outer(np.arange(mmax+1), phi))
-    smp = np.sin(np.outer(np.arange(mmax+1), phi))
-
     # compute the number of dimensions based on nmax, nmin, mmax
     if mmax >= (nmin-1):
         dim = int(mmax*(mmax+2) + (nmax-mmax)*(2*mmax+1) - nmin**2 + 1)
@@ -622,7 +623,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     A_phi = np.zeros((theta.size, dim))
 
     num = 0
-    for n in np.arange(nmin, nmax+1):
+    for n in range(nmin, nmax+1):
         if source == 'internal':
             A_radius[:, num] = (n+1) * Pnm[n, 0] * r_n
         else:
@@ -633,23 +634,23 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
         num += 1
 
         for m in range(1, min(n, mmax)+1):
+
+            cmp = np.cos(m*phi)
+            smp = np.sin(m*phi)
+
             if source == 'internal':
-                A_radius[:, num] = (n+1) * Pnm[n, m] * r_n * cmp[m]
-                A_radius[:, num+1] = (n+1) * Pnm[n, m] * r_n * smp[m]
+                A_radius[:, num] = (n+1) * Pnm[n, m] * r_n * cmp
+                A_radius[:, num+1] = (n+1) * Pnm[n, m] * r_n * smp
             else:
-                A_radius[:, num] = -n * Pnm[n, m] * r_n * cmp[m]
-                A_radius[:, num+1] = -n * Pnm[n, m] * r_n * smp[m]
+                A_radius[:, num] = -n * Pnm[n, m] * r_n * cmp
+                A_radius[:, num+1] = -n * Pnm[n, m] * r_n * smp
 
-            A_theta[:, num] = -Pnm[m, n+1] * r_n * cmp[m]
-            A_theta[:, num+1] = -Pnm[m, n+1] * r_n * smp[m]
+            A_theta[:, num] = -Pnm[m, n+1] * r_n * cmp
+            A_theta[:, num+1] = -Pnm[m, n+1] * r_n * smp
 
-            with np.errstate(divide='ignore', invalid='ignore'):
-                # handle poles using L'Hopital's rule
-                div_Pnm = np.where(theta == 0., np.nan, Pnm[n, m] / sinth)
-                div_Pnm = np.where(theta == 180., np.nan, div_Pnm)
-
-            A_phi[:, num] = m * div_Pnm * r_n * smp[m]
-            A_phi[:, num+1] = -m * div_Pnm * r_n * cmp[m]
+            # divide by synth after building the matrix
+            A_phi[:, num] = m * Pnm[n, m] * r_n * smp
+            A_phi[:, num+1] = -m * Pnm[n, m] * r_n * cmp
 
             num += 2
 
@@ -659,13 +660,18 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
         else:
             r_n = r_n * radius
 
+    # divide phi component by sinth
+    sinth = np.where((theta == 0.) | (theta == 180.), np.nan, sinth)
+    A_phi /= sinth[:, None]
+
     return A_radius, A_theta, A_phi
 
 
 def legendre_poly(nmax, theta):
     """
-    Returns associated Legendre polynomials `P(n,m)` (Schmidt quasi-normalized)
-    and the derivative :math:`dP(n,m)/d\\theta` evaluated at :math:`\\theta`.
+    Returns associated Legendre polynomials :math:`dP_n^m(\\cos\\theta)`
+    (Schmidt quasi-normalized) and the derivative
+    :math:`dP_n^m(\\cos\\theta)/d\\theta` evaluated at :math:`\\theta`.
 
     Parameters
     ----------
@@ -679,8 +685,8 @@ def legendre_poly(nmax, theta):
     -------
     Pnm : ndarray, shape (n, m, ...)
           Evaluated values and derivatives, grid shape is appended as trailing
-          dimensions. `P(n,m)` := ``Pnm[n, m, ...]`` and `dP(n,m)` :=
-          ``Pnm[m, n+1, ...]``
+          dimensions. :math:`dP_n^m(\\cos\\theta)` := ``Pnm[n, m, ...]`` and
+          :math:`dP_n^m(\\cos\\theta)/d\\theta` := ``Pnm[m, n+1, ...]``
 
     References
     ----------
@@ -709,7 +715,7 @@ def legendre_poly(nmax, theta):
         if m > 0:
             Pnm[m+1, m+1] = sinth*Pnm_tmp / rootn[m+m+2]
 
-        for n in np.arange(m+2, nmax+1):
+        for n in range(m+2, nmax+1):
             d = n * n - m * m
             e = n + n - 1
             Pnm[n, m] = ((e * costh * Pnm[n-1, m] - rootn[d-e] * Pnm[n-2, m])
@@ -723,7 +729,7 @@ def legendre_poly(nmax, theta):
         Pnm[1, n+1] = ((np.sqrt(2 * (n*n + n)) * Pnm[n, 0]
                        - np.sqrt((n*n + n - 2)) * Pnm[n, 2]) / 2)
 
-        for m in np.arange(2, n):
+        for m in range(2, n):
             Pnm[m, n+1] = (0.5*(np.sqrt((n + m) * (n - m + 1)) * Pnm[n, m-1]
                            - np.sqrt((n + m + 1) * (n - m)) * Pnm[n, m+1]))
 

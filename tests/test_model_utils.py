@@ -220,10 +220,10 @@ class ModelUtils(TestCase):
         print("  Time for 'grid=True' computation: ", e - s)
 
         for comp, comp_grid in zip(B_grid, B_grid2):
-            self.assertIsNone(np.testing.assert_allclose(comp, comp_grid))
+            np.testing.assert_allclose(comp, comp_grid)
 
         for comp, comp_grid in zip(B_grid2, B):
-            self.assertIsNone(np.testing.assert_allclose(comp, comp_grid))
+            np.testing.assert_allclose(comp, comp_grid)
 
     def test_design_matrix(self):
         """
