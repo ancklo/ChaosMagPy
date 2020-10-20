@@ -81,13 +81,12 @@ class Base(object):
         Parameters
         ----------
         time : ndarray, shape (...) or float
-            Array containing the time in modified Julian dates.
+            Array containing the time in modified Julian date.
         dim : int, positive, optional
             Truncation value of the number of coefficients (no truncation by
             default).
         deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
-            choose ``deriv=1``.
+            Derivative in time (None defaults to 0).
         extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
 'off'} or int, optional
             Extrapolate to times outside of the piecewise polynomial bounds.
@@ -155,7 +154,7 @@ class Base(object):
                 try:
                     key = min(dkey[extrapolate], self.order)
                 except KeyError:
-                    string = '", "'.join([*dkey.keys()])
+                    string = '", "'.join(list(dkey.keys()))
                     raise ValueError(
                         f'Unknown extrapolation method "{extrapolate}". Use '
                         f'one of {{"{string}"}}.')
@@ -216,37 +215,39 @@ class Base(object):
 
 class BaseModel(Base):
     """
-    Class for time-dependent (piecewise polynomial) model.
+    Class for piecewise polynomial spherical harmonic model.
 
     Parameters
     ----------
     name : str
         User specified name of the model.
     breaks : ndarray, shape (m+1,)
-        Break points for piecewise-polynomial representation of the
-        time-dependent internal field in modified Julian date format.
+        Break points (`m` pieces plus one) for the piecewise polynomial
+        representation of the field model in modified Julian date format.
+        If a single break point is given, it is appended to itself to have two
+        points defining the model interval (single piece).
     order : int, positive
-        Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
-        field.
+        Order `k` of the polynomial pieces (e.g. 1 = constant, 4 = cubic).
     coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
-        Coefficients of the time-dependent field.
+        Coefficients of the piecewise polynomial representation of the
+        field model.
     source : {'internal', 'external'}
         Internal or external source (defaults to ``'internal'``)
     meta : dict, optional
-        Dictionary containing additional information about the model.
+        Dictionary containing additional information about the model if
+        available.
 
     Attributes
     ----------
     breaks : ndarray, shape (m+1,)
-        Break points for piecewise-polynomial representation of the
-        magnetic field in modified Julian date format.
+        Break points (`m` pieces plus one) for the piecewise polynomial
+        representation of the field model in modified Julian date format.
     pieces : int, positive
         Number `m` of intervals given by break points in ``breaks``.
     order : int, positive
-        Order `k` of polynomial pieces (e.g. 4 = cubic) of the time-dependent
-        field.
+        Order `k` of the polynomial pieces (e.g. 1 = constant, 4 = cubic).
     nmax : int, positive
-        Maximum spherical harmonic degree of the time-dependent field.
+        Maximum spherical harmonic degree of the field model.
     dim : int, ``nmax`` * (``nmax`` + 2)
         Dimension of the model.
     coeffs : ndarray, shape (`k`, `m`, ``nmax`` * (``nmax`` + 2))
@@ -254,15 +255,15 @@ class BaseModel(Base):
     source : {'internal', 'external'}
         Internal or external source (defaults to ``'internal'``)
     meta : dict, optional
-        Dictionary containing additional information about the model.
+        Dictionary containing additional information about the model if
+        available.
 
     """
 
     def __init__(self, name, breaks=None, order=None, coeffs=None,
                  source=None, meta=None):
         """
-        Initialize time-dependent spherical harmonic model as a piecewise
-        polynomial.
+        Initialize spherical harmonic model as a piecewise polynomial.
 
         """
 
@@ -285,10 +286,10 @@ class BaseModel(Base):
         time : ndarray, shape (...) or float
             Array containing the time in modified Julian dates.
         nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
+            Derivative in time (defaults to 0). For secular variation,
             choose ``deriv=1``.
         extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
 'off'} or int, optional
@@ -319,7 +320,7 @@ class BaseModel(Base):
 
         """
 
-        dim = None if nmax is None else nmax*(nmax+2)
+        dim = None if nmax is None else int(nmax*(nmax+2))
         coeffs = super().synth_coeffs(time, dim=dim, deriv=deriv,
                                       extrapolate=extrapolate)
 
@@ -328,23 +329,23 @@ class BaseModel(Base):
     def synth_values(self, time, radius, theta, phi, *, nmax=None,
                      deriv=None, grid=None, extrapolate=None):
         """
-        Compute magnetic components of the time-dependent field.
+        Compute magnetic components from the field model.
 
         Parameters
         ----------
         time : ndarray, shape (...) or float
-            Array containing the time in modified Julian dates.
+            Array containing the time in modified Julian date.
         radius : ndarray, shape (...) or float
-            Radius of station in kilometers.
+            Radius in kilometers.
         theta : ndarray, shape (...) or float
-            Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+            Colatitude in degrees.
         phi : ndarray, shape (...) or float
             Longitude in degrees.
         nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
-            Derivative in time (None defaults to 0). For secular variation,
+            Derivative in time (defaults to 0). For secular variation,
             choose ``deriv=1``.
         grid : bool, optional
             If ``True``, field components are computed on a regular grid.
@@ -360,10 +361,6 @@ class BaseModel(Base):
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
-
-        See Also
-        --------
-        CHAOS.synth_values_tdep
 
         """
 
@@ -381,20 +378,21 @@ class BaseModel(Base):
         ----------
         time : ndarray, shape (...)
             Time in modified Julian date.
-        radius : float
+        radius : float, optional
             Radius in kilometers (defaults to mean Earth's surface defined in
             ``basicConfig['r_surf']``).
 
         Returns
         -------
         R_n : ndarray, shape (..., ``nmax``)
-            Power spectrum of spherical harmonics up to degree ``nmax``.
+            Power spectrum of the spherical harmonic expansion up to
+            degree ``nmax``.
 
         Other Parameters
         ----------------
         nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
@@ -467,8 +465,8 @@ class BaseModel(Base):
         Other Parameters
         ----------------
         nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
@@ -540,8 +538,8 @@ class BaseModel(Base):
         Other Parameters
         ----------------
         nmax : int, positive, optional
-            Maximum degree harmonic expansion (default is given by the model
-            coefficients, but can also be smaller, if specified).
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
@@ -630,6 +628,82 @@ class BaseModel(Base):
         return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                    source=source, meta=meta)
 
+    @classmethod
+    def from_shc(cls, filepath, *, name=None, leap_year=None,
+                 source=None, meta=None):
+        """
+        Return BaseModel instance by loading a model from an shc-file.
+
+        Parameters
+        ----------
+        filepath : str
+            Path to shc-file.
+        name : str, optional
+            User defined name of the model. Defaults to the filename without
+            the file extension.
+        leap_year : {True, False}, optional
+            Take leap year in time conversion into account (default).
+            Otherwise, use conversion factor of 365.25 days per year.
+        source : {'internal', 'external'}
+            Internal or external source (defaults to ``'internal'``)
+        meta : dict, optional
+            Dictionary containing additional information about the model.
+
+        Returns
+        -------
+        model : :class:`BaseModel`
+            Class :class:`BaseModel` instance.
+
+        """
+
+        if name is None:
+            # get name without extension
+            name = os.path.splitext(os.path.basename(filepath))[0]
+
+        source = 'internal' if source is None else source
+        leap_year = True if leap_year is None else leap_year
+
+        time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
+
+        nmin = params['nmin']
+        nmax = params['nmax']
+        order = params['order']
+        step = order - 1  # actually params['step'], but not reliable
+
+        # make single piece by setting both ends equal
+        if time.size == 1:
+            breaks = np.append(time, time)
+        else:
+            breaks = time[::step]
+
+        # need to pad coefficients
+        if nmin > 1:
+            data = np.zeros((nmax*(nmax+2),) + coeffs.shape[1:])
+            data[int(nmin**2-1):, ...] = coeffs
+        else:
+            data = coeffs
+
+        pieces = breaks.size - 1  # number of polynomial pieces
+
+        if (pieces == 1) and (order == 1):  # static field in single bin
+            coeffs_out = data.reshape((1, 1, -1))
+
+        else:  # model must be time-dependent (incl. piecewise constant)
+
+            # interpolate with piecewise polynomial of given order
+            coeffs_out = np.empty((order, pieces, coeffs.shape[0]))
+            for m, left_break in enumerate(breaks[:-1]):
+                left = m * step  # time index of left_break
+                x = time[left:left+order] - left_break
+                c = np.linalg.solve(
+                    np.vander(x, order), coeffs[:, left:left+order].T)
+
+                for k in range(order):
+                    coeffs_out[k, m] = c[k]
+
+        return cls(name, breaks=breaks, order=order, coeffs=coeffs_out,
+                   source=source, meta=meta)
+
 
 class CHAOS(object):
     """
@@ -638,7 +712,7 @@ class CHAOS(object):
     Parameters
     ----------
     breaks : ndarray, shape (m+1,)
-        Break points for piecewise-polynomial representation of the
+        Break points for piecewise polynomial representation of the
         time-dependent internal (i.e. large-scale core) field in modified
         Julian date format.
     order : int, positive
@@ -717,12 +791,22 @@ class CHAOS(object):
 
     """
 
-    def __init__(self, breaks, order=None, *,
-                 coeffs_tdep=None, coeffs_static=None,
-                 coeffs_sm=None, coeffs_gsm=None,
-                 breaks_delta=None, coeffs_delta=None,
-                 breaks_euler=None, coeffs_euler=None,
-                 name=None, meta=None):
+    def __init__(
+        self,
+        breaks,
+        order=None,
+        *,
+        coeffs_tdep=None,
+        coeffs_static=None,
+        coeffs_sm=None,
+        coeffs_gsm=None,
+        breaks_delta=None,
+        coeffs_delta=None,
+        breaks_euler=None,
+        coeffs_euler=None,
+        name=None,
+        meta=None
+    ):
         """
         Initialize the CHAOS model.
 
@@ -769,10 +853,15 @@ class CHAOS(object):
                 except KeyError:
                     Euler_prerotation = None
 
-                model = Base(satellite, order=1,
-                             breaks=breaks_euler[satellite],
-                             coeffs=coeffs_euler[satellite],
-                             meta={'Euler_prerotation': Euler_prerotation})
+                model = Base(
+                    satellite,
+                    order=1,
+                    breaks=breaks_euler[satellite],
+                    coeffs=coeffs_euler[satellite],
+                    meta={
+                        'Euler_prerotation': Euler_prerotation
+                    }
+                )
                 self.model_euler[satellite] = model
 
         # give the model a name: CHAOS-x.x or user input
