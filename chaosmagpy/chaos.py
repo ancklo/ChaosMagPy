@@ -917,10 +917,10 @@ str, {'internal', 'external'}
 
         """
 
-        time = np.array(time, dtype=float)
-        radius = np.array(radius, dtype=float)
-        theta = np.array(theta, dtype=float)
-        phi = np.array(phi, dtype=float)
+        time = np.asarray(time, dtype=float)
+        radius = np.asarray(radius, dtype=float)
+        theta = np.asarray(theta, dtype=float)
+        phi = np.asarray(phi, dtype=float)
 
         if source_list is None:
             source_list = ['tdep', 'static', 'gsm', 'sm']
@@ -1354,7 +1354,7 @@ str, {'internal', 'external'}
             source = 'external'
 
         # ensure ndarray input
-        time = np.array(time, dtype=np.float)
+        time = np.asarray(time, dtype=np.float)
 
         # use static part to define modelled period
         start = self.model_static.breaks[0]
