@@ -3,12 +3,13 @@ Changelog
 
 Version 0.5dev
 --------------
-| **Date:** September 10, 2020
+| **Date:** November 5, 2020
 | **Release:** v0.5dev
 | **Version of CHAOS:** CHAOS-7.3 (0703)
 
 Features
 ^^^^^^^^
+* Modified "nio" colormap to be white-centered.
 
 Version 0.4
 -----------
