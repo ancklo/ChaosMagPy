@@ -740,7 +740,7 @@ def legendre_poly(nmax, theta):
 
 def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     """
-    Compute the Mauersberger-Lowes spatial powerspectrum.
+    Compute the spatial power spectrum.
 
     Parameters
     ----------
@@ -748,9 +748,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
         Spherical harmonic coefficients for degree `N`.
     radius : float, optional
         Radius in kilometers (defaults to mean Earth's surface radius).
+        It has no effect for ``source='toroidal'``.
     nmax : int, optional
         Maximum sphercial degree (defaults to `N`).
-    source : {'internal', 'external'}
+    source : {'internal', 'external', 'toroidal'}
         Source of the field model (defaults to internal).
 
     Returns
@@ -767,16 +768,20 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
         W_n(r) &= \\langle|\\mathbf{B}|^2\\rangle
              = \\frac{1}{4\\pi}\\iint_\\Omega |\\mathbf{B}|^2 \\mathrm{d}
                \\Omega \\\\
-             &= W_n^i(r) + W_n^e(n)
+             &= W_n^\\mathrm{i}(r) + W_n^\\mathrm{e}(r) + W_n^\\mathrm{T}
 
-    where the internal :math:`W_n^i` and external spectrum :math:`W_n^e` are
+    where the internal :math:`W_n^\\mathrm{i}`, external
+    :math:`W_n^\\mathrm{e}` and the non-potential toroidal
+    :math:`W_n^\\mathrm{T}` spatial power spectra are
 
     .. math::
 
         W_n^\\mathrm{i}(r) &= (n+1)\\left(\\frac{a}{r}\\right)^{2n+4}
                               \\sum_{m=0}^n [(g_n^m)^2 + (h_n^m)^2] \\\\
-        W_n^\\mathrm{e}(r) &= n\\left(\\frac{r}{a}\\right)^{n-2}\\sum_{m=0}^n
-                              [(q_n^m)^2 + (s_n^m)^2]
+        W_n^\\mathrm{e}(r) &= n\\left(\\frac{r}{a}\\right)^{2n-2}\\sum_{m=0}^n
+                              [(q_n^m)^2 + (s_n^m)^2] \\\\
+        W_n^\\mathrm{T} &= \\frac{n(n+1)}{2n+1}\\sum_{m=0}^n
+                           [(T_n^{m,c}^2 + (T_n^{m,s}^2]
 
     References
     ----------
@@ -805,8 +810,12 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     elif source == 'external':
         def factor(n, ratio):
             return n*ratio**(-(2*n-2))
+    elif source == 'toroidal':
+        def factor(n, ratio):
+            return n*(n+1) / (2*n+1)
     else:
-        raise ValueError('Wrong source. Use `internal` or `external`.')
+        raise ValueError(
+            'Wrong source. Use `internal`, `external` or `toroidal`.')
 
     W_n = np.empty(coeffs.shape[:-1] + (nmax,))
 

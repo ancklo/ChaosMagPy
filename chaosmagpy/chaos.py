@@ -372,7 +372,7 @@ class BaseModel(Base):
 
     def power_spectrum(self, time, radius=None, **kwargs):
         """
-        Compute the powerspectrum.
+        Compute the spatial power spectrum.
 
         Parameters
         ----------
@@ -385,7 +385,7 @@ class BaseModel(Base):
         Returns
         -------
         R_n : ndarray, shape (..., ``nmax``)
-            Power spectrum of the spherical harmonic expansion up to
+            Spatial power spectrum of the spherical harmonic expansion up to
             degree ``nmax``.
 
         Other Parameters
@@ -413,7 +413,7 @@ class BaseModel(Base):
 
     def plot_power_spectrum(self, time, **kwargs):
         """
-        Plot the power spectrum.
+        Plot the spatial power spectrum.
 
         Parameters
         ----------
@@ -429,7 +429,7 @@ class BaseModel(Base):
         defaults = dict(radius=None,
                         deriv=0,
                         nmax=self.nmax,
-                        titles='power spectrum')
+                        titles='spatial power spectrum')
 
         kwargs = defaultkeys(defaults, kwargs)
 
