@@ -10,6 +10,8 @@ Version 0.5dev
 Features
 ^^^^^^^^
 * Modified "nio" colormap to be white-centered.
+* Added spatial power spectrum of toroidal sources
+  (:func:`chaosmagpy.model_utils.power_spectrum`)
 
 Version 0.4
 -----------
