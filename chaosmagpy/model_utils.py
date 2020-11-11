@@ -780,8 +780,8 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
                               \\sum_{m=0}^n [(g_n^m)^2 + (h_n^m)^2] \\\\
         W_n^\\mathrm{e}(r) &= n\\left(\\frac{r}{a}\\right)^{2n-2}\\sum_{m=0}^n
                               [(q_n^m)^2 + (s_n^m)^2] \\\\
-        W_n^\\mathrm{T} &= \\frac{n(n+1)}{2n+1}\\sum_{m=0}^n
-                           [(T_n^{m,c}^2 + (T_n^{m,s}^2]
+        W_n^\\mathrm{T}    &= \\frac{n(n+1)}{2n+1}\\sum_{m=0}^n
+                              [(T_n^{m,c})^2 + (T_n^{m,s})^2]
 
     References
     ----------
