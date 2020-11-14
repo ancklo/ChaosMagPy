@@ -364,6 +364,15 @@ class BaseModel(Base):
 
         """
 
+        if nmax is None:
+            nmax = self.nmax
+        elif nmax > self.nmax:
+            warnings.warn(
+                f'Supplied nmax = {nmax} is incompatible with number of '
+                f'coefficients. Using nmax = {self.nmax} instead.'
+            )
+            nmax = self.nmax
+
         coeffs = self.synth_coeffs(time, nmax=nmax, deriv=deriv,
                                    extrapolate=extrapolate)
 
