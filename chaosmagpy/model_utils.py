@@ -313,13 +313,17 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         Array containing the longitude in degrees.
     nmax : int, positive, optional
         Maximum degree up to which expansion is to be used (default is given by
-        the last dimenion of ``coeffs``, that is, ``M = nmax(nmax+2)``).
+        the last dimension of ``coeffs``, that is, ``M = nmax(nmax+2)``). This
+        value can also be smaller if only coefficients at low degree should
+        contribute.
     nmin : int, positive, optional
-        Minimum degree of the expansion (defaults to 1).
+        Minimum degree of the expansion (defaults to 1). This value must
+        correspond to the minimum degree of the coefficients and cannot be
+        larger.
     mmax : int, positive, optional
         Maximum order of the spherical harmonic expansion (defaults to
-        ``nmax``). For ``mmax = 0``, for example, only the zonal part of the
-        expansion is used.
+        ``nmax``). This value can also be smaller. For example, if only the
+        zonal part of the expansion should be used, set ``mmax = 0``.
     source : {'internal', 'external'}, optional
         Magnetic field source (default is an internal source).
     grid : bool, optional
@@ -413,12 +417,12 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('The geographic poles are included.')
+            warnings.warn('The poles are included.')
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 
     nmin = 1 if nmin is None else int(nmin)
-    assert nmin > 0, '"nmin" must be greater than zero.'
+    assert nmin > 0, 'The value of "nmin" must be greater than zero.'
 
     dim = coeffs.shape[-1]
 
@@ -427,10 +431,10 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         nmax = int(np.sqrt(dim + nmin**2) - 1)
         mmax = nmax
 
-    elif mmax is None:
+    elif mmax is None:  # but nmax given
         mmax = nmax
 
-    elif nmax is None:
+    elif nmax is None:  # but mmax given
 
         if mmax >= (nmin-1):
             nmax = int((dim - mmax*(mmax+2) + nmin**2 - 1) / (2*mmax+1) + mmax)
