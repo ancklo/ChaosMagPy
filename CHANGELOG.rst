@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.6-dev
+---------------
+| **Date:** December 23, 2020
+| **Release:** v0.6-dev
+| **Version of CHAOS:** CHAOS-7.5 (0705)
+
+Features
+^^^^^^^^
+
+
 Version 0.5
 -----------
 | **Date:** December 23, 2020
