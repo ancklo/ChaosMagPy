@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 0.5dev
+--------------
+| **Date:** November 11, 2020
+| **Release:** v0.5dev
+| **Version of CHAOS:** CHAOS-7.3 (0703)
+
+Features
+^^^^^^^^
+* Modified "nio" colormap to be white-centered.
+* Added spatial power spectrum of toroidal sources
+  (:func:`chaosmagpy.model_utils.power_spectrum`)
+
 Version 0.4
 -----------
 | **Date:** September 10, 2020
