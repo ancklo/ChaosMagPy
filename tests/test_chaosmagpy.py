@@ -5,7 +5,7 @@ from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
 from chaosmagpy import coordinate_utils as c
 from chaosmagpy import model_utils as m
 from chaosmagpy import data_utils as du
-from unittest import TestCase, main
+from unittest import TestCase, main, skip
 try:
     from tests.helpers import load_matfile
 except ImportError:
@@ -14,7 +14,7 @@ except ImportError:
 R_REF = 6371.2  # reference radius in km
 ROOT = os.path.abspath(os.path.dirname(__file__))
 MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
-CHAOS_PATH = os.path.join(os.path.split(ROOT)[0], 'data', 'CHAOS-6-x7.mat')
+CHAOS_PATH = os.path.join(ROOT, 'CHAOS-6-x7.mat')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:
@@ -42,6 +42,7 @@ class ChaosMagPy(TestCase):
         self.assertIsNone(np.testing.assert_allclose(
             swarm_c, test['swarm_c']))
 
+    @skip
     def test_save_matfile(self):
 
         seq = np.random.randint(0, 10, size=(5,))
@@ -163,11 +164,11 @@ class ChaosMagPy(TestCase):
             print('  Min Error =', np.amin(res), 'nT')
 
         self.assertIsNone(np.testing.assert_allclose(
-            B_radius, B_radius_mat, rtol=1e-2, atol=1e-2))
+            B_radius, B_radius_mat, rtol=1e-7, atol=1e-2))
         self.assertIsNone(np.testing.assert_allclose(
-            B_theta, B_theta_mat, rtol=1e-2, atol=1e-2))
+            B_theta, B_theta_mat, rtol=1e-7, atol=1e-2))
         self.assertIsNone(np.testing.assert_allclose(
-            B_phi, B_phi_mat, rtol=1e-2, atol=1e-2))
+            B_phi, B_phi_mat, rtol=1e-7, atol=1e-2))
 
     def test_surface_field(self):
 
