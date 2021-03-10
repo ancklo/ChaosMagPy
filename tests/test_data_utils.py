@@ -22,6 +22,10 @@ class DataUtils(TestCase):
             Running {self._testMethodName}:
             """))
 
+    def test_load_RC_datfile(self):
+
+        raise NotImplementedError('Write test and fix datafile download.')
+
     def test_time_conversion(self):
 
         size = (10,)

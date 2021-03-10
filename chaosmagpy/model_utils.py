@@ -754,7 +754,7 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
         Radius in kilometers (defaults to mean Earth's surface radius).
         It has no effect for ``source='toroidal'``.
     nmax : int, optional
-        Maximum sphercial degree (defaults to `N`).
+        Maximum spherical degree (defaults to `N`).
     source : {'internal', 'external', 'toroidal'}
         Source of the field model (defaults to internal).
 
