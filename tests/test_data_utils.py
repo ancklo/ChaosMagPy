@@ -3,7 +3,7 @@ import os
 import textwrap
 from unittest import TestCase, main
 from datetime import datetime, timedelta
-from chaosmagpy import data_utils as d
+from chaosmagpy import data_utils as cpd
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
@@ -24,7 +24,8 @@ class DataUtils(TestCase):
 
     def test_load_RC_datfile(self):
 
-        raise NotImplementedError('Write test and fix datafile download.')
+        # make sure link is not broken
+        cpd.load_RC_datfile(filepath=None, parse_dates=None)
 
     def test_time_conversion(self):
 
@@ -38,48 +39,48 @@ class DataUtils(TestCase):
             date = (timedelta(days=int(day)) +
                     datetime(1990, 1, 1, hour, minute, second))
 
-            mjd = d.mjd2000(date.year, date.month, date.day, date.hour,
-                            date.minute, date.second)
+            mjd = cpd.mjd2000(date.year, date.month, date.day, date.hour,
+                              date.minute, date.second)
 
-            dyear = d.mjd_to_dyear(mjd, leap_year=True)
-            mjd2 = d.dyear_to_mjd(dyear, leap_year=True)
+            dyear = cpd.mjd_to_dyear(mjd, leap_year=True)
+            mjd2 = cpd.dyear_to_mjd(dyear, leap_year=True)
             self.assertIsNone(np.testing.assert_allclose(mjd2, mjd, atol=1e-8))
 
-            dyear = d.mjd_to_dyear(mjd, leap_year=False)
-            mjd2 = d.dyear_to_mjd(dyear, leap_year=False)
+            dyear = cpd.mjd_to_dyear(mjd, leap_year=False)
+            mjd2 = cpd.dyear_to_mjd(dyear, leap_year=False)
             self.assertIsNone(np.testing.assert_allclose(mjd2, mjd, atol=1e-8))
 
-            dyear = d.mjd_to_dyear(mjd, leap_year=True)
-            mjd2 = d.dyear_to_mjd(dyear, leap_year=False)
+            dyear = cpd.mjd_to_dyear(mjd, leap_year=True)
+            mjd2 = cpd.dyear_to_mjd(dyear, leap_year=False)
             self.assertRaises(
                 AssertionError, lambda: np.testing.assert_allclose(
                     mjd2, mjd, atol=1e-8))
 
-            dyear = d.mjd_to_dyear(mjd, leap_year=False)
-            mjd2 = d.dyear_to_mjd(dyear, leap_year=True)
+            dyear = cpd.mjd_to_dyear(mjd, leap_year=False)
+            mjd2 = cpd.dyear_to_mjd(dyear, leap_year=True)
             self.assertRaises(
                 AssertionError, lambda: np.testing.assert_allclose(
                     mjd2, mjd, atol=1e-8))
 
-            dyear = d.mjd_to_dyear(mjd, leap_year=False)
-            mjd2 = d.dyear_to_mjd(dyear, leap_year=None)
+            dyear = cpd.mjd_to_dyear(mjd, leap_year=False)
+            mjd2 = cpd.dyear_to_mjd(dyear, leap_year=None)
             self.assertRaises(
                 AssertionError, lambda: np.testing.assert_allclose(
                     mjd2, mjd, atol=1e-8))
 
     def test_mjd_to_dyear(self):
 
-        self.assertEqual(d.mjd_to_dyear(0.0), 2000.0)
-        self.assertEqual(d.mjd_to_dyear(366.0), 2001.0)
-        self.assertEqual(d.mjd_to_dyear(731.0), 2002.0)
-        self.assertEqual(d.mjd_to_dyear(1096.0), 2003.0)
-        self.assertEqual(d.mjd_to_dyear(4*365.25), 2004.0)
+        self.assertEqual(cpd.mjd_to_dyear(0.0), 2000.0)
+        self.assertEqual(cpd.mjd_to_dyear(366.0), 2001.0)
+        self.assertEqual(cpd.mjd_to_dyear(731.0), 2002.0)
+        self.assertEqual(cpd.mjd_to_dyear(1096.0), 2003.0)
+        self.assertEqual(cpd.mjd_to_dyear(4*365.25), 2004.0)
 
-        self.assertEqual(d.mjd_to_dyear(0.0, leap_year=False), 2000.0)
-        self.assertEqual(d.mjd_to_dyear(365.25, leap_year=False), 2001.0)
-        self.assertEqual(d.mjd_to_dyear(2*365.25, leap_year=False), 2002.0)
-        self.assertEqual(d.mjd_to_dyear(3*365.25, leap_year=False), 2003.0)
-        self.assertEqual(d.mjd_to_dyear(4*365.25, leap_year=False), 2004.0)
+        self.assertEqual(cpd.mjd_to_dyear(0.0, leap_year=False), 2000.0)
+        self.assertEqual(cpd.mjd_to_dyear(365.25, leap_year=False), 2001.0)
+        self.assertEqual(cpd.mjd_to_dyear(2*365.25, leap_year=False), 2002.0)
+        self.assertEqual(cpd.mjd_to_dyear(3*365.25, leap_year=False), 2003.0)
+        self.assertEqual(cpd.mjd_to_dyear(4*365.25, leap_year=False), 2004.0)
 
 
 if __name__ == '__main__':

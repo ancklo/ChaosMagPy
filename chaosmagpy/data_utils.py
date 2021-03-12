@@ -134,7 +134,7 @@ def load_RC_datfile(filepath=None, parse_dates=None):
         print(f'Accessing {page.url}.')
 
         tree = html.fromstring(page.content)
-        file = tree.xpath('//tr[5]//td[2]//a/text()')[0]  # get name from list
+        file = tree.xpath('//tr[5]//td[2]//a/@href')[0]  # get name from list
         date = tree.xpath('//tr[5]//td[3]/text()')[0]
 
         print(f'Downloading RC-index file "{file}" '

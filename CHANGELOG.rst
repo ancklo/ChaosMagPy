@@ -3,13 +3,17 @@ Changelog
 
 Version 0.6-dev
 ---------------
-| **Date:** December 23, 2020
+| **Date:** March 12, 2021
 | **Release:** v0.6-dev
 | **Version of CHAOS:** CHAOS-7.5 (0705)
 
 Features
 ^^^^^^^^
+* Added new sections to the usage section of the documentation
 
+Bugfixes
+^^^^^^^^
+* Fixed broken link to RC-index file.
 
 Version 0.5
 -----------
