@@ -2062,9 +2062,8 @@ str, {'internal', 'external'}
         filepath : str
             Path to mat-file containing the CHAOS model.
         name : str, optional
-            User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-            where <version> is the default in
-            ``basicConfig['params.version']``.
+            User defined name of the model. Defaults to the filename without
+            the file extension.
         satellites : list of strings, optional
             List of satellite names whose Euler angles are stored in the
             mat-file. This is needed for correct referencing as this
@@ -2149,7 +2148,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
-    satellites : list of strings
+    satellites : list of strings, optional
         List of satellite names whose Euler angles are stored in the mat-file.
         This is needed for correct referencing as this information is not
         given in the standard CHAOS mat-file format (defaults to

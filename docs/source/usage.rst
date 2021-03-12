@@ -30,46 +30,25 @@ internal field:
    # load the CHAOS model
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   # compute the Gauss coefficients from the model
-   coeffs = model.synth_coeffs_tdep(time)
+   # compute field components on the grid using the Gauss coefficients
+   B_radius, B_theta, B_phi = model.synth_values_tdep(coeffs, radius_grid, theta_grid, phi_grid)
 
-   # compute field components on a grid using the Gauss coefficients
-   B_radius, B_theta, B_phi = cp.model_utils.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
-
-   # alternatively, compute the field components directly from the model
-   B_radius, B_theta, B_phi = model.synth_values_tdep(time, radius, theta, phi, grid=True)
-
-When using a fully specified regular grid, consider ``grid=True`` option for
-speed. It will internally compute a grid similar to :func:`numpy.meshgrid`
-without repeating some computations (note the usage of, for example, ``theta``
-instead of ``theta_grid``):
+When using a *regular* grid, consider ``grid=True`` option for
+speed. It will internally compute a grid in ``theta`` and ``phi`` similar to
+:func:`numpy.meshgrid` in the example above while saving time with some of the
+computations (note the usage of, for example, ``theta`` instead of
+``theta_grid``):
 
 .. code-block:: python
 
-   B_radius, B_theta, B_phi = cp.model_utils.synth_values(coeffs, radius, theta, phi, grid=True)
+   B_radius, B_theta, B_phi = model.synth_values_tdep(time, radius, theta, phi, grid=True)
 
 The same computation can be done with other sources described by the model:
 
 +----------+-----------------+---------------------------------------------------+
 |  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
 +==========+=================+===================================================+
-| internal | time-dependent  | :meth:`~.CHAOS.synth_coeffs_tdep`                 |
-+          +-----------------+---------------------------------------------------+
-|          | static          | :meth:`~.CHAOS.synth_coeffs_static`               |
-+----------+-----------------+---------------------------------------------------+
-| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_coeffs_gsm`                  |
-+          +-----------------+---------------------------------------------------+
-|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_coeffs_sm`                   |
-+----------+-----------------+---------------------------------------------------+
-
-Directly calculate the magnetic field components without having to
-synthesize the spherical harmonic coefficients first. Use one of the following
-methods:
-
-+----------+-----------------+---------------------------------------------------+
-|  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
-+==========+=================+===================================================+
-| internal | time-dependent  | :meth:`~.CHAOS.synth_values_tdep`                 |
+| internal | time-dependent  | :meth:`~.CHAOS.synth_values_tdep` (see example)   |
 +          +-----------------+---------------------------------------------------+
 |          | static          | :meth:`~.CHAOS.synth_values_static`               |
 +----------+-----------------+---------------------------------------------------+
@@ -78,8 +57,76 @@ methods:
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_values_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
-Computing the timeseries of field components at two ground observatories
-------------------------------------------------------------------------
+Computing a timeseries of Gauss coefficients
+--------------------------------------------
+
+ChaosMagPy can also be used to synthesize a timeseries of the spherical
+harmonic coefficients first. For example, in the case of the time-dependent
+internal field:
+
+.. code-block:: python
+
+   import numpy as np
+   import chaosmagpy as cp
+
+   # create vector of time instances in modified Julian date from 2000 to 2004
+   time = np.linspace(0., 4*365.25, 10)  # 10 equally-spaced time instances
+
+   # load the CHAOS model
+   model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
+
+   # compute the Gauss coefficients of the internal field up to degree 14
+   coeffs = model.synth_coeffs_tdep(time, nmax=14, deriv=0)  # shape: (10, 196)
+
+The same can be done with other sources accounted for in CHAOS.
+
++----------+-----------------+---------------------------------------------------+
+|  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
++==========+=================+===================================================+
+| internal | time-dependent  | :meth:`~.CHAOS.synth_coeffs_tdep` (see example)   |
++          +-----------------+---------------------------------------------------+
+|          | static          | :meth:`~.CHAOS.synth_coeffs_static`               |
++----------+-----------------+---------------------------------------------------+
+| external | time-dep. (GSM) | :meth:`~.CHAOS.synth_coeffs_gsm`                  |
++          +-----------------+---------------------------------------------------+
+|          | time-dep. (SM)  | :meth:`~.CHAOS.synth_coeffs_sm`                   |
++----------+-----------------+---------------------------------------------------+
+
+Converting time formats in ChaosMagPy
+-------------------------------------
+
+The models in ChaosMagPy are based on time in modified Julian date. But
+sometimes it is easier to work in different units such as decimal years or
+Numpy's datetime. For those cases, ChaosMagPy offers simple conversion
+functions:
+
+.. code-block:: python
+
+   import chaosmagpy as cp
+
+   mjd = 412.  # 2001-02-16
+
+   dyear = cp.data_utils.mjd_to_dyear(mjd)  # to decimal years (accounts for leap years)
+   # dyear = 2001.1260273972603
+
+   timestamp = cp.data_utils.timestamp(mjd)  # to Numpy's datetime
+   # timestamp = numpy.datetime64('2001-02-16T00:00:00.000000')
+
+The inverse operations are also available:
+
+.. code-block:: python
+
+   cp.data_utils.dyear_to_mjd(dyear)  # from decimal years (accounts for leap years)
+   # 412.0
+
+   cp.data_utils.mjd2000(timestamp)  # from Numpy's datetime
+   # 412.0
+
+At the same time, :func:`chaosmagpy.data_utils.mjd2000` accepts a wide range of
+inputs (see the documentation).
+
+Computing a timeseries of field components at two ground observatories
+----------------------------------------------------------------------
 
 Compute the time series of the first time-derivative of the field components at
 the ground observatories in Niemegk (Germany) and Mbour (Senegal).
@@ -124,14 +171,14 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
    plt.show()
 
 .. figure:: images/plot_timeseries.png
-   :align: left
+   :align: center
 
    Timeseries of the secular variation at two ground observatory stations.
 
 Any timeseries can be generated this way.
 
-Plotting the map of the time-dependent internal field
------------------------------------------------------
+Plotting a map of the time-dependent internal field
+---------------------------------------------------
 
 Here, we make a map of the first time-derivative of the time-dependent internal
 part of the model. We will plot it on the surface at 3485 km (core-mantle
@@ -161,8 +208,8 @@ field in shc-format to a file:
 
    model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
 
-Plotting the map of the static internal field
----------------------------------------------
+Plotting a map of the static internal field
+-------------------------------------------
 
 Similarly, the static internal (i.e. small-scale crustal) part of the model can
 be plotted on a map:
@@ -185,8 +232,8 @@ and saved
 
    model.save_shcfile('CHAOS-6-x7_static.shc', model='static')
 
-Plotting the global map together with polar views
--------------------------------------------------
+Plotting a global map together with polar views
+-----------------------------------------------
 
 
 .. code-block:: python

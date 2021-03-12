@@ -401,13 +401,13 @@ datetime.datetime(2002, 3, 4)])
     >>> mjd2000(a)
         array([  0., 793.])
 
-    >>> mjd2000(2003, 5, 3, 13, 52, 15)  # May 3rd, 2003, 13:52:15 (hh:mm:ss)
+    >>> mjd2000(2003, 5, 3, 13, 52, 15)  # May 3, 2003, 13:52:15 (hh:mm:ss)
         1218.5779513888888
 
-    >>> mjd2000(np.arange(2000, 2005))  # 1st of January
+    >>> mjd2000(np.arange(2000, 2005))  # January 1 in each year
         array([   0.,  366.,  731., 1096., 1461.])
 
-    >>> mjd2000(np.arange(2000, 2005), 2, 1)  # 1st of February
+    >>> mjd2000(np.arange(2000, 2005), 2, 1)  # February 1 in each year
         array([  31.,  397.,  762., 1127., 1492.])
 
     >>> mjd2000(np.arange(2000, 2005), 2, np.arange(1, 6))
