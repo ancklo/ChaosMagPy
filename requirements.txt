@@ -8,4 +8,5 @@ matplotlib>=3
 cdflib>=0.3
 docutils>=0.13
 pygments>=2.2
-hdf5storage>=0.1.15
+hdf5storage>=0.1.17
+lxml>=4.3.4
