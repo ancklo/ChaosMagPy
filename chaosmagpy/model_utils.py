@@ -407,10 +407,10 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     """
 
     # ensure ndarray inputs
-    coeffs = np.asarray(coeffs, dtype=np.float)
-    radius = np.asarray(radius, dtype=np.float) / basicConfig['params.r_surf']
-    theta = np.asarray(theta, dtype=np.float)
-    phi = np.asarray(phi, dtype=np.float)
+    coeffs = np.asarray(coeffs, dtype=float)
+    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    theta = np.asarray(theta, dtype=float)
+    phi = np.asarray(phi, dtype=float)
 
     theta_min = np.amin(theta)
     theta_max = np.amax(theta)
@@ -579,9 +579,9 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     """
 
     # ensure ndarray inputs
-    radius = np.asarray(radius, dtype=np.float) / basicConfig['params.r_surf']
-    theta = np.asarray(theta, dtype=np.float)
-    phi = np.asarray(phi, dtype=np.float)
+    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    theta = np.asarray(theta, dtype=float)
+    phi = np.asarray(phi, dtype=float)
 
     assert radius.shape == theta.shape == phi.shape
     assert radius.ndim == 1

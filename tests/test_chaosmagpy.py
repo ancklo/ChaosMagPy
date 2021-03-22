@@ -42,7 +42,6 @@ class ChaosMagPy(TestCase):
         self.assertIsNone(np.testing.assert_allclose(
             swarm_c, test['swarm_c']))
 
-    @skip
     def test_save_matfile(self):
 
         seq = np.random.randint(0, 10, size=(5,))
@@ -163,12 +162,12 @@ class ChaosMagPy(TestCase):
             print('  Max Error =', np.amax(res), 'nT')
             print('  Min Error =', np.amin(res), 'nT')
 
-        self.assertIsNone(np.testing.assert_allclose(
-            B_radius, B_radius_mat, rtol=1e-7, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_theta, B_theta_mat, rtol=1e-7, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_phi, B_phi_mat, rtol=1e-7, atol=1e-2))
+        np.testing.assert_allclose(
+            B_radius, B_radius_mat, rtol=1e-7, atol=1e-2)
+        np.testing.assert_allclose(
+            B_theta, B_theta_mat, rtol=1e-7, atol=1e-2)
+        np.testing.assert_allclose(
+            B_phi, B_phi_mat, rtol=1e-7, atol=1e-2)
 
     def test_surface_field(self):
 
@@ -332,12 +331,12 @@ class ChaosMagPy(TestCase):
             print('  Max Error =', np.amax(res), 'nT')
             print('  Min Error =', np.amin(res), 'nT')
 
-        self.assertIsNone(np.testing.assert_allclose(
-            B_radius, B_radius_mat, rtol=1e-2, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_theta, B_theta_mat, rtol=1e-2, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_phi, B_phi_mat, rtol=1e-2, atol=1e-2))
+        np.testing.assert_allclose(
+            B_radius, B_radius_mat, rtol=1e-2, atol=1e-2)
+        np.testing.assert_allclose(
+            B_theta, B_theta_mat, rtol=1e-2, atol=1e-2)
+        np.testing.assert_allclose(
+            B_phi, B_phi_mat, rtol=1e-2, atol=1e-2)
 
     def test_rotate_gsm_vector(self):
 
@@ -365,8 +364,7 @@ class ChaosMagPy(TestCase):
 
         B_geo_2 = np.matmul(R.transpose(), B_gsm)
 
-        self.assertIsNone(np.testing.assert_allclose(
-            B_geo_1, B_geo_2, rtol=1e-5))
+        np.testing.assert_allclose(B_geo_1, B_geo_2, rtol=1e-5)
 
 
 def profiler_complete_forward(n_data=300):

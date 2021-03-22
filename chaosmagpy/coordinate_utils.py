@@ -174,17 +174,17 @@ def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     if scaled is None:
         scaled = False
 
-    time = np.array(time[..., None, None, None], dtype=np.float)
-    frequency = 2*pi*np.array(frequency, dtype=np.float)
+    time = np.array(time[..., None, None, None], dtype=float)
+    frequency = 2*pi*np.array(frequency, dtype=float)
     if frequency.ndim == 1:
         frequency.reshape(-1, 1, 1)
-    spectrum = np.array(spectrum, dtype=np.complex)
+    spectrum = np.array(spectrum, dtype=complex)
 
     # output of shape (..., k, n, m)
     freq_t = frequency*time
 
     # compute complex exponentials
-    harmonics = np.empty(freq_t.shape, dtype=np.complex)
+    harmonics = np.empty(freq_t.shape, dtype=complex)
     harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
     if scaled is False:
@@ -356,9 +356,9 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     frequency = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)))
     frequency_ind = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)))
     spectrum = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)),
-                        dtype=np.complex)
+                        dtype=complex)
     spectrum_ind = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)),
-                            dtype=np.complex)
+                            dtype=complex)
 
     for k in range(nmax*(nmax+2)):
 
@@ -1462,12 +1462,12 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         fac2 = (-1)**n * fac1/(2*n+1)
 
         # initialze helpers variables and output
-        C = np.empty(periods.shape, dtype=np.complex)
-        z = np.empty((2,), dtype=np.complex)
-        p = np.empty((2,), dtype=np.complex)
-        q = np.empty((2,), dtype=np.complex)
-        pd = np.empty((2,), dtype=np.complex)
-        qd = np.empty((2,), dtype=np.complex)
+        C = np.empty(periods.shape, dtype=complex)
+        z = np.empty((2,), dtype=complex)
+        p = np.empty((2,), dtype=complex)
+        q = np.empty((2,), dtype=complex)
+        pd = np.empty((2,), dtype=complex)
+        qd = np.empty((2,), dtype=complex)
 
         for counter, period in enumerate(periods):
             for il in range(nl, -1, -1):  # runs over nl...0
@@ -1578,7 +1578,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         M = omega.size
 
         # Preallocate
-        Y = np.zeros((M, N), dtype=np.complex)
+        Y = np.zeros((M, N), dtype=complex)
 
         # values for inner sphere, r = N (core)
         qk = -omega*mu*radius[-1]
@@ -1665,7 +1665,7 @@ def q_response(frequency, nmax):
 
     periods = 1 / frequency[index]
 
-    q_response = np.zeros((nmax, frequency.size), dtype=np.complex)
+    q_response = np.zeros((nmax, frequency.size), dtype=complex)
     for n in range(nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n

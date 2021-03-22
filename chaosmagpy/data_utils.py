@@ -251,7 +251,7 @@ def load_shcfile(filepath, leap_year=None):
             read_line = np.fromstring(line, sep=' ')
             if read_line.size == 5:
                 name = os.path.split(filepath)[1]  # file name string
-                values = [name] + read_line.astype(np.int).tolist()
+                values = [name] + read_line.astype(int).tolist()
 
             else:
                 data = np.append(data, read_line)
@@ -301,7 +301,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
     """
 
-    time = np.array(time, dtype=np.float)
+    time = np.array(time, dtype=float)
 
     order = 1 if order is None else int(order)
 
@@ -326,8 +326,8 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     coeffs = coeffs[:, (nmin**2-1):((nmax+1)**2-1)]
 
     # compute all possible degree and orders
-    deg = np.array([], dtype=np.int)
-    ord = np.array([], dtype=np.int)
+    deg = np.array([], dtype=int)
+    ord = np.array([], dtype=int)
     for n in range(nmin, nmax+1):
         deg = np.append(deg, np.repeat(n, 2*n+1))
         ord = np.append(ord, [0])
@@ -533,7 +533,7 @@ def dyear_to_mjd(time, leap_year=None):
     leap_year = True if leap_year is None else leap_year
 
     if leap_year:
-        year = np.asarray(time, dtype=np.int)
+        year = np.asarray(time, dtype=int)
         frac_of_year = np.remainder(time, 1.)
 
         isleap = is_leap_year(year)
@@ -587,10 +587,10 @@ def mjd_to_dyear(time, leap_year=None):
     leap_year = True if leap_year is None else leap_year
 
     if leap_year:
-        date = (np.asarray(time, dtype=np.int)*np.timedelta64(1, 'D')
+        date = (np.asarray(time, dtype=int)*np.timedelta64(1, 'D')
                 + np.datetime64('2000-01-01'))  # only precise to date
 
-        year = date.astype('datetime64[Y]').astype(np.int) + 1970
+        year = date.astype('datetime64[Y]').astype(int) + 1970
         days = np.asarray(time) - mjd2000(year, 1, 1)  # days of that year
 
         isleap = is_leap_year(year)

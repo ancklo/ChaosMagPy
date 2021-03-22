@@ -1,19 +1,22 @@
 Changelog
 =========
 
-Version 0.6-dev
----------------
-| **Date:** March 12, 2021
-| **Release:** v0.6-dev
-| **Version of CHAOS:** CHAOS-7.5 (0705)
+Version 0.6
+-----------
+| **Date:** March 22, 2021
+| **Release:** v0.6
+| **Version of CHAOS:** CHAOS-7.6 (0706)
 
 Features
 ^^^^^^^^
-* Added new sections to the usage section of the documentation
+* Added new usage sections to the documentation
 
 Bugfixes
 ^^^^^^^^
-* Fixed broken link to RC-index file.
+* Fixed broken link to RC-index file (GitHub issue #5).
+* Added lxml to installation instructions
+  (needed for webpage requests, optional).
+* Require hdf5storage version 0.1.17 (fixed read/write intent)
 
 Version 0.5
 -----------

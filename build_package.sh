@@ -3,7 +3,7 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
-chaos=data/CHAOS-7.5/CHAOS-7.5.mat  # update model file here
+chaos=data/CHAOS-7.6/CHAOS-7.6.mat  # update model file here
 
 echo ---------------- ChaosMagPy Version $version ----------------
 echo "Building package with CHAOS-matfile in '$chaos'."
@@ -18,8 +18,7 @@ while true; do
 done
 
 # delete old dist files if exist
-rm -f dist/chaosmagpy-$version-py3-none-any.whl
-rm -f dist/chaosmagpy-$version.tar.gz
+rm -f dist/chaosmagpy-$version*
 
 # build distribution, build binary in /tmp because of windows shared dir
 tempdir=$(mktemp -t -d XXXXXX)
@@ -128,11 +127,14 @@ while true; do
     esac
 done
 
+ls -lrt build | grep --color=auto chaosmagpy_package_$version
+ls -lrt dist | grep --color=auto chaosmagpy-$version
+
 cat << EOF
 -------------------------------------------------------------
 Check creation date of dist files (*.tar.gz and *.whl).
-Check RC-index file.
-Check example output.
+Check that the RC-index file has been updated.
+Check that example output agrees with MATLAB example output.
 Check that correct model file was used.
 Check license date.
 Check changelog date.

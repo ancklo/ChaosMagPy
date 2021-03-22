@@ -48,7 +48,7 @@ class Base(object):
 
         # ensure breaks is None or has 2 elements
         if breaks is not None:
-            breaks = np.asarray(breaks, dtype=np.float)
+            breaks = np.asarray(breaks, dtype=float)
             if breaks.size == 1:
                 breaks = np.append(breaks, breaks)
 
@@ -62,7 +62,7 @@ class Base(object):
             self.dim = None
 
         else:
-            coeffs = np.asarray(coeffs, dtype=np.float)
+            coeffs = np.asarray(coeffs, dtype=float)
 
             if order is None:
                 self.order = coeffs.shape[0]
@@ -513,7 +513,7 @@ class BaseModel(Base):
                     nmax, self.nmax))
             nmax = self.nmax
 
-        time = np.array(time, dtype=np.float)
+        time = np.array(time, dtype=float)
         theta = np.linspace(1, 179, num=320)
         phi = np.linspace(-180, 180, num=721)
 
@@ -1363,7 +1363,7 @@ str, {'internal', 'external'}
             source = 'external'
 
         # ensure ndarray input
-        time = np.asarray(time, dtype=np.float)
+        time = np.asarray(time, dtype=float)
 
         # use static part to define modelled period
         start = self.model_static.breaks[0]
@@ -1540,7 +1540,7 @@ str, {'internal', 'external'}
                        self.breaks_delta['s11'][-1]])
 
         # ensure ndarray input
-        time = np.array(time, dtype=np.float)
+        time = np.array(time, dtype=float)
 
         if np.amin(time) < start or np.amax(time) > end:
             warnings.warn(
@@ -1905,7 +1905,7 @@ str, {'internal', 'external'}
             order = self.model_tdep.order
 
             # compute times in mjd2000
-            times = np.array([], dtype=np.float)
+            times = np.array([], dtype=float)
             for start, end in zip(breaks[:-1], breaks[1:]):
                 step = (end - start)/(order-1)
                 times = np.append(times, np.arange(start, end, step))
@@ -2300,7 +2300,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
             angles = [model_euler[angle][num] for angle in [
                 'alpha', 'beta', 'gamma']]
-            euler = np.concatenate(angles, axis=-1).astype(np.float)
+            euler = np.concatenate(angles, axis=-1).astype(float)
 
             # first: order, second: number of intervals, third: 3 angles
             coeffs_euler[satellite] = np.expand_dims(euler, axis=0)
