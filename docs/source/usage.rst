@@ -57,11 +57,11 @@ The same computation can be done with other sources described by the model:
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_values_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
-Computing a timeseries of Gauss coefficients
---------------------------------------------
+Computing a time series of Gauss coefficients
+---------------------------------------------
 
-ChaosMagPy can also be used to synthesize a timeseries of the spherical
-harmonic coefficients first. For example, in the case of the time-dependent
+ChaosMagPy can also be used to synthesize a time series of the spherical
+harmonic coefficients. For example, in the case of the time-dependent
 internal field:
 
 .. code-block:: python
@@ -69,16 +69,31 @@ internal field:
    import numpy as np
    import chaosmagpy as cp
 
-   # create vector of time instances in modified Julian date from 2000 to 2004
-   time = np.linspace(0., 4*365.25, 10)  # 10 equally-spaced time instances
-
-   # load the CHAOS model
+   # load the CHAOS model from the mat-file
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   # compute the Gauss coefficients of the internal field up to degree 14
-   coeffs = model.synth_coeffs_tdep(time, nmax=14, deriv=0)  # shape: (10, 196)
+   print('Model timespan is:', model.model_tdep.breaks[[0, -1]])
 
-The same can be done with other sources accounted for in CHAOS.
+   # create vector of time points in modified Julian date from 2000 to 2004
+   time = np.linspace(0., 4*365.25, 10)  # 10 equally-spaced time instances
+
+   # compute the Gauss coefficients of the MF, SV and SA of the internal field
+   coeffs_MF = model.synth_coeffs_tdep(time, nmax=13, deriv=0)  # shape: (10, 195)
+   coeffs_SV = model.synth_coeffs_tdep(time, nmax=14, deriv=1)  # shape: (10, 224)
+   coeffs_SA = model.synth_coeffs_tdep(time, nmax=9, deriv=2)  # shape: (10, 99)
+
+   # save time and coefficients to a txt-file: each column starts with the time
+   # point in decimal years followed by the Gauss coefficients in
+   # natural order, i.e. g(n,m): g(1,0), g(1, 1), h(1, 1), ...
+
+   dyear = cp.data_utils.mjd_to_dyear(time)  # convert mjd2000 to decimal year
+
+   np.savetxt('MF.txt', np.concatenate([dyear[None, :], coeffs_MF.T]), fmt='%10.5f', delimiter=' ')
+   np.savetxt('SV.txt', np.concatenate([dyear[None, :], coeffs_SV.T]), fmt='%10.5f', delimiter=' ')
+   np.savetxt('SA.txt', np.concatenate([dyear[None, :], coeffs_SA.T]), fmt='%10.5f', delimiter=' ')
+
+The same can be done with other sources accounted for in CHAOS. However, except
+for the time-dependent internal field, there are no time derivatives available.
 
 +----------+-----------------+---------------------------------------------------+
 |  Source  |     Type        | Method in :class:`~.CHAOS` class                  |
@@ -95,7 +110,7 @@ The same can be done with other sources accounted for in CHAOS.
 Converting time formats in ChaosMagPy
 -------------------------------------
 
-The models in ChaosMagPy are based on time in modified Julian date. But
+The models in ChaosMagPy only accept modified Julian date. But
 sometimes it is easier to work in different units such as decimal years or
 Numpy's datetime. For those cases, ChaosMagPy offers simple conversion
 functions:
@@ -125,8 +140,8 @@ The inverse operations are also available:
 At the same time, :func:`chaosmagpy.data_utils.mjd2000` accepts a wide range of
 inputs (see the documentation).
 
-Computing a timeseries of field components at two ground observatories
-----------------------------------------------------------------------
+Computing a time series of field components at two ground observatories
+-----------------------------------------------------------------------
 
 Compute the time series of the first time-derivative of the field components at
 the ground observatories in Niemegk (Germany) and Mbour (Senegal).
@@ -173,9 +188,9 @@ the ground observatories in Niemegk (Germany) and Mbour (Senegal).
 .. figure:: images/plot_timeseries.png
    :align: center
 
-   Timeseries of the secular variation at two ground observatory stations.
+   Time series of the secular variation at two ground observatory stations.
 
-Any timeseries can be generated this way.
+Any time series can be generated this way.
 
 Plotting a map of the time-dependent internal field
 ---------------------------------------------------
