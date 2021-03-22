@@ -8,4 +8,4 @@ __all__ = ["CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile",
            "load_CovObs_txtfile", "load_gufm1_txtfile",
            "basicConfig", "synth_values"]
 
-__version__ = "0.6"
+__version__ = "0.7-dev"

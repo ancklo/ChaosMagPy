@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.7-dev
+---------------
+| **Date:** March 22, 2021
+| **Release:** v0.7-dev
+| **Version of CHAOS:** CHAOS-7.6 (0706)
+
 Version 0.6
 -----------
 | **Date:** March 22, 2021
