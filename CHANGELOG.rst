@@ -5,7 +5,14 @@ Version 0.6
 -----------
 | **Date:** March 22, 2021
 | **Release:** v0.6
-| **Version of CHAOS:** CHAOS-7.6 (0706)
+| **Version of CHAOS:** CHAOS-7.6 (0706), CHAOS-7.7 (0707)
+
+News
+^^^^
+The latest version of CHAOS (CHAOS-7.7) fixes an issue with the endpoint of the
+model time interval of the time-dependent internal field of the earlier release
+CHAOS-7.6. ChaosMagPy v0.6 also works with CHAOS-7.7 and does not need to be
+updated (2021-06-15).
 
 Features
 ^^^^^^^^
