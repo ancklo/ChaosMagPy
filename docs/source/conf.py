@@ -113,7 +113,7 @@ html_static_path = ['.static']
 # add button to hide prompts and outputs in code examples
 # also required "copybutton.js" and "jquery.js" in .static directory
 def setup(app):
-    app.add_javascript('copybutton.js')
+    app.add_js_file('copybutton.js')
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
