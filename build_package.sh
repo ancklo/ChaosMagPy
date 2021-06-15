@@ -3,7 +3,7 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
-chaos=data/CHAOS-7.6/CHAOS-7.6.mat  # update model file here
+chaos=data/CHAOS-7.7/CHAOS-7.7.mat  # update model file here
 
 echo ---------------- ChaosMagPy Version $version ----------------
 echo "Building package with CHAOS-matfile in '$chaos'."
@@ -126,6 +126,9 @@ while true; do
         * ) echo "Please answer yes or no.";;
     esac
 done
+
+echo "-------------------------------------------------------------"
+echo  "Check that the date of the produced package files."
 
 ls -lrt build | grep --color=auto chaosmagpy_package_$version
 ls -lrt dist | grep --color=auto chaosmagpy-$version
