@@ -127,8 +127,10 @@ while true; do
     esac
 done
 
-echo "-------------------------------------------------------------"
-echo  "Check that the date of the produced package files."
+cat << EOF
+-------------------------------------------------------------
+Check that the produced package files have the current date.
+EOF
 
 ls -lrt build | grep --color=auto chaosmagpy_package_$version
 ls -lrt dist | grep --color=auto chaosmagpy-$version
