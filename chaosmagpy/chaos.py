@@ -1069,7 +1069,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> time = np.linspace(0., 10., num=2)
+        >>> time = np.array([0., 10.])
 
         >>> model.synth_coeffs_tdep(time, nmax=1)  # dipole coefficients
         array([[-29614.72797782,  -1728.47079907,   5185.50518939],
@@ -1124,7 +1124,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> time = np.linspace(0., 10., num=2)
+        >>> time = np.array([0., 10.])
 
         Compute magnetic field components at specific location.
 
@@ -1449,7 +1449,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> time = np.linspace(0., 10., num=2)
+        >>> time = np.array([0., 10.])
         >>> Br, Bt, Bp = model.synth_values_gsm(time, 6371.2, 45., 0.)
         >>> Br
         array([-8.18751916, -8.25661729])
@@ -1624,7 +1624,6 @@ str, {'internal', 'external'}
             # unpack file: oscillations per day, complex spectrum
             frequency = frequency_spectrum['frequency_ind']
             spectrum = frequency_spectrum['spectrum_ind']
-            scaled = frequency_spectrum['scaled']
 
             # build rotation matrix for induced coefficients SM -> GEO
             rotate_gauss_ind = cu.synth_rotate_gauss(
@@ -1694,7 +1693,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> time = np.linspace(0., 10., num=2)
+        >>> time = np.array([0., 10.])
         >>> Br, Bt, Bp = model.synth_values_sm(time, 6371.2, 45., 0.)
         >>> Br
         array([-18.85890361, -13.99893523])
@@ -1842,7 +1841,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> time = np.linspace(500., 600., num=2)
+        >>> time = np.array([500., 600.])
         >>> model.meta['satellites']  # check satellite names
         ('oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c')
 
