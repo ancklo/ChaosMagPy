@@ -354,7 +354,7 @@ class CoordinateUtils(TestCase):
 
         height, beta = c.geo_to_gg(mat['radius'], mat['theta'])
 
-        # self.assertIsNone(np.testing.assert_allclose(height, mat['height']))
+        self.assertIsNone(np.testing.assert_allclose(height, mat['height']))
         self.assertIsNone(np.testing.assert_allclose(beta, mat['beta']))
 
     def test_gg_geo_gg(self):

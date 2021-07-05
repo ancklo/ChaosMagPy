@@ -215,7 +215,7 @@ class Base(object):
 
 class BaseModel(Base):
     """
-    Class for piecewise polynomial spherical harmonic model.
+    Class for piecewise polynomial spherical harmonic models.
 
     Parameters
     ----------

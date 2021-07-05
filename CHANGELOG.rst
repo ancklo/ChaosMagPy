@@ -15,9 +15,13 @@ Version 0.6
 
 News
 ^^^^
-The latest version of CHAOS (CHAOS-7.7) fixes an issue with the endpoint of the
-model time interval of the time-dependent internal field of the earlier release
-CHAOS-7.6. ChaosMagPy v0.6 also works with CHAOS-7.7 and does not need to be
+The latest version of CHAOS (CHAOS-7.7) corrects an error in the distributed
+CHAOS-7.6 model files. The mat-file and shc-file for CHAOS-7.6 were due to a
+bug identical to CHAOS-7.5, i.e. not correctly updated. The distributed spline
+coefficient file for CHAOS-7.6 was correct. The CHAOS-7.7 release corrects the
+errors and all CHAOS-7.7 files use updated data to March 2021.
+
+ChaosMagPy v0.6 also works with CHAOS-7.7 and does not need to be
 updated (2021-06-15).
 
 Features
