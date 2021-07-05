@@ -143,10 +143,10 @@ def _dipole_to_unit(*args):
 
 def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     """
-    Compute matrices to transform spherical harmonic expansion from Fourier
-    coefficients.
+    Compute time-dependent matrices that transform spherical harmonic expansion
+    from the given Fourier coefficients.
 
-    The function computes matrices that trasnform the spherical harmonic
+    The function computes matrices that transform the spherical harmonic
     expansion of a time-dependent reference system (e.g. GSM, SM) to GEO using
     Fourier expansion of the transformation coefficients.
 
