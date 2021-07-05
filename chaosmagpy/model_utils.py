@@ -673,7 +673,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
 def legendre_poly(nmax, theta):
     """
-    Returns associated Legendre polynomials :math:`dP_n^m(\\cos\\theta)`
+    Returns associated Legendre polynomials :math:`P_n^m(\\cos\\theta)`
     (Schmidt quasi-normalized) and the derivative
     :math:`dP_n^m(\\cos\\theta)/d\\theta` evaluated at :math:`\\theta`.
 
@@ -689,7 +689,7 @@ def legendre_poly(nmax, theta):
     -------
     Pnm : ndarray, shape (n, m, ...)
           Evaluated values and derivatives, grid shape is appended as trailing
-          dimensions. :math:`dP_n^m(\\cos\\theta)` := ``Pnm[n, m, ...]`` and
+          dimensions. :math:`P_n^m(\\cos\\theta)` := ``Pnm[n, m, ...]`` and
           :math:`dP_n^m(\\cos\\theta)/d\\theta` := ``Pnm[m, n+1, ...]``
 
     References

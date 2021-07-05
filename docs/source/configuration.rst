@@ -25,10 +25,9 @@ magnetic potential field. For a complete list, see
 Change RC index file
 --------------------
 
-Download a new RC-index file either directly as ``dat``-file from
+Download a new RC-index file either directly as txt-file from
 `spacecenter.dk <http://www.spacecenter.dk/files/magnetic-models/RC/current/>`_
-or using the function :func:`data_utils.save_RC_h5file` (saved as
-``h5``-file):
+or using the function :func:`data_utils.save_RC_h5file` (saved as h5-file):
 
 .. code-block:: python
 
@@ -36,18 +35,18 @@ or using the function :func:`data_utils.save_RC_h5file` (saved as
 
    save_RC_h5file('my_RC_file.h5')
 
-There is no difference in speed when using ``dat`` or ``h5`` file format in
-this case. After importing ChaosMagPy, provide the path to the new RC-index
-file:
+There is no significant difference in speed when using txt-file or h5-file
+formats in this case. After importing ChaosMagPy, provide the path to the new
+RC-index file:
 
 .. code-block:: python
 
    import chaosmagpy as cp
 
-   cp.basicConfig['file.RC_index'] = 'my_RC_file.h5'
+   cp.basicConfig['file.RC_index'] = './my_RC_file.h5'
 
-This should be done somewhere at the beginning of the script, otherwise
-ChaosMagPy uses the builtin RC index file.
+This should be done at the top of the script after the import statements,
+otherwise ChaosMagPy uses the builtin RC-index file.
 
 Save and load custom configuration
 ----------------------------------
