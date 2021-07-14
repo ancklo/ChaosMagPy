@@ -1,5 +1,6 @@
 """
-Classes and functions to read the CHAOS model.
+Classes and functions to read the CHAOS model and other geomagnetic field
+models.
 
 .. autosummary::
     :toctree: classes
