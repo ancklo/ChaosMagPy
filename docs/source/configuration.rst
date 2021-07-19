@@ -5,8 +5,8 @@ ChaosMagPy internally uses a number of parameters and coefficient/data files,
 whose numerical values and filepaths are stored in a dictionary-like container,
 called ``basicConfig``. Usually, the content of it need not be changed.
 However, if for example one wishes to compute a time series of the
-external field beyond the limit of the builtin RC index file, then ChaosMagPy
-can be configured to use an updates RC index file.
+external field beyond the limit of the builtin RC-index file, then ChaosMagPy
+can be configured to use an updates RC-index file.
 
 To view the parameters in ``basicConfig``, do the following:
 
@@ -20,7 +20,7 @@ This will print a list of the parameters than can in principle be changed.
 For example, it contains Earth's surface radius ``params.r_surf``, which is
 used as reference radius for the spherical harmonic representation of the
 magnetic potential field. For a complete list, see
-:ref:`label-configuration-list`.
+:ref:`sec-configuration-utilities`.
 
 Change RC index file
 --------------------
@@ -52,25 +52,27 @@ Save and load custom configuration
 ----------------------------------
 
 The configuration values can also be read from and written to a simple text
-file. To ensure the correct format of the text file, it is best to save the
-current configuration:
+file in json format.
+
+For the correct format, it is best to change the configuration parameters
+during a python session and then save them to a file. For example, the
+following code sets the Earth's surface radius to 6371 km (there is no reason
+to do this except for the sake of this example):
 
 .. code-block:: python
 
    import chaosmagpy as cp
 
-   cp.basicConfig.save('my_config.txt')
+   cp.basicConfig['params.r_surf'] = 6371
 
-A typical line looks like this:
-
-.. code-block:: bash
-
-   params.r_surf : 6371.2
-
-Comments have to start with ``#``, empty lines are skipped and key-value
-pairs are separated with ``:``. Change the values in the file and load it into
-ChaosMagPy at the beginning of the script:
+Then save the configuration dictionary to a file:
 
 .. code-block:: python
 
-   cp.basicConfig.load('my_config.txt')
+   cp.basicConfig.save('myconfig.json')
+
+To load this configuration file, use the following at the start of the script:
+
+.. code-block:: python
+
+   cp.basicConfig.load('myconfig.json')

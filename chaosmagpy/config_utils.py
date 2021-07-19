@@ -61,6 +61,7 @@ keywords.
 
 import os
 import re
+import json
 import numpy as np
 from contextlib import contextmanager
 
@@ -126,7 +127,7 @@ def check_version_string(s):
         return s
     else:
         raise ValueError(f'Not supported version format "{s}".'
-                         'Looking for "x.x".')
+                         'Must be of the form "x.x" with x an integer.')
 
 
 DEFAULTS = {
@@ -203,26 +204,16 @@ class BasicConfig(dict):
         Parameters
         ----------
         filepath : str
-            Filepath and name to configuration textfile.
+            Filepath and name to json-formatted configuration txt-file.
 
         """
 
         with open(filepath, 'r') as f:
-            for line in f.readlines():
-                # skip comment and empty lines
-                if not line.strip():
-                    continue
-                elif line.strip()[0] == '#':
-                    continue
+            kwargs = json.load(f)
 
-                key, value = line.split(':')
-                value = value.split('#')[0].strip()  # remove comments and \n
-
-                # check list input and convert to array
-                if value.startswith('[') and value.endswidth(']'):
-                    value = np.fromstring(value[1:-1], sep=' ')
-
-                self.__setitem__(key.strip(), value)
+        for key, value in kwargs.items():
+            # check format and set key value pairs
+            self.__setitem__(key, value)
 
     def save(self, filepath):
         """
@@ -236,10 +227,17 @@ class BasicConfig(dict):
 
         """
 
+        def default(obj):
+            if isinstance(obj, np.ndarray):
+                return obj.tolist()
+
+        filename, extension = os.path.splitext(filepath)
+        if not extension == '.json':
+            filepath = filename + '.json'
+
         with open(filepath, 'w') as f:
-            for key, value in self.items():
-                f.write(f'{key} : {value}\n')
-        f.close()
+            json.dump(self, f, default=default, indent=4, sort_keys=True)
+
         print(f'Saved configuration textfile to {filepath}.')
 
     @contextmanager

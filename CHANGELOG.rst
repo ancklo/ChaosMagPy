@@ -3,9 +3,14 @@ Changelog
 
 Version 0.7-dev
 ---------------
-| **Date:** March 22, 2021
+| **Date:** July 19, 2021
 | **Release:** v0.7-dev
-| **Version of CHAOS:** CHAOS-7.6 (0706)
+| **Version of CHAOS:** CHAOS-7.7 (0707)
+
+Features
+^^^^^^^^
+* Configuration parameters in ``chaosmagpy.basicConfig`` are now saved to and
+  loaded from a json-formatted txt-file.
 
 Version 0.6
 -----------
