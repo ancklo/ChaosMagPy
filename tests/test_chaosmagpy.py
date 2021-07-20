@@ -285,12 +285,10 @@ class ChaosMagPy(TestCase):
             print('  Max Error =', np.amax(res), 'nT')
             print('  Min Error =', np.amin(res), 'nT')
 
-        self.assertIsNone(np.testing.assert_allclose(
-            B_radius, B_radius_mat, rtol=1e-2, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_theta, B_theta_mat, rtol=1e-2, atol=1e-2))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_phi, B_phi_mat, rtol=1e-2, atol=1e-2))
+        np.testing.assert_allclose(
+            B_radius, B_radius_mat, rtol=1e-2, atol=1e-2)
+        np.testing.assert_allclose(B_theta, B_theta_mat, rtol=1e-2, atol=1e-2)
+        np.testing.assert_allclose(B_phi, B_phi_mat, rtol=1e-2, atol=1e-2)
 
     def test_synth_gsm_field(self):
 

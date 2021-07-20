@@ -3,7 +3,7 @@ Changelog
 
 Version 0.7-dev
 ---------------
-| **Date:** July 19, 2021
+| **Date:** July 20, 2021
 | **Release:** v0.7-dev
 | **Version of CHAOS:** CHAOS-7.7 (0707)
 
@@ -11,6 +11,9 @@ Features
 ^^^^^^^^
 * Configuration parameters in ``chaosmagpy.basicConfig`` are now saved to and
   loaded from a json-formatted txt-file.
+* Added keyword arguments to :meth:`chaosmagpy.chaos.CHAOS.synth_coeffs_sm`
+  and :meth:`chaosmagpy.chaos.CHAOS.synth_values_sm` to provide the RC-index
+  values directly instead of using the built-in RC-index file.
 
 Version 0.6
 -----------

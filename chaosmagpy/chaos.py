@@ -165,7 +165,7 @@ class Base(object):
 
             message = 'no' if extrapolate == 'off' else extrapolate
             warnings.warn("Requested coefficients are "
-                          "outside of the modelled period from "
+                          "outside of the model period from "
                           f"{start} to {end}. Doing {message} extrapolation.")
 
             if key > 0:
@@ -1372,7 +1372,7 @@ str, {'internal', 'external'}
 
         if np.amin(time) < start or np.amax(time) > end:
             warnings.warn("Requested coefficients are "
-                          "outside of the modelled period from "
+                          "outside of the model period from "
                           f"{start} to {end}. Doing linear extrapolation in "
                           "GSM reference frame.")
 
@@ -1486,7 +1486,7 @@ str, {'internal', 'external'}
 
         return B_radius, B_theta, B_phi
 
-    def synth_coeffs_sm(self, time, *, nmax=None, source=None):
+    def synth_coeffs_sm(self, time, *, nmax=None, source=None, rc=None):
         """
         Compute the external SM field from the CHAOS model.
 
@@ -1499,6 +1499,14 @@ str, {'internal', 'external'}
             coefficients, but can also be smaller, if specified).
         source : {'external', 'internal'}, optional
             Choose source either external or internal (default is 'external').
+        rc : ndarray, shape (...), optional
+            External or internal part of the RC-index (defaults to linearly
+            interpolating the hourly values given by built-in RC-index file).
+
+            .. note::
+
+                Use the external part of the RC-index for ``source='external'``
+                (default) and the internal part for ``source='internal'``.
 
         Returns
         -------
@@ -1541,12 +1549,12 @@ str, {'internal', 'external'}
                        self.breaks_delta['s11'][-1]])
 
         # ensure ndarray input
-        time = np.array(time, dtype=float)
+        time = np.asarray(time, dtype=float)
 
         if np.amin(time) < start or np.amax(time) > end:
             warnings.warn(
                 'Requested coefficients are outside of the '
-                f'modelled period from {start} to {end}. Doing linear '
+                f'model period from {start} to {end}. Doing linear '
                 'extrapolation in SM reference frame.')
 
         # load rotation matrix spectrum from file
@@ -1555,35 +1563,27 @@ str, {'internal', 'external'}
             frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
             "SM rotation coefficients not compatible with the chosen dipole."
 
-        # load RC-index file: first hdf5 then dat-file format
-        try:
-            with h5py.File(basicConfig['file.RC_index'], 'r') as f_RC:
-                # check RC index time and input times
-                start = f_RC['time'][0]
-                end = f_RC['time'][-1]
-                # interpolate RC (linear) at input times: RC is callable
+        if rc is None:
+
+            # load RC-index file: first hdf5 then dat-file format
+            try:
+                with h5py.File(basicConfig['file.RC_index'], 'r') as f_RC:
+
+                    # create linear interpolant of the RC-index
+                    RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
+                                      kind='linear', bounds_error=True)
+
+            except OSError:
+                f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
+
+                # create linear interpolant of the RC-index
                 RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
-                                  kind='linear')
-        except OSError:  # dat file second
-            f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
-            start = f_RC['time'].iloc[0]
-            end = f_RC['time'].iloc[-1]
-            # interpolate RC (linear) at input times: RC is callable
-            RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
-                              kind='linear')
+                                  kind='linear', bounds_error=True)
 
-        if np.amin(time) < start:
-            raise ValueError(
-                'Insufficient RC time series. Input times must be between '
-                '{:.2f} and {:.2f}, but found {:.2f}.'.format(
-                    start, end, np.amin(time)))
+            rc = RC(time)  # interpolate RC-index
 
-        # check RC index time and inputs time
-        if np.amax(time) > end:
-            raise ValueError(
-                'Insufficient RC time series. Input times must be between '
-                '{:.2f} and {:.2f}, but found {:.2f}.'.format(
-                    start, end, np.amax(time)))
+        else:
+            rc = np.asarray(rc, dtype=float)  # use supplied index values
 
         # use piecewise polynomials to evaluate baseline correction in bins
         delta_q10 = sip.PPoly.construct_fast(
@@ -1608,14 +1608,11 @@ str, {'internal', 'external'}
             time, frequency, spectrum, scaled=scaled)
 
         if source == 'external':
-            coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm+2),))
+            coeffs_sm = np.empty(time.shape + (self.n_sm*(self.n_sm + 2),))
 
-            coeffs_sm[..., 0] = (RC(time)*self.coeffs_sm[0]
-                                 + delta_q10(time))
-            coeffs_sm[..., 1] = (RC(time)*self.coeffs_sm[1]
-                                 + delta_q11(time))
-            coeffs_sm[..., 2] = (RC(time)*self.coeffs_sm[2]
-                                 + delta_s11(time))
+            coeffs_sm[..., 0] = rc*self.coeffs_sm[0] + delta_q10(time)
+            coeffs_sm[..., 1] = rc*self.coeffs_sm[1] + delta_q11(time)
+            coeffs_sm[..., 2] = rc*self.coeffs_sm[2] + delta_s11(time)
             coeffs_sm[..., 3:] = self.coeffs_sm[3:]
 
             # rotate external SM coefficients to GEO reference
@@ -1636,12 +1633,11 @@ str, {'internal', 'external'}
 
             coeffs_sm = np.empty(time.shape + (3,))
 
-            coeffs_sm[..., 0] = RC(time)*self.coeffs_sm[0]
-            coeffs_sm[..., 1] = RC(time)*self.coeffs_sm[1]
-            coeffs_sm[..., 2] = RC(time)*self.coeffs_sm[2]
+            coeffs_sm[..., 0] = rc*self.coeffs_sm[0]
+            coeffs_sm[..., 1] = rc*self.coeffs_sm[1]
+            coeffs_sm[..., 2] = rc*self.coeffs_sm[2]
 
-            coeffs_sm_ind = np.empty(
-                time.shape + (self.n_sm*(self.n_sm+2),))
+            coeffs_sm_ind = np.empty(time.shape + (self.n_sm*(self.n_sm + 2),))
 
             coeffs_sm_ind[..., 0] = delta_q10(time)
             coeffs_sm_ind[..., 1] = delta_q11(time)
@@ -1659,7 +1655,7 @@ str, {'internal', 'external'}
         return coeffs[..., :nmax*(nmax+2)]
 
     def synth_values_sm(self, time, radius, theta, phi, *, nmax=None,
-                        source=None, grid=None):
+                        source=None, grid=None, rc_e=None, rc_i=None):
         """
         Compute SM magnetic field components.
 
@@ -1684,6 +1680,12 @@ str, {'internal', 'external'}
             If ``True``, field components are computed on a regular grid,
             which is created from ``theta`` and ``phi`` as their outer product
             (defaults to ``False``).
+        rc_e : ndarray, shape (...), optional
+            External part of the RC-index (defaults to linearly interpolating
+            the hourly values given by built-in RC-index file).
+        rc_i : ndarray, shape (...), optional
+            Internal part of the RC-index (defaults to linearly interpolating
+            the hourly values given by built-in RC-index file).
 
         Returns
         -------
@@ -1705,10 +1707,11 @@ str, {'internal', 'external'}
         grid = False if grid is None else grid
 
         if source == 'all':
-            coeffs_ext = self.synth_coeffs_sm(time, nmax=nmax,
-                                              source='external')
-            coeffs_int = self.synth_coeffs_sm(time, nmax=nmax,
-                                              source='internal')
+
+            coeffs_ext = self.synth_coeffs_sm(
+                time, nmax=nmax, source='external', rc=rc_e)
+            coeffs_int = self.synth_coeffs_sm(
+                time, nmax=nmax, source='internal', rc=rc_i)
 
             B_radius_ext, B_theta_ext, B_phi_ext = mu.synth_values(
                 coeffs_ext, radius, theta, phi, source='external', grid=grid)
@@ -1720,7 +1723,12 @@ str, {'internal', 'external'}
             B_phi = B_phi_ext + B_phi_int
 
         elif source in ['external', 'internal']:
-            coeffs = self.synth_coeffs_sm(time, nmax=nmax, source=source)
+
+            # set the RC-index
+            rc = rc_e if source == 'external' else rc_i
+
+            coeffs = self.synth_coeffs_sm(
+                time, nmax=nmax, source=source, rc=rc)
             B_radius, B_theta, B_phi = mu.synth_values(
                 coeffs, radius, theta, phi, source=source, grid=grid)
 
