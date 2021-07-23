@@ -63,6 +63,7 @@ import os
 import re
 import json
 import numpy as np
+import warnings
 from contextlib import contextmanager
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
@@ -105,7 +106,7 @@ def check_string(s):
 
 
 def check_vector(s, len=None):
-    """Check that input is vector with required length."""
+    """Check that input is vector of required length."""
     try:
         s = np.array(s)
         assert s.ndim == 1
@@ -211,6 +212,9 @@ class BasicConfig(dict):
         with open(filepath, 'r') as f:
             kwargs = json.load(f)
 
+        if len(kwargs) == 0:
+            warnings.warn('Loaded configuration dictionary is empty.')
+
         for key, value in kwargs.items():
             # check format and set key value pairs
             self.__setitem__(key, value)
@@ -230,10 +234,6 @@ class BasicConfig(dict):
         def default(obj):
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
-
-        filename, extension = os.path.splitext(filepath)
-        if not extension == '.json':
-            filepath = filename + '.json'
 
         with open(filepath, 'w') as f:
             json.dump(self, f, default=default, indent=4, sort_keys=True)
