@@ -213,7 +213,8 @@ class BasicConfig(dict):
             kwargs = json.load(f)
 
         if len(kwargs) == 0:
-            warnings.warn('Loaded configuration dictionary is empty.')
+            warnings.warn(
+                'Configuration dictionary loaded from file is empty.')
 
         for key, value in kwargs.items():
             # check format and set key value pairs
