@@ -1500,8 +1500,9 @@ str, {'internal', 'external'}
         source : {'external', 'internal'}, optional
             Choose source either external or internal (default is 'external').
         rc : ndarray, shape (...), optional
-            External or internal part of the RC-index (defaults to linearly
-            interpolating the hourly values given by built-in RC-index file).
+            External (internal) part of the RC-index (defaults to linearly
+            interpolating the hourly values given by the built-in RC-index
+            file).
 
             .. note::
 
@@ -1650,7 +1651,7 @@ str, {'internal', 'external'}
 
         else:
             raise ValueError(f'Unknown source "{source}". '
-                             'Use {external'', ''internal''}.')
+                             'Use one of {"external", "internal"}.')
 
         return coeffs[..., :nmax*(nmax+2)]
 
@@ -1682,10 +1683,10 @@ str, {'internal', 'external'}
             (defaults to ``False``).
         rc_e : ndarray, shape (...), optional
             External part of the RC-index (defaults to linearly interpolating
-            the hourly values given by built-in RC-index file).
+            the hourly values given by the built-in RC-index file).
         rc_i : ndarray, shape (...), optional
             Internal part of the RC-index (defaults to linearly interpolating
-            the hourly values given by built-in RC-index file).
+            the hourly values given by the built-in RC-index file).
 
         Returns
         -------
