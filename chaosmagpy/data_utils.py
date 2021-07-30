@@ -297,11 +297,11 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         Take leap years for decimal year conversion into account
         (defaults to ``True``).
     header : str, optional
-        Optional header at beginning of file. Defaults to empty string.
+        Optional header at beginning of file. Defaults to an empty string.
 
     """
 
-    time = np.array(time, dtype=float)
+    time = np.asarray(time, dtype=float)
 
     order = 1 if order is None else int(order)
 
@@ -315,10 +315,11 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     assert (nmin <= nmax), \
         '``nmin`` must be smaller than or equal to ``nmax``.'
 
-    if filepath is None:
-        filepath = 'model.shc'
+    filepath = 'model.shc' if filepath is None else filepath
 
     header = '' if header is None else header
+
+    leap_year = True if leap_year is None else bool(leap_year)
 
     if coeffs.ndim == 1:
         coeffs = coeffs.reshape((1, -1))
@@ -344,11 +345,9 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         # write comment line
         f.write(comment)
 
-        # write header lines to 8 significants
         f.write('  ')  # to represent two missing values
         for t in time:
-            f.write(' {:9.4f}'.format(
-                mjd_to_dyear(t, leap_year=leap_year)))
+            f.write(' {:9.4f}'.format(mjd_to_dyear(t, leap_year=leap_year)))
         f.write('\n')
 
         # write coefficient table to 8 significants
