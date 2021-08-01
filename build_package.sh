@@ -26,8 +26,7 @@ echo "Creating temporary directory '$tempdir'"
 python setup.py sdist bdist_wheel --bdist-dir $tempdir
 
 # clean build and compile documentary as html
-rm -rf ./docs/build/
-make --directory ./docs html
+make --directory ./docs clean html
 
 # make temporary directory
 tempdir=$(mktemp -t -d XXXXXX)
