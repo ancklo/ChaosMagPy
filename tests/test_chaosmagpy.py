@@ -101,7 +101,7 @@ class ChaosMagPy(TestCase):
 
         model_mat = load_CHAOS_matfile(CHAOS_PATH)
 
-        print('  On time-dependent part:')
+        print('  Time-dep. internal field\n  ========================')
         print('  ', end='')
         model_mat.save_shcfile(filepath, model='tdep')
         coeffs_tdep_mat = model_mat.model_tdep.coeffs
@@ -113,9 +113,9 @@ class ChaosMagPy(TestCase):
               np.amax(np.abs(coeffs_tdep_shc - coeffs_tdep_mat)))
 
         np.testing.assert_allclose(
-            coeffs_tdep_shc, coeffs_tdep_mat, rtol=1e-2, atol=1e-3)
+            coeffs_tdep_shc, coeffs_tdep_mat, atol=1e-12)
 
-        print('  On static part:')
+        print('\n  Static internal field\n  =====================')
         print('  ', end='')
         model_mat.save_shcfile(filepath, model='static')
         coeffs_static_mat = model_mat.model_static.coeffs
