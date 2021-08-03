@@ -347,7 +347,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
         f.write('  ')  # to represent two missing values
         for t in time:
-            f.write(' {:9.4f}'.format(mjd_to_dyear(t, leap_year=leap_year)))
+            f.write(' {:16.8f}'.format(mjd_to_dyear(t, leap_year=leap_year)))
         f.write('\n')
 
         # write coefficient table to 8 significants
@@ -356,7 +356,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
             f.write('{:} {:}'.format(n, m))
 
             for value in coeffs[:, row]:
-                f.write(' {:.8e}'.format(value))
+                f.write(' {:16.8f}'.format(value))
 
             f.write('\n')
 
