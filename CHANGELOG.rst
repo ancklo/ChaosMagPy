@@ -3,12 +3,17 @@ Changelog
 
 Version 0.7-dev
 ---------------
-| **Date:** July 20, 2021
+| **Date:** August 03, 2021
 | **Release:** v0.7-dev
 | **Version of CHAOS:** CHAOS-7.7 (0707)
 
 Features
 ^^^^^^^^
+* Changed the way piecewise polynomials are produced from the coefficients in
+  shc-files. A B-spline representation is now created in an intermediate step
+  to ensure coefficient time series that are smooth.
+* Changed the number format to ``'16.8f'`` when writing shc-files to increase
+  precision.
 * Configuration parameters in ``chaosmagpy.basicConfig`` are now saved to and
   loaded from a json-formatted txt-file.
 * Added keyword arguments to :meth:`chaosmagpy.chaos.CHAOS.synth_coeffs_sm`
