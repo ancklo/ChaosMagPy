@@ -5,6 +5,7 @@ from unittest import TestCase, main
 from chaosmagpy import model_utils as m
 from timeit import default_timer as timer
 from math import pi
+
 try:
     from tests.helpers import load_matfile
 except ImportError:
@@ -15,7 +16,7 @@ RAD = pi / 180
 R_REF = 6371.2  # reference radius in kilometers
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
+MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:

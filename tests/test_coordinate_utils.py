@@ -6,13 +6,14 @@ from chaosmagpy import coordinate_utils as c
 from chaosmagpy import data_utils as d
 from math import pi
 from timeit import default_timer as timer
+
 try:
     from tests.helpers import load_matfile
 except ImportError:
     from helpers import load_matfile
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
+MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:

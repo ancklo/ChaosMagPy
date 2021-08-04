@@ -1,11 +1,9 @@
 import os
 import numpy as np
 import textwrap
-from chaosmagpy import load_CHAOS_matfile, load_CHAOS_shcfile
-from chaosmagpy import coordinate_utils as c
-from chaosmagpy import model_utils as m
-from chaosmagpy import data_utils as du
-from unittest import TestCase, main, skip
+import chaosmagpy as cp
+from unittest import TestCase, main
+
 try:
     from tests.helpers import load_matfile
 except ImportError:
@@ -13,8 +11,9 @@ except ImportError:
 
 R_REF = 6371.2  # reference radius in km
 ROOT = os.path.abspath(os.path.dirname(__file__))
-MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
-CHAOS_PATH = os.path.join(ROOT, 'CHAOS-6-x7.mat')
+MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
+CHAOS_PATH = os.path.join(ROOT, 'data/CHAOS-6-x7.mat')
+CHAOS_PATH_SHC = os.path.join(ROOT, 'data/CHAOS-6-x7_tdep.shc')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:
@@ -32,7 +31,7 @@ class ChaosMagPy(TestCase):
 
     def test_synth_euler_angles(self):
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         test = load_matfile(MATFILE_PATH, 'test_synth_euler_angles')
         time = np.squeeze(test['time'])
@@ -42,13 +41,19 @@ class ChaosMagPy(TestCase):
         self.assertIsNone(np.testing.assert_allclose(
             swarm_c, test['swarm_c']))
 
+    def test_load_CHAOS(self):
+
+        cp.load_CHAOS_matfile(CHAOS_PATH)
+        cp.load_CHAOS_shcfile(CHAOS_PATH_SHC)
+        cp.chaos.BaseModel.from_shc(CHAOS_PATH_SHC)
+
     def test_save_matfile(self):
 
         seq = np.random.randint(0, 10, size=(5,))
         filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.mat'
         filepath = os.path.join(ROOT, filename)
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
         print('  ', end='')  # indent line by two withespaces
         model.save_matfile(filepath)
 
@@ -59,9 +64,9 @@ class ChaosMagPy(TestCase):
             else:
                 np.testing.assert_allclose(x, y, atol=1e-10)
 
-        chaos = du.load_matfile(CHAOS_PATH, variable_names=[
+        chaos = cp.data_utils.load_matfile(CHAOS_PATH, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])
-        chaos_out = du.load_matfile(filepath, variable_names=[
+        chaos_out = cp.data_utils.load_matfile(filepath, variable_names=[
             'pp', 'model_ext', 'model_Euler', 'g'])
 
         pp = chaos['pp']
@@ -99,35 +104,33 @@ class ChaosMagPy(TestCase):
         filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.shc'
         filepath = os.path.join(ROOT, filename)
 
-        model_mat = load_CHAOS_matfile(CHAOS_PATH)
+        model_mat = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         print('  Time-dep. internal field\n  ========================')
         print('  ', end='')
         model_mat.save_shcfile(filepath, model='tdep')
         coeffs_tdep_mat = model_mat.model_tdep.coeffs
 
-        model_shc = load_CHAOS_shcfile(filepath)
+        model_shc = cp.load_CHAOS_shcfile(filepath)
         coeffs_tdep_shc = model_shc.model_tdep.coeffs
 
         print('  Max Error =',
               np.amax(np.abs(coeffs_tdep_shc - coeffs_tdep_mat)))
 
-        np.testing.assert_allclose(
-            coeffs_tdep_shc, coeffs_tdep_mat, atol=1e-12)
+        np.testing.assert_allclose(coeffs_tdep_shc, coeffs_tdep_mat, atol=1e-8)
 
         print('\n  Static internal field\n  =====================')
         print('  ', end='')
         model_mat.save_shcfile(filepath, model='static')
-        coeffs_static_mat = model_mat.model_static.coeffs
+        coeffs_stat_mat = model_mat.model_static.coeffs
 
-        model_shc = load_CHAOS_shcfile(filepath)
-        coeffs_static_shc = model_shc.model_static.coeffs
+        model_shc = cp.load_CHAOS_shcfile(filepath)
+        coeffs_stat_shc = model_shc.model_static.coeffs
 
         print('  Max Error =',
-              np.amax(np.abs(coeffs_static_shc - coeffs_static_mat)))
+              np.amax(np.abs(coeffs_stat_shc - coeffs_stat_mat)))
 
-        np.testing.assert_allclose(
-            coeffs_static_shc, coeffs_static_mat, rtol=1e-2, atol=1e-3)
+        np.testing.assert_allclose(coeffs_stat_shc, coeffs_stat_mat, atol=1e-8)
 
         print(f"  Removing file {filepath}")
         os.remove(filepath)
@@ -142,7 +145,7 @@ class ChaosMagPy(TestCase):
         theta = np.linspace(1, 179, num=n_data)
         phi = np.linspace(-180, 179, num=n_data)
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         B_radius, B_theta, B_phi = model(time, radius, theta, phi)
 
@@ -171,7 +174,7 @@ class ChaosMagPy(TestCase):
 
     def test_surface_field(self):
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         time = 2015.
         radius = R_REF
@@ -215,7 +218,7 @@ class ChaosMagPy(TestCase):
         theta = 90-14.308
         phi = -16.950
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         time = np.linspace(model.model_tdep.breaks[0],
                            model.model_tdep.breaks[-1], num=1000)
@@ -251,7 +254,7 @@ class ChaosMagPy(TestCase):
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_synth_sm_field')
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         N = int(1000)
 
@@ -295,7 +298,7 @@ class ChaosMagPy(TestCase):
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_synth_gsm_field')
 
-        model = load_CHAOS_matfile(CHAOS_PATH)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
         N = int(1000)
 
@@ -346,18 +349,20 @@ class ChaosMagPy(TestCase):
         phi_geo = 90/8
         g_gsm = np.array([1, 2, -1])
 
-        base_1, base_2, base_3 = c.basevectors_gsm(time)
-        matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
+        base_1, base_2, base_3 = cp.coordinate_utils.basevectors_gsm(time)
+        matrix = cp.coordinate_utils.rotate_gauss(nmax, kmax, base_1,
+                                                  base_2, base_3)
 
         g_geo = np.matmul(matrix, g_gsm)
 
-        B_geo_1 = m.synth_values(g_geo, radius, theta_geo, phi_geo)
+        B_geo_1 = cp.model_utils.synth_values(g_geo, radius,
+                                              theta_geo, phi_geo)
         B_geo_1 = np.array(B_geo_1)
 
-        theta_gsm, phi_gsm, R = c.matrix_geo_to_base(theta_geo, phi_geo,
-                                                     base_1, base_2, base_3)
+        theta_gsm, phi_gsm, R = cp.coordinate_utils.matrix_geo_to_base(
+            theta_geo, phi_geo, base_1, base_2, base_3)
 
-        B_gsm = m.synth_values(g_gsm, radius, theta_gsm, phi_gsm)
+        B_gsm = cp.model_utils.synth_values(g_gsm, radius, theta_gsm, phi_gsm)
         B_gsm = np.array(B_gsm)
 
         B_geo_2 = np.matmul(R.transpose(), B_gsm)
@@ -389,7 +394,7 @@ def profiler_complete_forward(n_data=300):
     theta = np.linspace(1, 179, num=n_data)
     phi = np.linspace(-180, 179, num=n_data)
 
-    model = load_CHAOS_matfile(CHAOS_PATH)
+    model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
     # B_radius, B_theta, B_phi = model(time, radius, theta, phi)
     B_radius, B_theta, B_phi = model(time, radius, theta, phi)

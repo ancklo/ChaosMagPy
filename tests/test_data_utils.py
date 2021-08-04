@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from chaosmagpy import data_utils as cpd
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
-MATFILE_PATH = os.path.join(ROOT, 'CHAOS_test.mat')
+MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:
