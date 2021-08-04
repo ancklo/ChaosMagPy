@@ -205,9 +205,9 @@ class Base(object):
 
         pp = dict(
             form='pp',
-            order=self.order,
-            pieces=self.pieces,
-            dim=dim,
+            order=float(self.order),
+            pieces=float(self.pieces),
+            dim=float(dim),
             breaks=self.breaks.reshape((1, -1)),  # ensure 2d
             coefs=coefs)
 
@@ -619,21 +619,7 @@ class BaseModel(Base):
 
         """
 
-        degree = order - 1
-        breaks = np.unique(knots)  # remove endpoint multiplicity
-        pieces = breaks.size - 1  # number of polynomial pieces
-        dim = coeffs.shape[-1]  # dimension = number of Gauss coefficients
-
-        coeffs_pp = np.zeros((order, pieces, dim))
-
-        # have to do it manually for each dimension, scipy only univariate
-        for d in range(dim):
-
-            bs = sip.BSpline(knots, coeffs[:, d], degree)
-            pp = sip.PPoly.from_spline(bs, extrapolate=False)
-
-            # remove multiple pp-coefficients at endpoints
-            coeffs_pp[:, :, d] = pp.c[:, degree:(degree+pieces)]
+        coeffs_pp, breaks = mu.pp_from_bspline(coeffs, knots, order)
 
         return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                    source=source, meta=meta)
@@ -688,31 +674,35 @@ class BaseModel(Base):
 
         # need to pad coefficients
         if nmin > 1:
-            data = np.zeros((nmax*(nmax+2),) + coeffs.shape[1:])
-            data[int(nmin**2-1):, ...] = coeffs
+            coeffs_pad = np.zeros((nmax*(nmax + 2),) + coeffs.shape[1:])
+            coeffs_pad[int(nmin**2 - 1):, ...] = coeffs
         else:
-            data = coeffs
+            coeffs_pad = coeffs
 
         pieces = breaks.size - 1  # number of polynomial pieces
 
         if (pieces == 1) and (order == 1):  # static field in single bin
-            coeffs_out = data.reshape((1, 1, -1))
+
+            coeffs_out = coeffs_pad.reshape((1, 1, -1))
+
+            return cls(name, breaks=breaks, order=order, coeffs=coeffs_out,
+                       source=source, meta=meta)
 
         else:  # model must be time-dependent (incl. piecewise constant)
 
-            # interpolate with piecewise polynomial of given order
-            coeffs_out = np.empty((order, pieces, coeffs.shape[0]))
-            for m, left_break in enumerate(breaks[:-1]):
-                left = m * step  # time index of left_break
-                x = time[left:left+order] - left_break
-                c = np.linalg.solve(
-                    np.vander(x, order), coeffs[:, left:left+order].T)
+            # there may be extra sites to extend the model interval,
+            # but it is not clear how to handle this in a unique way.
+            # I therefore just discard these extrapolation sites
+            end = (time.size // step) * step
 
-                for k in range(order):
-                    coeffs_out[k, m] = c[k]
+            knots = mu.augment_breaks(breaks, order)
+            spl = sip.make_lsq_spline(time[:end], coeffs_pad[:, :end].T,
+                                      knots, order - 1)
+            coeffs_out = spl.c.copy()
 
-        return cls(name, breaks=breaks, order=order, coeffs=coeffs_out,
-                   source=source, meta=meta)
+            # convert B-spline basis to PPoly
+            return cls.from_bspline(name, knots=knots, coeffs=coeffs_out,
+                                    order=order, source=source, meta=meta)
 
 
 class CHAOS(object):
@@ -2436,34 +2426,37 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 
         nmin = params['nmin']
         nmax = params['nmax']
-        coeffs_static = np.zeros((nmax*(nmax+2),))
-        coeffs_static[int(nmin**2-1):] = coeffs  # pad zeros to coefficients
-        coeffs_static = coeffs_static.reshape((1, 1, -1))
-        model = CHAOS(breaks=np.array(time),
-                      coeffs_static=coeffs_static,
-                      name=name)
+
+        coeffs_pp = np.zeros((nmax * (nmax + 2),))
+        coeffs_pp[int(nmin**2 - 1):] = coeffs  # pad zeros to coefficients
+        coeffs_pp = coeffs_pp.reshape((1, 1, -1))
+
+        breaks = np.append(time, time)  # make a single piece
+
+        model = CHAOS(breaks=breaks, coeffs_static=coeffs_pp, name=name)
 
     else:  # time-dependent field
 
-        coeffs = np.transpose(coeffs)
         order = params['order']
         step = params['step']
         breaks = time[::step]
 
-        # interpolate with piecewise polynomial of given order
-        coeffs_pp = np.empty((order, time.size // step, coeffs.shape[-1]))
-        for m, left_break in enumerate(breaks[:-1]):
-            left = m * step  # time index of left_break
-            x = time[left:left+order] - left_break
-            c = np.linalg.solve(np.vander(x, order), coeffs[left:left+order])
+        end = (time.size // step) * step  # to discard extrapolation sites
 
-            for k in range(order):
-                coeffs_pp[k, m] = c[k]
+        knots = mu.augment_breaks(breaks, order)
+        spl = sip.make_lsq_spline(time[:end], coeffs[:, :end].T,
+                                  knots, order - 1)
+        coeffs_out = spl.c.copy()
 
-        model = CHAOS(breaks=breaks,
-                      order=order,
-                      coeffs_tdep=coeffs_pp,
-                      name=name)
+        # convert B-spline basis to PPoly
+        coeffs_pp, _ = mu.pp_from_bspline(coeffs_out, knots, order)
+
+        model = CHAOS(
+            breaks=breaks,
+            order=order,
+            coeffs_tdep=coeffs_pp,
+            name=name
+        )
 
     return model
 
@@ -2543,20 +2536,20 @@ def load_CovObs_txtfile(filepath, name=None):
     # convert decimal year to modified Julian date (using 365.25 days/year)
     breaks = du.dyear_to_mjd(tmp[3:], leap_year=False)
 
-    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    # add endpoint multiplicity to conform with scipy's BSpline routine
     knots = mu.augment_breaks(breaks, order)
 
     data = np.fromstring(' '.join(lines[2:]), sep=' ')
 
     # add zeros at endpoints to match manually extended knots
-    coeffs = np.zeros((knots.size - order, nmax*(nmax+2)))
+    coeffs = np.zeros((knots.size - order, nmax * (nmax + 2)))
 
     # insert actual coefficients, endpoint coefficients are now zero
     coeffs[degree:-degree, :] = data.reshape(
-        (breaks.size - order, nmax*(nmax+2)))
+        (breaks.size - order, nmax * (nmax + 2)))
 
     return BaseModel.from_bspline(name, knots, coeffs, order,
-                                  source='internal', meta=None)
+                                  source='internal')
 
 
 def load_gufm1_txtfile(filepath, name=None):
@@ -2636,11 +2629,11 @@ def load_gufm1_txtfile(filepath, name=None):
     knots = mu.augment_breaks(breaks, order)
 
     # add zeros at endpoints to match manually extended knots
-    coeffs = np.zeros((knots.size - order, nmax*(nmax + 2)))
+    coeffs = np.zeros((knots.size - order, nmax * (nmax + 2)))
 
     # insert actual coefficients, endpoint coefficients are now zero
     coeffs[degree:-degree, :] = data[(nbreaks + 2):].reshape(
-        (breaks.size - order, nmax*(nmax + 2)))
+        (breaks.size - order, nmax * (nmax + 2)))
 
     return BaseModel.from_bspline(name, knots, coeffs, order,
-                                  source='internal', meta=None)
+                                  source='internal')

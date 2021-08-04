@@ -9,6 +9,7 @@ field models in general.
     design_gauss
     colloc_matrix
     augment_breaks
+    pp_from_bspline
     synth_from_pp
     synth_values
     legendre_poly
@@ -209,6 +210,50 @@ def augment_breaks(breaks, order):
 
     degree = order - 1
     return np.array([breaks[0]]*degree + list(breaks) + [breaks[-1]]*degree)
+
+
+def pp_from_bspline(coeffs, knots, order):
+    """
+    Return a piecewise polynomial from a BSpline representation.
+
+    Parameters
+    ----------
+    coeffs : ndarray, shape (M, D)
+        Bspline coefficients for the `M` B-splines parameterizing
+        `D` dimensions.
+    knots : ndarray, shape (N,)
+        B-spline knots. The knots must have the full endpoint multiplicity.
+        Zero-pad spline coefficients if needed.
+    order : int
+        Order of the B-spline.
+
+    Returns
+    -------
+    coeffs_pp : ndarray, shape (K, P, D)
+        Coefficients of the piecewise polynomial where `K` is the order
+        (``order``), `P` is the number of pieces and `D` is the dimension.
+    breaks : ndarray, shape (P+1,)
+        Break points of the piecewise polynomial.
+
+    """
+
+    degree = order - 1
+    breaks = np.unique(knots)
+    pieces = breaks.size - 1
+    dim = coeffs.shape[-1]
+
+    coeffs_pp = np.empty((order, pieces, dim))
+
+    # have to do it manually for each dimension
+    for d in range(dim):
+
+        bs = BSpline(knots, coeffs[:, d], degree)
+        pp = PPoly.from_spline(bs, extrapolate=False)
+
+        # remove endpoint multiplicities
+        coeffs_pp[:, :, d] = pp.c[:, degree:(degree+pieces)]
+
+    return coeffs_pp, breaks
 
 
 def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
