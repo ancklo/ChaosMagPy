@@ -14,3 +14,4 @@ dependencies:
     - cdflib
     - hdf5storage >= 0.1.17
     - lxml
+    - sphinx-gallery
