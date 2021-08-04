@@ -12,6 +12,7 @@ ChaosMagPy documentation
    readme
    installation
    usage
+   gallery/index
    configuration
    references
    changelog

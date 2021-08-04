@@ -18,6 +18,7 @@ MANIFEST
 docs/_build/
 docs/source/classes
 docs/source/functions
+docs/source/gallery
 
 # Jupyter Notebook
 .ipynb_checkpoints

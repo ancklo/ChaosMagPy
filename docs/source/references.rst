@@ -1,45 +1,45 @@
-API references
+API References
 ==============
 
-Core functionality (`chaos.py`)
--------------------------------
+Core Functionality
+------------------
 
 .. automodule:: chaosmagpy.chaos
     :noindex:
     :no-members:
 
-Coordinate transformations (`coordinate_utils.py`)
---------------------------------------------------
+Coordinate Transformations
+--------------------------
 
 .. automodule:: chaosmagpy.coordinate_utils
     :noindex:
     :no-members:
 
-Model utilities (`model_utils.py`)
-----------------------------------
+Model Utilities
+---------------
 
 .. automodule:: chaosmagpy.model_utils
     :noindex:
     :no-members:
 
-Plotting utilities (`plot_utils.py`)
-------------------------------------
+Plotting Utilities
+------------------
 
 .. automodule:: chaosmagpy.plot_utils
     :noindex:
     :no-members:
 
-Data utilities (`data_utils.py`)
---------------------------------
+Data Utilities
+--------------
 
 .. automodule:: chaosmagpy.data_utils
     :noindex:
     :no-members:
 
-.. _label-configuration-list:
+.. _sec-configuration-utilities:
 
-Configuration utilities (`config_utils.py`)
--------------------------------------------
+Configuration Utilities
+-----------------------
 
 .. automodule:: chaosmagpy.config_utils
     :noindex:

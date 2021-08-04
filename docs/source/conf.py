@@ -20,7 +20,10 @@ sys.path.insert(0, root)
 autodoc_mock_imports = ['_tkinter']
 
 import matplotlib  # import so that 'agg' can be given, as readthedocs fails
+import matplotlib.pyplot as plt
 matplotlib.use('agg')
+plt.ioff()
+
 import chaosmagpy
 
 # -- Project information -----------------------------------------------------
@@ -51,18 +54,10 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.mathjax',
+    'sphinx_gallery.gen_gallery',
+    'matplotlib.sphinxext.plot_directive',
 ]
-
-# generate rst of member functions on the fly
-autosummary_generate = True
-autodata_content = 'both'
-
-# Remove class members to suppress error message when compiling
-# (removes module list)
-numpydoc_show_class_members = True
-numpydoc_show_inherited_class_members = False
-numpydoc_class_members_toctree = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
@@ -178,13 +173,27 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'chaosmagpy', 'ChaosMagPy Documentation',
-     author, 'ChaosMagPy', 'Package for reading the CHAOS model and '
-     'computing the geomagnetic field.',
+     author, 'ChaosMagPy', 'Package to read the CHAOS model and '
+     'compute the geomagnetic field.',
      'Miscellaneous'),
 ]
 
 
 # -- Extension configuration -------------------------------------------------
+
+# -- Options for autodoc extension ---------------------------------------
+
+# generate rst of member functions on the fly
+autosummary_generate = True
+autodata_content = 'both'
+
+# -- Options for numpydoc extension ---------------------------------------
+
+# Remove class members to suppress error message when compiling
+# (removes module list)
+numpydoc_show_class_members = True
+numpydoc_show_inherited_class_members = False
+numpydoc_class_members_toctree = False
 
 # -- Options for intersphinx extension ---------------------------------------
 
@@ -195,3 +204,33 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# -- Options for sphinx gallery ----------------------------------------------
+
+sphinx_gallery_conf = {
+     'examples_dirs': '.static/examples',   # path to your example scripts
+     'gallery_dirs': 'gallery',  # path to gallery generated output
+
+     'download_all_examples': False,
+}
+
+# -- Matplotlib plot_directive options ---------------------------------------
+
+plot_pre_code = ''
+plot_include_source = True
+plot_formats = [('png', 96)]
+plot_html_show_formats = False
+plot_html_show_source_link = False
+
+fontsize = 13*72/96.0  # 13 px
+
+plot_rcparams = {
+    'font.size': fontsize,
+    'axes.titlesize': fontsize,
+    'axes.labelsize': fontsize,
+    'xtick.labelsize': fontsize,
+    'ytick.labelsize': fontsize,
+    'legend.fontsize': fontsize,
+    'figure.figsize': (5*1.618, 5),
+    'text.usetex': False,
+}

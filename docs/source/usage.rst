@@ -1,3 +1,5 @@
+.. _sec-usage:
+
 Usage
 =====
 
@@ -140,58 +142,6 @@ The inverse operations are also available:
 At the same time, :func:`chaosmagpy.data_utils.mjd2000` accepts a wide range of
 inputs (see the documentation).
 
-Computing a time series of field components at two ground observatories
------------------------------------------------------------------------
-
-Compute the time series of the first time-derivative of the field components at
-the ground observatories in Niemegk (Germany) and Mbour (Senegal).
-
-.. code-block:: python
-
-   from chaosmagpy import load_CHAOS_matfile
-   from chaosmagpy.model_utils import synth_values
-   from chaosmagpy.data_utils import mjd2000
-   from chaosmagpy.plot_utils import plot_timeseries
-   import matplotlib.pyplot as plt
-   import numpy as np
-
-   model = load_CHAOS_matfile('CHAOS-6-x7.mat')
-
-   N = 500
-   time = np.linspace(mjd2000(1998, 1, 1), mjd2000(2018, 1, 1), num=N)
-   radius = 6371.2 * np.ones((2,))
-   theta = np.array([75.62, 37.93])  # colatitude in degrees
-   phi = np.array([343.03, 12.68])  # longitude in degrees
-
-   stations = ['Mbour', 'Niemegk']  # ground observatory names
-
-   # reshape to use NumPy broadcasting
-   time = np.reshape(time, (1, N))  # 1 x N
-   radius = np.reshape(radius, (2, 1))  # 2 x 1
-   theta = np.reshape(theta, (2, 1))  # 2 x 1
-   phi = np.reshape(phi, (2, 1))  # 2 x 1
-
-   coeffs = model.synth_coeffs_tdep(time, nmax=16, deriv=1)
-
-   # compute field components of shape 2 x N
-   B_radius, B_theta, B_phi = synth_values(coeffs, radius, theta, phi)
-
-   # plot time series of the stations
-   for idx, station in enumerate(stations):
-       titles = [' $dB_r/dt$ at ' + station,
-                 ' $dB_\\theta/dt$ at ' + station,
-                 ' $dB_\\phi/dt$ at ' + station]
-       plot_timeseries(time, B_radius[idx], B_theta[idx], B_phi[idx],
-                       ylabel='nT/yr', titles=titles)
-   plt.show()
-
-.. figure:: images/plot_timeseries.png
-   :align: center
-
-   Time series of the secular variation at two ground observatory stations.
-
-Any time series can be generated this way.
-
 Plotting a map of the time-dependent internal field
 ---------------------------------------------------
 
@@ -210,7 +160,7 @@ boundary) from the center of Earth and on January 1, 2000:
 
    model.plot_maps_tdep(time, radius, nmax=16, deriv=1)  # plots the SV up to degree 16
 
-.. figure:: images/plot_maps_tdep.png
+.. figure:: .static/plot_maps_tdep.png
    :align: center
 
    Secular variation at the core-mantle-boundary up to degree 16 in
@@ -236,7 +186,7 @@ be plotted on a map:
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
    model.plot_maps_static(radius=6371.2, nmax=85)
 
-.. figure:: images/plot_maps_static.png
+.. figure:: .static/plot_maps_static.png
    :align: center
 
    Static internal small-scale field at Earth's surface up to degree 85.
@@ -246,65 +196,3 @@ and saved
 .. code-block:: python
 
    model.save_shcfile('CHAOS-6-x7_static.shc', model='static')
-
-Plotting a global map together with polar views
------------------------------------------------
-
-
-.. code-block:: python
-
-   import chaosmagpy as cp
-   import numpy as np
-   import matplotlib.pyplot as plt
-   import matplotlib.gridspec as gridspec
-   from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-   import cartopy.crs as ccrs
-
-
-   chaos = cp.CHAOS.from_mat('CHAOS-6-x9.mat')
-
-   time = cp.data_utils.mjd2000(2016, 1, 1)
-   radius = 3485.
-   theta = np.linspace(1., 179., 181)
-   phi = np.linspace(-180., 180, 361)
-   B, _, _ = chaos.synth_values_tdep(time, radius, theta, phi,
-                                     nmax=16, deriv=1, grid=True)
-
-   limit = 30e3  # nT colorbar limit
-
-   # create figure
-   fig = plt.figure(figsize=(16, 10))
-
-   # make array of axes
-   gs = gridspec.GridSpec(2, 2, width_ratios=[0.5, 0.5], height_ratios=[0.35, 0.65])
-
-   axes = []
-   axes.append(plt.subplot(gs[0, 0], projection=ccrs.NearsidePerspective(central_latitude=90.)))
-   axes.append(plt.subplot(gs[0, 1], projection=ccrs.NearsidePerspective(central_latitude=-90.)))
-   axes.append(plt.subplot(gs[1, :], projection=ccrs.Mollweide()))
-
-   for ax in axes:
-       pc = ax.pcolormesh(phi, 90. - theta, B, cmap='PuOr', vmin=-limit,
-                          vmax=limit, transform=ccrs.PlateCarree())
-       ax.gridlines(linewidth=0.5, linestyle='dashed',
-                    ylocs=np.linspace(-90, 90, num=7),  # parallels
-                    xlocs=np.linspace(-180, 180, num=13))  # meridians
-       ax.coastlines(linewidth=0.5)
-
-   # inset axes into global map and move upwards
-   cax = inset_axes(axes[-1], width="45%", height="5%", loc='upper center',
-                    borderpad=-12)
-
-   # use last artist for the colorbar
-   clb = plt.colorbar(pc, cax=cax, extend='both', orientation='horizontal')
-   clb.set_label('nT/yr', fontsize=16)
-
-   plt.subplots_adjust(top=0.985, bottom=0.015, left=0.008,
-                       right=0.992, hspace=0.0, wspace=0.0)
-
-   plt.show()
-
-.. figure:: images/plot_maps_tdep_polar.png
-  :align: center
-
-  Model of the radial secular variation at the core surface in 2016.
