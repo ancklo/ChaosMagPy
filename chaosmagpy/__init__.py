@@ -10,4 +10,4 @@ __all__ = [
     "basicConfig", "synth_values"
 ]
 
-__version__ = "0.7-dev"
+__version__ = "0.7"

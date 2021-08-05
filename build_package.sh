@@ -3,7 +3,7 @@
 # extract from __init__.py on line with __version__ the expr between ""
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_$version.zip
-chaos=data/CHAOS-7.7/CHAOS-7.7.mat  # update model file here
+read -e -p "Path to the recent CHAOS mat-file: " chaos
 
 echo ---------------- ChaosMagPy Version $version ----------------
 echo "Building package with CHAOS-matfile in '$chaos'."
@@ -136,7 +136,6 @@ ls -lrt dist | grep --color=auto chaosmagpy-$version
 
 cat << EOF
 -------------------------------------------------------------
-Check creation date of dist files (*.tar.gz and *.whl).
 Check that the RC-index file has been updated.
 Check that example output agrees with MATLAB example output.
 Check that correct model file was used.

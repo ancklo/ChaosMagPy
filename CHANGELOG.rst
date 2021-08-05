@@ -1,16 +1,16 @@
 Changelog
 =========
 
-Version 0.7-dev
----------------
-| **Date:** August 04, 2021
-| **Release:** v0.7-dev
-| **Version of CHAOS:** CHAOS-7.7 (0707)
+Version 0.7
+-----------
+| **Date:** August 05, 2021
+| **Release:** v0.7
+| **Version of CHAOS:** CHAOS-7.8 (0708)
 
 Features
 ^^^^^^^^
-* Added matplotlib's plot_directive for sphinx and added a gallery section
-  with more examples to the documentation. 
+* Added matplotlib's plot_directive for sphinx and added more examples to a
+  new gallery section in the documentation. 
 * Added :func:`chaosmagpy.model_utils.pp_from_bspline` to convert the spline
   coefficients from B-spline to PP format.
 * Changed the way piecewise polynomials are produced from the coefficients in
