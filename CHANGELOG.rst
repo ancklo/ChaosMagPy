@@ -10,6 +10,10 @@ Version 0.8-dev
 Features
 ^^^^^^^^
 
+Bugfixes
+^^^^^^^^
+* Fixed initializing CHAOS from shc-file.
+
 Version 0.7
 -----------
 | **Date:** August 05, 2021

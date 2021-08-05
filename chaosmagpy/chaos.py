@@ -693,7 +693,7 @@ class BaseModel(Base):
             # there may be extra sites to extend the model interval,
             # but it is not clear how to handle this in a unique way.
             # I therefore just discard these extrapolation sites
-            end = (time.size // step) * step
+            end = (time.size // order) * order
 
             knots = mu.augment_breaks(breaks, order)
             spl = sip.make_lsq_spline(time[:end], coeffs_pad[:, :end].T,
@@ -2441,7 +2441,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
         step = params['step']
         breaks = time[::step]
 
-        end = (time.size // step) * step  # to discard extrapolation sites
+        end = (time.size // order) * order  # to discard extrapolation sites
 
         knots = mu.augment_breaks(breaks, order)
         spl = sip.make_lsq_spline(time[:end], coeffs[:, :end].T,
