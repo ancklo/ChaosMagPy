@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.8-dev
+---------------
+| **Date:** August 05, 2021
+| **Release:** v0.8-dev
+| **Version of CHAOS:** CHAOS-7.8 (0708)
+
+Features
+^^^^^^^^
+
 Version 0.7
 -----------
 | **Date:** August 05, 2021
