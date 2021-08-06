@@ -3,16 +3,22 @@ Changelog
 
 Version 0.8-dev
 ---------------
-| **Date:** August 05, 2021
+| **Date:** August 06, 2021
 | **Release:** v0.8-dev
 | **Version of CHAOS:** CHAOS-7.8 (0708)
 
 Features
 ^^^^^^^^
 
+Version 0.7.1
+-------------
+| **Date:** August 05, 2021
+| **Release:** v0.7.1
+| **Version of CHAOS:** CHAOS-7.8 (0708)
+
 Bugfixes
 ^^^^^^^^
-* Fixed initializing CHAOS from shc-file.
+* Fixed CHAOS shc-file loader.
 
 Version 0.7
 -----------
