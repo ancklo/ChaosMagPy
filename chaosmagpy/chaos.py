@@ -787,7 +787,7 @@ class CHAOS(object):
     >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
     >>> print(model)
 
-    For more examples, see the dcoumentation of the methods below.
+    For more examples, see the documentation of the methods below.
 
     """
 
@@ -878,7 +878,7 @@ class CHAOS(object):
         Calculate the magnetic field of all sources from the CHAOS model.
 
         All sources means the time-dependent and static internal field, the
-        external SM/GSM fields both including and induced parts.
+        external SM/GSM fields including their induced parts.
 
         Parameters
         ----------
@@ -1825,8 +1825,7 @@ str, {'internal', 'external'}
             Maximum dimension (default is 3, for the three angles alpha, beta,
             gamma).
         deriv : int, positive, optional
-            Derivative in time (default is 0). For secular variation, choose
-            ``deriv=1``.
+            Derivative in time (default is 0).
         extrapolate : {'linear', 'spline', 'constant', 'off'}, optional
             Extrapolate to times outside of the model bounds. Defaults to
             ``'linear'``.
