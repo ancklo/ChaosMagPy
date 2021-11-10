@@ -33,6 +33,7 @@ MAG : Magnetic orthogonal coordinate system (centered dipole)
     synth_rotate_gauss
     rotate_gauss_fft
     rotate_gauss
+    sh_analysis
     sun_position
     zenith_angle
     spherical_to_cartesian
@@ -56,8 +57,7 @@ MAG : Magnetic orthogonal coordinate system (centered dipole)
 
 import numpy as np
 import os
-from numpy import degrees, radians
-from math import pi, ceil, factorial
+from math import factorial
 from chaosmagpy.model_utils import legendre_poly
 from chaosmagpy.config_utils import basicConfig
 
@@ -125,8 +125,8 @@ def _dipole_to_unit(*args):
         # unit vector, opposite to dipole
         vector = -vector/np.linalg.norm(vector)
     elif len(args) == 2:
-        theta = radians(args[0])
-        phi = radians(args[1])
+        theta = np.radians(args[0])
+        phi = np.radians(args[1])
         vector = np.array([np.sin(theta)*np.cos(phi),
                            np.sin(theta)*np.sin(phi),
                            np.cos(theta)])
@@ -176,7 +176,7 @@ def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
         scaled = False
 
     time = np.array(time[..., None, None, None], dtype=float)
-    frequency = 2*pi*np.array(frequency, dtype=float)
+    frequency = 2*np.pi*np.array(frequency, dtype=float)
     if frequency.ndim == 1:
         frequency.reshape(-1, 1, 1)
     spectrum = np.array(spectrum, dtype=complex)
@@ -449,13 +449,13 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
     matrix_time = np.empty(time_shape + (nmax**2+2*nmax, kmax**2+2*kmax))
 
     # define Gauss-Legendre grid for surface integration
-    n_theta = ceil((nmax + kmax + 1)/2)  # number of points in colatitude
+    n_theta = int((nmax + kmax + 1)/2) + 1  # number of points in colatitude
     n_phi = 2*n_theta  # number of points in azimuth
 
     # integrates polynomials of degree 2*n_theta-1 exactly
     x, weights = np.polynomial.legendre.leggauss(n_theta)
-    theta = degrees(np.arccos(x))
-    phi = np.arange(n_phi) * degrees(2*pi)/n_phi
+    theta = np.degrees(np.arccos(x))
+    phi = np.arange(n_phi) * np.degrees(2*np.pi)/n_phi
 
     # compute Schmidt quasi-normalized associated Legendre functions and
     # corresponding normalization
@@ -485,7 +485,7 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
         Pnm_ref = legendre_poly(kmax, theta_ref)
 
         # compute powers of complex exponentials
-        nphi_ref = radians(np.multiply.outer(np.arange(kmax+1), phi_ref))
+        nphi_ref = np.radians(np.multiply.outer(np.arange(kmax+1), phi_ref))
         exp_ref = np.cos(nphi_ref) + 1j*np.sin(nphi_ref)
 
         # loop over columns of matrix
@@ -562,6 +562,84 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
     return matrix_time
 
 
+def sh_analysis(func, nmax):
+    """
+    Perform a spherical harmonic expansion of a function defined on a
+    spherical surface.
+
+    Parameters
+    ----------
+    func: callable
+        Function takes two inputs: colatitude in degrees and longitude in
+        degrees. The function must accept 2-D arrays and preserve shapes.
+    nmax: int
+        Maximum spherical harmponic degree of the expansion.
+
+    Returns
+    -------
+    coeffs: ndarray, shape (nmax*(nmax+2),)
+        Spherical harmonic expansion.
+
+    Examples
+    --------
+    >>> import chaosmagpy as cp
+    >>> import numpy as np
+    >>> def func(theta, phi):
+    >>>     n, m = 1, 1
+    >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
+    >>>     return np.cos(m*np.radians(phi))*Pnm[n, m]
+    
+    >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
+        array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
+
+    """
+
+    # define Gauss-Legendre grid for surface integration,
+    # quadrature integrates polynomials of degree (2*n_theta - 1) exactly,
+    # here the integrands are Pnm(x)*Pkl(x), hence of degree = 2nmax
+    n_theta = nmax + 1  # number of points in colatitude
+    n_phi = 2*n_theta  # number of points in azimuth
+
+    x, weights = np.polynomial.legendre.leggauss(n_theta)
+    theta = np.degrees(np.arccos(x))
+    phi = np.arange(n_phi) * np.degrees(2*np.pi)/n_phi
+
+    # compute Schmidt quasi-normalized associated Legendre functions
+    Pnm = legendre_poly(nmax, theta)
+
+    # generate surface grid: [0., 360.] x [0., 180.]
+    theta_grid, phi_grid = np.meshgrid(theta, phi)
+
+    # predefine array
+    coeffs = np.zeros((nmax*(nmax+2),), dtype=float)
+
+    # evaluate function at grid points
+    F = func(theta_grid, phi_grid)
+
+    fft = np.fft.fft(F, axis=0) / n_phi
+  
+    row = 0  # index of row
+    for n in range(1, nmax+1):
+
+        norm = 2. / (2*n + 1)  # inner product of Pnm's
+
+        # m = 0
+        c = np.sum(fft[0]*Pnm[n, 0]*weights) / norm
+        coeffs[row] = c.real
+        row += 1
+
+        # m > 0
+        for m in range(1, n+1):
+
+            c = np.sum(fft[m]*Pnm[n, m]*weights) / norm
+            coeffs[row] = c.real
+            coeffs[row + 1] = -c.imag
+
+            row += 2  # update row index
+
+    return coeffs
+
+
 def sun_position(time):
     """
     Computes the sun's position in longitude and colatitude at a given time
@@ -591,7 +669,7 @@ def sun_position(time):
     Geophysical%20Coordinate%20Transformations.htm#appendix2>`_
 
     """
-    rad = pi / 180
+    rad = np.pi / 180
     year = 2000  # reference year for mjd2000
     assert np.all((year + time // 365.25) < 2099) \
         and np.all((year - time // 365.25) > 1901), \
@@ -615,15 +693,15 @@ def sun_position(time):
     declination = np.arctan(sind/cosd)
 
     # sun's right right ascension in radians (0, 2*pi)
-    right_ascension = pi - np.arctan2(sind/(cosd * np.tan(obliq*rad)),
-                                      -np.cos(slp*rad)/cosd)
+    right_ascension = np.pi - np.arctan2(sind/(cosd * np.tan(obliq*rad)),
+                                         -np.cos(slp*rad)/cosd)
 
     # Greenwich mean siderial time in radians (0, 2*pi)
     gmst = np.remainder(279.690983 + 0.9856473354*julian_date
                         + 360.*frac_day + 180., 360.) * rad
 
-    theta = degrees(pi/2 - declination)  # convert to colatitude
-    phi = center_azimuth(degrees(right_ascension - gmst))
+    theta = np.degrees(np.pi/2 - declination)  # convert to colatitude
+    phi = center_azimuth(np.degrees(right_ascension - gmst))
 
     return theta, phi
 
@@ -652,15 +730,15 @@ def zenith_angle(time, theta, phi):
 
     theta_sun, phi_sun = sun_position(time)
 
-    colat = radians(theta_sun)
-    azim = radians(phi_sun)
-    theta = radians(theta)
-    phi = radians(phi)
+    colat = np.radians(theta_sun)
+    azim = np.radians(phi_sun)
+    theta = np.radians(theta)
+    phi = np.radians(phi)
 
     cos_zeta = (np.cos(theta)*np.cos(colat) +
                 np.sin(theta)*np.sin(colat)*np.cos(azim - phi))
 
-    return degrees(np.arccos(cos_zeta))
+    return np.degrees(np.arccos(cos_zeta))
 
 
 def spherical_to_cartesian(radius, theta, phi):
@@ -683,7 +761,7 @@ def spherical_to_cartesian(radius, theta, phi):
 
     """
 
-    theta, phi = radians(theta), radians(phi)
+    theta, phi = np.radians(theta), np.radians(phi)
 
     x = np.array(radius) * np.cos(phi) * np.sin(theta)
     y = np.array(radius) * np.sin(phi) * np.sin(theta)
@@ -714,7 +792,7 @@ def cartesian_to_spherical(x, y, z):
     theta = np.arctan2(np.sqrt(x**2 + y**2), z)
     phi = np.arctan2(y, x)
 
-    return radius, degrees(theta), degrees(phi)
+    return radius, np.degrees(theta), np.degrees(phi)
 
 
 def gg_to_geo(height, beta):
@@ -751,7 +829,7 @@ def gg_to_geo(height, beta):
     b = basicConfig['params.ellipsoid'][1]  # polar radius
 
     # convert geodetic colatitude to latitude
-    alpha = radians(90. - beta)
+    alpha = np.radians(90. - beta)
 
     sin_alpha_2 = np.sin(alpha)**2
     cos_alpha_2 = np.cos(alpha)**2
@@ -759,7 +837,7 @@ def gg_to_geo(height, beta):
     factor = height*np.sqrt(a**2*cos_alpha_2 + b**2*sin_alpha_2)
     gamma = np.arctan2((factor + b**2)*np.tan(alpha), (factor + a**2))
 
-    theta = 90. - degrees(gamma)
+    theta = 90. - np.degrees(gamma)
     radius = np.sqrt(height**2 + 2*factor +
                      a**2*(1. - (1. - (b/a)**4)*sin_alpha_2) /
                           (1. - (1. - (b/a)**2)*sin_alpha_2))
@@ -812,8 +890,8 @@ def geo_to_gg(radius, theta):
     e4 = e2*e2
     ep2 = (a2 - b2) / b2  # squared primed eccentricity
 
-    r = radius * np.sin(radians(theta))
-    z = radius * np.cos(radians(theta))
+    r = radius * np.sin(np.radians(theta))
+    z = radius * np.cos(np.radians(theta))
 
     r2 = r**2
     z2 = z**2
@@ -841,7 +919,7 @@ def geo_to_gg(radius, theta):
 
     height = U*(1. - b2 / (a*V))
 
-    beta = 90. - degrees(np.arctan2(z + ep2*z0, r))
+    beta = 90. - np.degrees(np.arctan2(z + ep2*z0, r))
 
     return height, beta
 
@@ -1011,10 +1089,11 @@ def basevectors_use(theta, phi):
 
     """
 
-    theta = np.array(radians(theta))
-    phi = np.array(radians(phi))
+    theta = np.array(np.radians(theta))
+    phi = np.array(np.radians(phi))
 
-    assert np.amin(theta) > 0 and np.amax(theta) < pi, "Not defined at poles."
+    if (np.amin(theta) == 0.) or (np.amax(theta) == np.pi):
+        raise ValueError("Basevectors are not defined at poles.")
 
     grid_shape = max(theta.shape, phi.shape)
 
@@ -1481,7 +1560,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
 
         for counter, period in enumerate(periods):
             for il in range(nl, -1, -1):  # runs over nl...0
-                k = np.sqrt(8.0e-7 * 1.0j * pi**2 * sigma[il] / period)
+                k = np.sqrt(8.0e-7 * 1.0j * np.pi**2 * sigma[il] / period)
                 z[0] = k*radius[il]*1000
                 z[1] = k*radius[il+1]*1000
 
@@ -1511,10 +1590,10 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
 
                         p[m] = p[m] * z[m]**n / fac1
                         q[m] = q[m] * z[m]**(-n-1) * fac2
-                        q[m] = (-1)**(n+1) * pi/2 * (p[m]-q[m])
+                        q[m] = (-1)**(n+1) * np.pi/2 * (p[m]-q[m])
                         pd[m] = pd[m] * z[m]**(n-1) / fac1
                         qd[m] = qd[m] * z[m]**(-n-2) * fac2
-                        qd[m] = (-1)**(n+1) * pi/2 * (pd[m]-qd[m])
+                        qd[m] = (-1)**(n+1) * np.pi/2 * (pd[m]-qd[m])
 
                     v1 = p[1] / p[0]
                     v2 = pd[0] / p[0]
@@ -1544,10 +1623,10 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
 
                         e = np.exp(-2*z[m])
                         p[m] = (rm - sg*rp*e) / zz
-                        q[m] = (pi/zz) * rp
+                        q[m] = (np.pi/zz) * rp
                         pd[m] = ((rm + sg*rp*e) /
                                  zz - 2*(rmd - sg*rpd*e) / zz**2)
-                        qd[m] = -q[m] - 2*pi*rpd / zz**2
+                        qd[m] = -q[m] - 2*np.pi*rpd / zz**2
 
                     e = np.exp(-(z[0] - z[1]))
                     v1 = p[1] / p[0] * e
@@ -1570,7 +1649,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         print('')
 
         # if nargout > 1
-        rho_a = 1e-7*8*pi**2 / periods * np.abs(C*1000)**2
+        rho_a = 1e-7*8*np.pi**2 / periods * np.abs(C*1000)**2
         phi = 90 + 57.3*np.angle(C)
         Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
 
@@ -1581,7 +1660,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         # constants
         mu = 4*np.pi*1e-7
 
-        omega = 2*pi*1.0j/periods
+        omega = 2*np.pi*1.0j/periods
 
         # Number of layers
         N = sigma.size
