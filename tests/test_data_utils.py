@@ -68,6 +68,19 @@ class DataUtils(TestCase):
                 AssertionError, lambda: np.testing.assert_allclose(
                     mjd2, mjd, atol=1e-8))
 
+    def test_mjd2000(self):
+        """
+        Ensure broadcasting works
+        """
+
+        actual = cpd.mjd2000(np.arange(2000, 2003), 2, 1)
+        desired = np.array([  31.,  397.,  762.])
+        np.testing.assert_allclose(actual, desired)
+
+        actual = cpd.mjd2000(2000, 2, 1, np.arange(3))
+        desired = 31. + np.arange(3)/24
+        np.testing.assert_allclose(actual, desired)
+
     def test_mjd_to_dyear(self):
 
         self.assertEqual(cpd.mjd_to_dyear(0.0), 2000.0)

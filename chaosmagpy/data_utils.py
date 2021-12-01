@@ -431,10 +431,11 @@ datetime.datetime(2002, 3, 4)])
 
         datetime = datetime.astype('datetime64[us]')
 
-        datetime += np.asarray(hour, dtype='timedelta64[h]')
-        datetime += np.asarray(minute, dtype='timedelta64[m]')
-        datetime += np.asarray(second, dtype='timedelta64[s]')
-        datetime += np.asarray(microsecond, dtype='timedelta64[us]')
+        # not use inplace add here because it doesn't broadcast arrays
+        datetime = datetime + np.asarray(hour, dtype='timedelta64[h]')
+        datetime = datetime + np.asarray(minute, dtype='timedelta64[m]')
+        datetime = datetime + np.asarray(second, dtype='timedelta64[s]')
+        datetime = datetime + np.asarray(microsecond, dtype='timedelta64[us]')
 
     microseconds = datetime - np.datetime64('2000-01-01', 'us')
 
