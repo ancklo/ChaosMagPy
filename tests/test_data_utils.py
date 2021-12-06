@@ -68,7 +68,7 @@ class DataUtils(TestCase):
                 AssertionError, lambda: np.testing.assert_allclose(
                     mjd2, mjd, atol=1e-8))
 
-    def test_mjd2000(self):
+    def test_mjd2000_broadcasting(self):
         """
         Ensure broadcasting works
         """

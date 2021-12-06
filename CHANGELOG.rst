@@ -3,12 +3,13 @@ Changelog
 
 Version 0.8-dev
 ---------------
-| **Date:** December 1, 2021
+| **Date:** December 6, 2021
 | **Release:** v0.8-dev
 | **Version of CHAOS:** CHAOS-7.8 (0708)
 
 Features
 ^^^^^^^^
+* Removed cdot from SV, SA units in :func:`chasomagpy.data_utils.gauss_units`.
 * Added :func:`chaosmagpy.coordinate_utils.sh_analysis`, which performs a
   spherical harmonic expansion.
 
