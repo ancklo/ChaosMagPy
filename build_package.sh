@@ -143,8 +143,7 @@ Check license date.
 Check changelog date.
 Check url to CHAOS at the top of the usage section.
 Check overview section in the documentation.
-Check Python script "chaos_examples.py" and update model file (CHAOS matfile).
-Check basicConfig default CHAOS version.
+Check default CHAOS version in basicConfig.
 -------------------------------------------------------------
 EOF
 
