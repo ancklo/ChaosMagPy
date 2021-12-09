@@ -9,6 +9,8 @@ Version 0.9-dev
 
 Features
 ^^^^^^^^
+* Renamed "params.version" in basicConfig to "params.CHAOS_version".
+
 
 Version 0.8
 -----------
