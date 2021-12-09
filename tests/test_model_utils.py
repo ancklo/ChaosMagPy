@@ -226,6 +226,37 @@ class ModelUtils(TestCase):
         for comp, comp_grid in zip(B_grid2, B):
             np.testing.assert_allclose(comp, comp_grid)
 
+    def test_synth_values_poles(self):
+
+        radius = 6371.2
+        theta = np.array([0., 180.])
+        phi = np.linspace(0., 360., num=10, endpoint=False)
+
+        # dipole aligned with x-axis, B = -grad(V)
+        # North pole: Bx = -1, Bt = -1
+        # South pole: Bx = -1, Bt = 1
+        Br, Bt, Bp = m.synth_values([0., 1., 0], radius, theta, phi, grid=True)
+        
+        # north pole (theta, phi) = (0., 0.)
+        npole = (0, 0)
+        np.testing.assert_allclose(Br[npole], 0.)
+        np.testing.assert_allclose(Bt[npole], -1.)
+        np.testing.assert_allclose(Bp[npole], 0.)
+
+        Bx = (np.cos(np.radians(0.))*np.cos(np.radians(phi))*Bt[0, :]
+              - np.sin(np.radians(phi))*Bp[0, :])
+        np.testing.assert_allclose(Bx, -np.ones((10,)))
+
+        # south pole (theta, phi) = (180., 0.)
+        spole = (1, 0)
+        np.testing.assert_allclose(Br[spole], 0.)
+        np.testing.assert_allclose(Bt[spole], 1.)
+        np.testing.assert_allclose(Bp[spole], 0.)
+
+        Bx = (np.cos(np.radians(180.))*np.cos(np.radians(phi))*Bt[1, :]
+              - np.sin(np.radians(phi))*Bp[1, :])
+        np.testing.assert_allclose(Bx, -np.ones((10,)))
+
     def test_design_matrix(self):
         """
         Test matrices for time-dependent field model using B-spline basis.

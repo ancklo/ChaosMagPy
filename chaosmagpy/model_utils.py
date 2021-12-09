@@ -20,8 +20,6 @@ field models in general.
 
 import numpy as np
 import warnings
-from numpy import radians, degrees
-from math import pi
 from chaosmagpy.config_utils import basicConfig
 from scipy.interpolate import BSpline, PPoly
 
@@ -81,7 +79,7 @@ def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
 
     assert time.shape == radius.shape == theta.shape == phi.shape
     assert time.ndim == 1
-    assert np.amin(theta) > 0 and np.amax(theta) < degrees(pi)
+    assert np.amin(theta) > 0. and np.amax(theta) < 180.
 
     n_data = time.size  # number of data points
 
@@ -382,6 +380,36 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     B_radius, B_theta, B_phi : ndarray, shape (...)
         Radial, colatitude and azimuthal field components.
 
+    Warnings
+    --------
+    The function can also evaluate the field components at the geographic
+    poles, i.e. where ``theta == 0.`` or ``theta == 180.``. However, users
+    should be careful when doing this because the vector basis for spherical
+    geocentric coordinates,
+    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`, 
+    depends on longitude, which is not well defined at the poles. That is,
+    at the poles, any value for the longitude maps to the same location in
+    euclidean coordinates but gives a different vector basis in spherical
+    geocentric coordinates. Nonetheless, by choosing a specific value for the
+    longitude at the poles, users can define the vector basis, which then
+    establishes the meaning of the spherical geocentric components returned by
+    this function. The vector basis for the horizontal components is defined as
+
+    .. math::
+
+        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x - 
+            \\cos\\theta\\sin\\phi\\mathbf{e}_y - \\sin\\theta\\mathbf{e}_z\\\\
+        \\mathbf{e}_\\phi &= -\\sin\\phi\\mathbf{e}_x +
+            \\cos\\phi\\mathbf{e}_y
+
+    Hence, at the geographic north pole as given by ``theta = 0.`` and
+    ``phi = 0.`` (chosen by the user), the returned component ``B_theta``
+    will be along the direction :math:`\\mathbf{e}_\\theta = \\mathbf{e}_x` and
+    ``B_phi`` along :math:`\\mathbf{e}_\\phi = \\mathbf{e}_y`. However,
+    if ``phi = 180.`` is chosen, ``B_theta``
+    will be along :math:`\\mathbf{e}_\\theta = -\\mathbf{e}_x` and ``B_phi``
+    along :math:`\\mathbf{e}_\\phi = -\\mathbf{e}_y`.
+
     Notes
     -----
     The function can work with different grid shapes, but the inputs have to
@@ -459,10 +487,12 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     theta_min = np.amin(theta)
     theta_max = np.amax(theta)
+    poles = False
 
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
             warnings.warn('The poles are included.')
+            poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
 
@@ -530,8 +560,12 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     # save sinth for fast access
     sinth = Pnm[1, 1]
 
+    # find the poles
+    if poles:
+        where_poles = (theta == 0.) | (theta == 180.)
+
     # convert phi to radians
-    phi = radians(phi)
+    phi = np.radians(phi)
 
     # allocate arrays in memory
     B_radius = np.zeros(grid_shape)
@@ -540,6 +574,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     num = 0
     for n in range(nmin, nmax+1):
+
         if source == 'internal':
             B_radius += (n+1) * Pnm[n, 0] * r_n * coeffs[..., num]
         else:
@@ -548,7 +583,6 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
         B_theta += -Pnm[0, n+1] * r_n * coeffs[..., num]
 
         num += 1
-
         for m in range(1, min(n, mmax)+1):
 
             cmp = np.cos(m*phi)
@@ -558,7 +592,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
                 B_radius += ((n+1) * Pnm[n, m] * r_n
                              * (coeffs[..., num] * cmp
                                 + coeffs[..., num+1] * smp))
-            elif source == 'external':
+            else:
                 B_radius += -(n * Pnm[n, m] * r_n
                               * (coeffs[..., num] * cmp
                                  + coeffs[..., num+1] * smp))
@@ -567,8 +601,20 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
                         * (coeffs[..., num] * cmp
                            + coeffs[..., num+1] * smp))
 
-            # divide by sinth later
-            B_phi += (m * Pnm[n, m] * r_n
+            # need special treatment at the poles because Pnm/sinth = 0/0 for
+            # theta in {0., 180.},
+            # use L'Hopital's rule to take the limit:
+            # lim Pnm/sinth = k*dPnm | theta in {0., 180}
+            # (evaluated at poles, where k=1 for theta=0 and k=-1 for
+            # theta=180.); k = costh = P[1, 0] at poles for convenience
+            if poles:
+                div_Pnm = np.where(where_poles, Pnm[m, n+1], Pnm[n, m])
+                div_Pnm[where_poles] *= Pnm[1, 0][where_poles]
+                div_Pnm[~where_poles] /= sinth[~where_poles]
+            else:
+                div_Pnm = Pnm[n, m] / sinth
+
+            B_phi += (m * div_Pnm * r_n
                       * (coeffs[..., num] * smp
                          - coeffs[..., num+1] * cmp))
 
@@ -576,12 +622,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
         if source == 'internal':
             r_n = r_n / radius  # equivalent to r_n = radius**(-(n+2))
-        elif source == 'external':
+        else:
             r_n = r_n * radius  # equivalent to r_n = radius**(n-1)
-
-    # divide by sinth here
-    sinth = np.where((theta == 0.) | (theta == 180.), np.nan, sinth)
-    B_phi /= sinth
 
     return B_radius, B_theta, B_phi
 
@@ -621,6 +663,37 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
         second dimension ``M`` varies depending on ``nmax``, ``nmin`` and
         ``mmax``.
 
+    Warnings
+    --------
+    The function can also return the design matrix for the field components at
+    the geographic poles, i.e. where ``theta == 0.`` or ``theta == 180.``.
+    However, users should be careful when doing this because the vector basis
+    for spherical geocentric coordinates,
+    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`, 
+    depends on longitude, which is not well defined at the poles. That is,
+    at the poles, any value for the longitude maps to the same location in
+    euclidean coordinates but gives a different vector basis in spherical
+    geocentric coordinates. Nonetheless, by choosing a specific value for the
+    longitude at the poles, users can define the vector basis, which then
+    establishes the meaning of the spherical geocentric components. The vector
+    basis for the horizontal components is defined as
+
+    .. math::
+
+        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x - 
+            \\cos\\theta\\sin\\phi\\mathbf{e}_y - \\sin\\theta\\mathbf{e}_z\\\\
+        \\mathbf{e}_\\phi &= -\\sin\\phi\\mathbf{e}_x +
+            \\cos\\phi\\mathbf{e}_y
+
+    Hence, at the geographic north pole as given by ``theta = 0.`` and
+    ``phi = 0.`` (chosen by the user), the returned design matrix ``A_theta``
+    will be for components along the direction
+    :math:`\\mathbf{e}_\\theta = \\mathbf{e}_x` and ``A_phi`` for components
+    along :math:`\\mathbf{e}_\\phi = \\mathbf{e}_y`. However,
+    if ``phi = 180.`` is chosen, ``A_theta`` will be for components along
+    :math:`\\mathbf{e}_\\theta = -\\mathbf{e}_x` and ``A_phi``
+    along :math:`\\mathbf{e}_\\phi = -\\mathbf{e}_y`.
+
     """
 
     # ensure ndarray inputs
@@ -630,7 +703,17 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
     assert radius.shape == theta.shape == phi.shape
     assert radius.ndim == 1
-    assert np.amin(theta) >= 0. and np.amax(theta) <= 180.
+
+    theta_min = np.amin(theta)
+    theta_max = np.amax(theta)
+    poles = False
+
+    if (theta_min <= 0.0) or (theta_max >= 180.0):
+        if (theta_min == 0.0) or (theta_max == 180.0):
+            warnings.warn('The poles are included.')
+            poles = True
+        else:
+            raise ValueError('Colatitude outside bounds [0, 180].')
 
     # set internal source as default
     if source is None:
@@ -658,7 +741,11 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     Pnm = legendre_poly(nmax, theta)
     sinth = Pnm[1, 1]
 
-    phi = radians(phi)
+    phi = np.radians(phi)
+
+    # find the poles
+    if poles:
+        where_poles = (theta == 0.) | (theta == 180.)
 
     # compute the number of dimensions based on nmax, nmin, mmax
     if mmax >= (nmin-1):
@@ -673,6 +760,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
     num = 0
     for n in range(nmin, nmax+1):
+
         if source == 'internal':
             A_radius[:, num] = (n+1) * Pnm[n, 0] * r_n
         else:
@@ -681,7 +769,6 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
         A_theta[:, num] = -Pnm[0, n+1] * r_n
 
         num += 1
-
         for m in range(1, min(n, mmax)+1):
 
             cmp = np.cos(m*phi)
@@ -697,9 +784,21 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
             A_theta[:, num] = -Pnm[m, n+1] * r_n * cmp
             A_theta[:, num+1] = -Pnm[m, n+1] * r_n * smp
 
-            # divide by synth after building the matrix
-            A_phi[:, num] = m * Pnm[n, m] * r_n * smp
-            A_phi[:, num+1] = -m * Pnm[n, m] * r_n * cmp
+            # need special treatment at the poles because Pnm/sinth = 0/0 for
+            # theta in {0., 180.},
+            # use L'Hopital's rule to take the limit:
+            # lim Pnm/sinth = k*dPnm | theta in {0., 180}
+            # (evaluated at poles, where k=1 for theta=0 and k=-1 for
+            # theta=180.); k = costh = P[1, 0] at poles for convenience
+            if poles:
+                div_Pnm = np.where(where_poles, Pnm[m, n+1], Pnm[n, m])
+                div_Pnm[where_poles] *= Pnm[1, 0][where_poles]
+                div_Pnm[~where_poles] /= sinth[~where_poles]
+            else:
+                div_Pnm = Pnm[n, m] / sinth
+
+            A_phi[:, num] = m * div_Pnm * r_n * smp
+            A_phi[:, num+1] = -m * div_Pnm * r_n * cmp
 
             num += 2
 
@@ -708,10 +807,6 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
             r_n = r_n / radius
         else:
             r_n = r_n * radius
-
-    # divide phi component by sinth
-    sinth = np.where((theta == 0.) | (theta == 180.), np.nan, sinth)
-    A_phi /= sinth[:, None]
 
     return A_radius, A_theta, A_phi
 
@@ -746,7 +841,7 @@ def legendre_poly(nmax, theta):
 
     """
 
-    costh = np.cos(radians(theta))
+    costh = np.cos(np.radians(theta))
     sinth = np.sqrt(1-costh**2)
 
     Pnm = np.zeros((nmax+1, nmax+2) + costh.shape)
