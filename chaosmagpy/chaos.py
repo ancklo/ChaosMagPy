@@ -146,12 +146,14 @@ class Base(object):
 
         if np.amin(time) < start or np.amax(time) > end:
             if isinstance(extrapolate, str):  # convert string to integer
-                dkey = {'linear': 2,
-                        'quadratic': 3,
-                        'cubic': 4,
-                        'constant': 1,
-                        'spline': self.order,
-                        'off': 0}
+                dkey = {
+                    'linear': 2,
+                    'quadratic': 3,
+                    'cubic': 4,
+                    'constant': 1,
+                    'spline': self.order,
+                    'off': 0
+                }
                 try:
                     key = min(dkey[extrapolate], self.order)
                 except KeyError:
@@ -163,7 +165,7 @@ class Base(object):
             else:
                 key = min(extrapolate, self.order)
 
-            message = 'no' if extrapolate == 'off' else extrapolate
+            message = 'no' if extrapolate in ['off', 0] else extrapolate
             warnings.warn("Requested coefficients are "
                           "outside of the model period from "
                           f"{start} to {end}. Doing {message} extrapolation.")
@@ -664,11 +666,13 @@ class BaseModel(Base):
         nmin = params['nmin']
         nmax = params['nmax']
         order = params['order']
-        step = order - 1  # actually params['step'], but not reliable
+        step = order - 1  # actually params['step'], but not reliable for
+                          # older shc-files
 
-        # make single piece by setting both ends equal
-        if time.size == 1:
-            breaks = np.append(time, time)
+        # extract breaks
+        if step == 0:
+            # duplicate endpoint to have a proper interval for the polynomial
+            breaks = np.append(time, time[-1])
         else:
             breaks = time[::step]
 
@@ -691,9 +695,8 @@ class BaseModel(Base):
         else:  # model must be time-dependent (incl. piecewise constant)
 
             # there may be extra sites to extend the model interval,
-            # but it is not clear how to handle this in a unique way.
-            # I therefore just discard these extrapolation sites
-            end = (time.size // order) * order
+            # but these extrapolation sites are just discarded here
+            end = ((time.size - 1) // step) * step + 1
 
             knots = mu.augment_breaks(breaks, order)
             spl = sip.make_lsq_spline(time[:end], coeffs_pad[:, :end].T,
@@ -814,10 +817,28 @@ class CHAOS(object):
 
         self.timestamp = str(datetime.utcnow())
 
-        # time-dependent internal field
-        self.model_tdep = BaseModel('model_tdep', breaks, order, coeffs_tdep)
-        self.model_static = BaseModel('model_static', breaks[[0, -1]], 1,
-                                      coeffs_static)
+        # internal field
+        if coeffs_tdep is None:
+            self.model_tdep = None
+        else:
+            self.model_tdep = BaseModel(
+                name='model_tdep',
+                breaks=breaks,
+                order=order,
+                coeffs=coeffs_tdep,
+                source='internal'
+            )
+        
+        if coeffs_static is None:
+            self.model_static = None
+        else:
+            self.model_static = BaseModel(
+                name='model_static',
+                breaks=breaks[[0, -1]],
+                order=1,
+                coeffs=coeffs_static,
+                source='internal'
+            )
 
         # helper for returning the degree of the provided coefficients
         def dimension(coeffs):
@@ -1072,6 +1093,10 @@ str, {'internal', 'external'}
 
         """
 
+        if self.model_tdep is None:
+            raise ValueError("Time-dependent internal field coefficients "
+                             "are missing.")
+
         return self.model_tdep.synth_coeffs(time, nmax=nmax, **kwargs)
 
     def synth_values_tdep(self, time, radius, theta, phi, *, nmax=None,
@@ -1138,6 +1163,10 @@ str, {'internal', 'external'}
 
         """
 
+        if self.model_tdep is None:
+            raise ValueError("Time-dependent internal field coefficients "
+                             "are missing.")
+
         return self.model_tdep.synth_values(
             time, radius, theta, phi, nmax=nmax, deriv=deriv, grid=grid,
             extrapolate=extrapolate)
@@ -1173,6 +1202,10 @@ str, {'internal', 'external'}
 
         """
 
+        if self.model_tdep is None:
+            raise ValueError("Time-dependent internal field coefficients "
+                             "are missing.")
+
         self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
     def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None, **kwargs):
@@ -1203,6 +1236,10 @@ str, {'internal', 'external'}
 
         """
 
+        if self.model_tdep is None:
+            raise ValueError("Time-dependent internal field coefficients "
+                             "are missing.")
+
         self.model_tdep.plot_maps(time, radius,
                                   nmax=nmax, deriv=deriv, **kwargs)
 
@@ -1231,6 +1268,9 @@ str, {'internal', 'external'}
         array([ 0.     , 0.     ,  0.     , ...,  0.01655, -0.06339,  0.00715])
 
         """
+
+        if self.model_static is None:
+            raise ValueError("Static internal field coefficients are missing.")
 
         time = self.model_static.breaks[0]
         return self.model_static.synth_coeffs(time, nmax=nmax, **kwargs)
@@ -1269,6 +1309,9 @@ str, {'internal', 'external'}
 
         """
 
+        if self.model_static is None:
+            raise ValueError("Static internal field coefficients are missing.")
+
         time = self.model_static.breaks[0]
         return self.model_static.synth_values(time, radius, theta, phi,
                                               nmax=nmax, **kwargs)
@@ -1295,6 +1338,9 @@ str, {'internal', 'external'}
             components.
 
         """
+
+        if self.model_static is None:
+            raise ValueError("Static internal field coefficients are missing.")
 
         defaults = dict(cmap='nio',
                         deriv=0,
@@ -1839,12 +1885,13 @@ str, {'internal', 'external'}
         Examples
         --------
         >>> import chaosmagpy as cp
+        >>> import numpy as np
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> time = np.array([500., 600.])
         >>> model.meta['satellites']  # check satellite names
         ('oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c')
 
-        >>> model.synth_euler_angles(time, 'swarm_a')
+        >>> model.synth_euler_angles(time, 'champ')
         array([[-0.05521985, -1.5763316 ,  0.48787601],
                [-0.05440427, -1.57966925,  0.49043057]])
 
@@ -1862,7 +1909,8 @@ str, {'internal', 'external'}
         # add Euler prerotation angles if available in meta
         pre = self.model_euler[satellite].meta['Euler_prerotation']
         if pre is not None:
-            coeffs += pre
+            warnings.warn(f'Euler pre-rotation has not been applied. '
+                          f'The pre-rotation angles are {pre}.')
 
         return coeffs
 
@@ -1893,7 +1941,8 @@ str, {'internal', 'external'}
         leap_year = True if leap_year is None else leap_year
 
         if model == 'tdep':
-            if self.model_tdep.coeffs is None:
+
+            if self.model_tdep is None:
                 raise ValueError("Time-dependent internal field coefficients "
                                  "are missing.")
 
@@ -1920,14 +1969,14 @@ str, {'internal', 'external'}
                 f"# and were extracted from order-{order}"
                 f" piecewise polynomial (i.e. break points are every"
                 f" {order} steps of the time sequence).\n"
-                )
+            )
 
             gauss_coeffs = self.synth_coeffs_tdep(
                 times, nmax=nmax, deriv=deriv)
 
         # output static field model coefficients
         if model == 'static':
-            if self.model_static.coeffs is None:
+            if self.model_static is None:
                 raise ValueError("Static internal field coefficients "
                                  "are missing.")
 
@@ -1936,7 +1985,7 @@ str, {'internal', 'external'}
             order = 1
 
             # compute times in mjd2000
-            times = np.array([self.model_static.breaks[0]])
+            times = np.atleast_1d(self.model_static.breaks[0])
 
             # create additonal header lines
             header = (
@@ -1944,7 +1993,7 @@ str, {'internal', 'external'}
                 f"# Spherical harmonic coefficients of the static internal"
                 f" field model from degree {nmin} to {nmax}.\n"
                 f"# Given at the first break point.\n"
-                )
+            )
 
             gauss_coeffs = self.synth_coeffs_static(nmax=nmax)
 
@@ -1967,7 +2016,8 @@ str, {'internal', 'external'}
         """
 
         # write time-dependent internal field model to matfile
-        self.model_tdep.save_matfile(filepath)
+        if self.model_tdep:
+            self.model_tdep.save_matfile(filepath)
 
         if self.coeffs_delta:
             # write time-dependent external field model to matfile
@@ -1996,7 +2046,8 @@ str, {'internal', 'external'}
                 qs11=qs11,
                 m_sm=m_sm,
                 m_gsm=m_gsm,
-                m_Dst=m_Dst)
+                m_Dst=m_Dst
+            )
 
             hdf.write(model_ext, path='/model_ext', filename=filepath,
                       matlab_compatible=True)
@@ -2009,7 +2060,7 @@ str, {'internal', 'external'}
             alpha = []  # list of alpha for each satellite
             beta = []  # list of beta for each satellite
             gamma = []  # list of gamma for each satellite
-            for num, satellite in enumerate(satellites):
+            for satellite in satellites:
 
                 # reduce breaks if start and end are equal
                 breaks = self.model_euler[satellite].breaks
@@ -2037,7 +2088,7 @@ str, {'internal', 'external'}
                       path='/model_Euler/gamma/',
                       filename=filepath, matlab_compatible=True)
 
-        if self.model_static.coeffs is not None:
+        if self.model_static:
             # write static internal field model to matfile
             g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
 
@@ -2417,47 +2468,28 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
         # get name without extension
         name = os.path.splitext(os.path.basename(filepath))[0]
 
-    leap_year = True if leap_year is None else leap_year
+    leap_year = True if leap_year is None else bool(leap_year)
 
-    time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
+    # create dummy BaseModel since there is no entry point to directly modify
+    # CHAOS.model_tdep or CHAOS.model_static at the moment
+    model = BaseModel.from_shc(filepath, name=name, leap_year=leap_year)
 
-    if time.size == 1:  # static field
+    if (model.pieces == 1) and (model.order == 1):  # static field in one bin
 
-        nmin = params['nmin']
-        nmax = params['nmax']
-
-        coeffs_pp = np.zeros((nmax * (nmax + 2),))
-        coeffs_pp[int(nmin**2 - 1):] = coeffs  # pad zeros to coefficients
-        coeffs_pp = coeffs_pp.reshape((1, 1, -1))
-
-        breaks = np.append(time, time)  # make a single piece
-
-        model = CHAOS(breaks=breaks, coeffs_static=coeffs_pp, name=name)
-
-    else:  # time-dependent field
-
-        order = params['order']
-        step = params['step']
-        breaks = time[::step]
-
-        end = (time.size // order) * order  # to discard extrapolation sites
-
-        knots = mu.augment_breaks(breaks, order)
-        spl = sip.make_lsq_spline(time[:end], coeffs[:, :end].T,
-                                  knots, order - 1)
-        coeffs_out = spl.c.copy()
-
-        # convert B-spline basis to PPoly
-        coeffs_pp, _ = mu.pp_from_bspline(coeffs_out, knots, order)
-
-        model = CHAOS(
-            breaks=breaks,
-            order=order,
-            coeffs_tdep=coeffs_pp,
-            name=name
+        return CHAOS(
+            breaks=model.breaks,
+            coeffs_static=model.coeffs,
+            name=model.name
         )
 
-    return model
+    else:  # must be time-dependent, incl. piecewise constant
+
+        return CHAOS(
+            breaks=model.breaks,
+            order=model.order,
+            coeffs_tdep=model.coeffs,
+            name=model.name
+        )
 
 
 def load_CovObs_txtfile(filepath, name=None):
