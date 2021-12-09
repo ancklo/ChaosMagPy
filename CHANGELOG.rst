@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.9-dev
+---------------
+| **Date:** December 9, 2021
+| **Release:** v0.9-dev
+| **Version of CHAOS:** CHAOS-7.9 (0709)
+
+Features
+^^^^^^^^
+
 Version 0.8
 -----------
 | **Date:** December 9, 2021
