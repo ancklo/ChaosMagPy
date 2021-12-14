@@ -185,6 +185,33 @@ class Base(object):
 
         return coeffs
 
+    def to_ppdict(self):
+        """
+        Return a dictionary of the piecewise polynomial that is compatible with
+        MATLAB's pp-form.
+
+        Returns
+        -------
+        pp : dict
+            Dictionary of the pp-form compatible with MATLAB.
+
+        See Also
+        --------
+        Base.save_matfile
+
+        """
+
+        pp = dict(
+            form='pp',
+            order=float(self.order),
+            pieces=float(self.pieces),
+            dim=float(self.dim),
+            breaks=self.breaks.copy().reshape((1, -1)),  # ensure 2d
+            coefs=np.reshape(self.coeffs.copy(), (self.order, -1)).transpose()
+        )
+
+        return pp
+
     def save_matfile(self, filepath, path=None):
         """
         Save piecewise polynomial as mat-file.
@@ -196,22 +223,16 @@ class Base(object):
         path : str
             Location in mat-file. Defaults to ``'/pp'``.
 
+        See Also
+        --------
+        Base.to_ppdict
+
         """
 
         if path is None:
             path = '/pp'
 
-        dim = self.dim
-        coeffs = self.coeffs
-        coefs = coeffs.reshape((self.order, -1)).transpose()
-
-        pp = dict(
-            form='pp',
-            order=float(self.order),
-            pieces=float(self.pieces),
-            dim=float(dim),
-            breaks=self.breaks.reshape((1, -1)),  # ensure 2d
-            coefs=coefs)
+        pp = self.to_ppdict()
 
         hdf.write(pp, path=path, filename=filepath, matlab_compatible=True)
 
@@ -739,12 +760,20 @@ class CHAOS(object):
     breaks_euler : dict with ndarrays, shape (:math:`m_e` + 1,)
         Dictionary containing satellite name as key and corresponding break
         vectors of Euler angles (keys are ``'oersted'``, ``'champ'``,
-        ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``).
+        ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``, ``'swarm_c'``,
+        ``'cryosat-2_1'``).
     coeffs_euler : dict with ndarrays, shape (1, :math:`m_e`, 3)
         Dictionary containing satellite name as key and arrays of the Euler
         angles alpha, beta and gamma as trailing dimension (keys are
         ``'oersted'``, ``'champ'``, ``'sac_c'``, ``'swarm_a'``, ``'swarm_b'``,
-        ``'swarm_c'``).
+        ``'swarm_c'``, ``'cryosat-2_1'``).
+    breaks_cal : dict with ndarrays, shape (:math:`m_c` + 1,)
+        Dictionary containing satellite name as key and corresponding break
+        vectors for the calibration parameters (keys are ``'cryosat-2_1'``).
+    coeffs_cal :dict with ndarrays, shape (1, :math:`m_c`, 3)
+        Dictionary containing satellite name as key and arrays of the 9 basic
+        calibration parameters (3 offsets, 3 sensitivities, 3
+        non-orthogonality angles) (keys are ``'cryosat-2_1'``).
     name : str, optional
         User defined name of the model. Defaults to ``'CHAOS-<version>'``,
         where <version> is the version in ``basicConfig['params.version']``.
@@ -762,6 +791,9 @@ class CHAOS(object):
     model_euler : dict of :class:`Base` instances
         Dictionary containing the satellite's name as key and the Euler angles
         as :class:`Base` class instance.
+    model_cal : dict of :class:`Base` instances
+        Dictionary containing the satellite's name as key and the calibration
+        parameters as :class:`Base` class instance.
     n_sm : int, positive
         Maximum spherical harmonic degree of external field in SM coordinates.
     coeffs_sm : ndarray, shape (``n_sm`` * (``n_sm`` + 2),)
@@ -807,6 +839,8 @@ class CHAOS(object):
         coeffs_delta=None,
         breaks_euler=None,
         coeffs_euler=None,
+        breaks_cal=None,
+        coeffs_cal=None,
         name=None,
         meta=None
     ):
@@ -861,7 +895,6 @@ class CHAOS(object):
 
         # Euler angles
         if breaks_euler is None:
-            satellites = None
             self.model_euler = None
         else:
             satellites = tuple([*breaks_euler.keys()])
@@ -884,6 +917,23 @@ class CHAOS(object):
                     }
                 )
                 self.model_euler[satellite] = model
+
+        # calibration parameters
+        if breaks_cal is None:
+            self.model_cal = None
+        else:
+            satellites = tuple([*breaks_cal.keys()])
+            self.model_cal = dict()            
+
+            for k, satellite in enumerate(satellites):
+
+                model = Base(
+                    satellite,
+                    order=1,
+                    breaks=breaks_cal[satellite],
+                    coeffs=coeffs_cal[satellite],
+                )
+                self.model_cal[satellite] = model
 
         # give the model a name: CHAOS-x.x or user input
         if name is None:
@@ -2088,6 +2138,16 @@ str, {'internal', 'external'}
                       path='/model_Euler/gamma/',
                       filename=filepath, matlab_compatible=True)
 
+        if self.model_cal:
+            # write calibration parameters to matfile for each satellite
+            cal = []
+            for satellite, model in self.model_cal.items():
+                cal.append(model.to_ppdict())
+
+            hdf.write(np.array(cal, dtype=object),
+                      path='/pp_CAL/',
+                      filename=filepath, matlab_compatible=True)
+
         if self.model_static:
             # write static internal field model to matfile
             g = np.ravel(self.model_static.coeffs).reshape((-1, 1))
@@ -2267,6 +2327,11 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         # get name without extension
         name = os.path.splitext(os.path.basename(filepath))[0]
 
+    # define satellite names
+    if satellites is None:
+        satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
+                      'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
+
     mat_contents = du.load_matfile(filepath)
 
     pp = mat_contents['pp']
@@ -2274,12 +2339,13 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
     order = int(pp['order'])
     pieces = int(pp['pieces'])
     dim = int(pp['dim'])
-    breaks = pp['breaks']  # flatten 2-D array
+    breaks = pp['breaks']
     coefs = pp['coefs']
 
     # reshaping coeffs_tdep from 2-D to 3-D: (order, pieces, coefficients)
     coeffs_tdep = coefs.transpose().reshape((order, pieces, dim))
 
+    # load the static internal field model
     try:
         coeffs_static = mat_contents['g'].reshape((1, 1, -1))
 
@@ -2287,9 +2353,18 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         warnings.warn(f'Missing static internal field coefficients: {err}')
         coeffs_static = None
 
+    # load the external field model
     try:
         model_ext = mat_contents['model_ext']
 
+    except KeyError as err:
+        warnings.warn(f'Missing external field coefficients: {err}')
+        coeffs_delta = None
+        breaks_delta = None
+        coeffs_gsm = None
+        coeffs_sm = None
+
+    else:
         # external field (SM): n=1, 2 (n=1 are sm offset time averages!)
         coeffs_sm = np.copy(model_ext['m_sm'])
         coeffs_sm[:3] = model_ext['m_Dst']  # replace with m_Dst
@@ -2313,21 +2388,16 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
         coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
 
-    except KeyError as err:
-        warnings.warn(f'Missing external field coefficients: {err}')
-        coeffs_delta = None
-        breaks_delta = None
-        coeffs_gsm = None
-        coeffs_sm = None
-
-    # define satellite names
-    if satellites is None:
-        satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
-                      'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
-
+    # load euler angles
     try:
         model_euler = mat_contents['model_Euler']
 
+    except KeyError as err:
+        warnings.warn(f'Missing Euler angles: {err}')
+        coeffs_euler = None
+        breaks_euler = None
+
+    else:
         # append generic satellite name if more data available or reduce
         t_break_Euler = model_euler['t_break_Euler']
         n = len(t_break_Euler)
@@ -2354,17 +2424,27 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
             # first: order, second: number of intervals, third: 3 angles
             coeffs_euler[satellite] = np.expand_dims(euler, axis=0)
 
-    except KeyError as err:
-        warnings.warn(f'Missing Euler angles: {err}')
-        coeffs_euler = None
-        breaks_euler = None
+    # load calibration parameters
+    try:
+        model_cal = mat_contents['pp_CAL']
 
+    except KeyError as err:
+        warnings.warn(f'Missing calibration parameters: {err}')
+        breaks_cal = None
+        coeffs_cal = None
+
+    else:
+        # only support of single satellite
+        breaks_cal = {'cryosat-2_1': model_cal['breaks']}
+        coeffs_cal = {'cryosat-2_1': model_cal['coefs'].reshape((1, -1, 9))}
+
+    # load additional parameters
     try:
         params = mat_contents['params']
         dict_params = {'Euler_prerotation': params['Euler_prerotation']}
 
     except KeyError as err:
-        warnings.warn(f'Missing params dictionary: {err}')
+        warnings.warn(f'Missing params dictionary of Euler prerotation: {err}')
         dict_params = {'Euler_prerotation': None}
 
     meta = dict(params=dict_params,
@@ -2380,6 +2460,8 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
                   coeffs_delta=coeffs_delta,
                   breaks_euler=breaks_euler,
                   coeffs_euler=coeffs_euler,
+                  breaks_cal=breaks_cal,
+                  coeffs_cal=coeffs_cal,
                   name=name,
                   meta=meta)
 
