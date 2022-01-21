@@ -5,23 +5,27 @@ following.
 
 **Abbreviations**
 
-GEO : Geographic, orthogonal coordinate system
-    Geocentric coordinates with z-axis along Earth's rotation axis, x-axis
-    pointing to Greenwich and y-axis completing right-handed coordinate system.
-GG : Geodetic, orthogonal coordinate system.
+GEO : Geographic coordinate system (orthogonal)
+    Geocentric coordinate system with the z-axis along Earth's rotation axis,
+    x-axis pointing to Greenwich and y-axis completing the right-handed system.
+    This is also referred to as the ECEF (Earth-centered Earth-fixed)
+    coordinate system.
+GG : Geodetic coordinate system (orthogonal).
     Earth is approximated by a spheroid (ellipsoid of revolution) with
-    equatorial radius `a` and polar radius `b`, `b < a`.
-USE : local orthogonal coordinate system on spherical surface
-    Axes directions are defined as Up-South-East (e.g. B_radius, B_theta,
-    B_phi in GEO).
-GSM : Geocentric Solar Magnetic, orthogonal coordinate system
+    equatorial radius `a` and polar radius `b`, `b < a`. The numerical values
+    of these radii are defined by the World Geodetic System 1984 (WGS84).
+USE : Cartesian coordinate system on spherical surface.
+    Axes directions are defined as Up-South-East at a point of interest on the
+    spherical surface (e.g. B_radius, B_theta, B_phi in spherical geocentric
+    coordinates).
+GSM : Geocentric Solar Magnetic coordinate system (orthogonal).
     With x-axis pointing towards the sun, y-axis perpendicular to plane spanned
     by Eart-Sun line and dipole axis and z-axis completing right-handed system.
-SM : Solar Magnetic, orthogonal coordinate system
+SM : Solar Magnetic coordinate system (orthogonal)
     With z-axis along dipole axis pointing to the geomagnetic north pole,
     y-axis perpendicular to plane containing the dipole axis and the Earth-Sun
     line, and x-axis completing the right-handed system.
-MAG : Magnetic orthogonal coordinate system (centered dipole)
+MAG : Magnetic coordinate system (centered dipole, orthogonal)
     With z-axis pointing to the geomagnetic north pole, x-axis in the plane
     spanned by the dipole axis and Earth's rotation axis, and y-axis completing
     the right-handed system.
@@ -588,7 +592,7 @@ def sh_analysis(func, nmax):
     >>>     n, m = 1, 1
     >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
     >>>     return np.cos(m*np.radians(phi))*Pnm[n, m]
-    
+
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
 
@@ -617,7 +621,7 @@ def sh_analysis(func, nmax):
     F = func(theta_grid, phi_grid)
 
     fft = np.fft.fft(F, axis=0) / n_phi
-  
+
     row = 0  # index of row
     for n in range(1, nmax+1):
 
@@ -743,16 +747,16 @@ def zenith_angle(time, theta, phi):
 
 def spherical_to_cartesian(radius, theta, phi):
     """
-    Convert geocentric spherical to cartesian coordinates.
+    Convert spherical to cartesian coordinates.
 
     Parameters
     ----------
     radius : float or ndarray, shape (...)
-        Geocentric radius.
+        Radius.
     theta : float or ndarray, shape (...)
-        Geocentric colatitude in degrees.
+        Colatitude in degrees.
     phi : float or ndarray, shape (...)
-        Geocentric longitude in degrees.
+        Longitude in degrees.
 
     Returns
     -------
@@ -781,11 +785,11 @@ def cartesian_to_spherical(x, y, z):
     Returns
     -------
     radius : float or ndarray, shape (...)
-        Geocentric radius.
+        Radius.
     theta : float or ndarray, shape (...)
-        Geocentric colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
+        Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
     phi : float or ndarray, shape (...)
-        Geocentric longitude in degrees :math:`(-180^\\circ,180^\\circ]`.
+        Longitude in degrees :math:`(-180^\\circ,180^\\circ]`.
     """
 
     radius = np.sqrt(x**2 + y**2 + z**2)
@@ -798,7 +802,8 @@ def cartesian_to_spherical(x, y, z):
 def gg_to_geo(height, beta):
     """
     Compute geocentric colatitude and radius from geodetic colatitude and
-    vertical height above the ellipsoid.
+    vertical height above the ellipsoid as defined by the World Geodetic System
+    1984 (WGS84).
 
     The equatorial and polar radius of the ellipsoid that approximates Earth's
     surface are stored in ``chaosmagpy.basicConfig['params.ellipsoid']``.
@@ -847,8 +852,9 @@ def gg_to_geo(height, beta):
 
 def geo_to_gg(radius, theta):
     """
-    Compute geodetic colatitude and vertical height above the ellipsoid from
-    geocentric radius and colatitude.
+    Compute geodetic colatitude and vertical height above the ellipsoid as
+    defined by the World Geodetic System 1984 (WGS84) from geocentric radius
+    and colatitude.
 
     Parameters
     ----------
@@ -862,7 +868,7 @@ def geo_to_gg(radius, theta):
     height : ndarray, shape (...)
         Altitude in kilometers.
     beta : ndarray, shape (...)
-        Geodetic colatitude
+        Geodetic colatitude in degrees.
 
     Notes
     -----
@@ -1147,7 +1153,7 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
     Returns
     -------
     theta : ndarray, shape (...)
-        Colatitude in degrees :math:`[0^\\circ, 180^\\circ]` of the rotated 
+        Colatitude in degrees :math:`[0^\\circ, 180^\\circ]` of the rotated
         coordinate system.
     phi : ndarray, shape (...)
         Longitude in degrees :math:`(-180^\\circ, 180^\\circ]` of the rotated

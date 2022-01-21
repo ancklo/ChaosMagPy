@@ -49,7 +49,7 @@ def load_matfile(filepath, variable_names=None, **kwargs):
     variable_names : list of strings
         Top-level variables to be loaded.
     **kwargs : keywords
-        Addidional keyword arguments are passed to :func:`hdf5storage.loadmat`.
+        Additional keyword arguments are passed to :func:`hdf5storage.loadmat`.
 
     Returns
     -------
