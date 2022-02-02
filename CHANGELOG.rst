@@ -3,12 +3,14 @@ Changelog
 
 Version 0.9-dev
 ---------------
-| **Date:** December 14, 2021
+| **Date:** February 02, 2022
 | **Release:** v0.9-dev
 | **Version of CHAOS:** CHAOS-7.9 (0709)
 
 Features
 ^^^^^^^^
+* Function :func:`chaosmagpy.model_utils.design_gauss` now accepts
+  multidimensional shapes of input grids and preserves them in the output.
 * Added new method :meth:`chaosmagpy.chaos.Base.to_ppdict`, which returns a
   dictionary of the pp-form compatible with MATLAB.
 * Added support for calibration parameters.
@@ -54,7 +56,7 @@ Version 0.7
 Features
 ^^^^^^^^
 * Added matplotlib's plot_directive for sphinx and added more examples to a
-  new gallery section in the documentation. 
+  new gallery section in the documentation.
 * Added :func:`chaosmagpy.model_utils.pp_from_bspline` to convert the spline
   coefficients from B-spline to PP format.
 * Changed the way piecewise polynomials are produced from the coefficients in

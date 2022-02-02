@@ -386,7 +386,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     poles, i.e. where ``theta == 0.`` or ``theta == 180.``. However, users
     should be careful when doing this because the vector basis for spherical
     geocentric coordinates,
-    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`, 
+    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`,
     depends on longitude, which is not well defined at the poles. That is,
     at the poles, any value for the longitude maps to the same location in
     euclidean coordinates but gives a different vector basis in spherical
@@ -397,7 +397,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     .. math::
 
-        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x - 
+        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x -
             \\cos\\theta\\sin\\phi\\mathbf{e}_y - \\sin\\theta\\mathbf{e}_z\\\\
         \\mathbf{e}_\\phi &= -\\sin\\phi\\mathbf{e}_x +
             \\cos\\phi\\mathbf{e}_y
@@ -442,7 +442,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
       theta = np.linspace(0., 180., num=N)  # colatitude of 50 points in deg.
 
       B = cpm.synth_values(coeffs, radius, theta, phi)
-      print([B[num].shape for num in range(3)])  # (N,) shaped output
+      print([B[num].shape for num in range(3)])  # output shape (N,)
 
     Instead of `N` points, compute the field on a regular
     :math:`N\\times N`-grid in azimuth and colatitude (slow).
@@ -450,29 +450,31 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
     .. code-block:: python
 
       radius_grid = 6371.2 * np.ones((N, N))
-      phi_grid, theta_grid = np.meshgrid(phi, theta)  # regular NxN grid
+      phi_grid, theta_grid = np.meshgrid(phi, theta)  # grid of shape (N, N)
 
       B = cpm.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
-      print([B[num].shape for num in range(3)])  # NxN output
+      print([B[num].shape for num in range(3)])  # output shape (N, N)
 
-    But this is slow since some computations on the grid are executed several
-    times. The preferred method is to use NumPy's broadcasting rules (fast).
+    But this is slow since some computations on the grid are repeatedly done.
+    The preferred method is to use NumPy's broadcasting rules (fast).
 
     .. code-block:: python
 
       radius_grid = 6371.2  # float, () or (1,)-shaped array broadcasted to NxN
-      phi_grid = phi[None, ...]  # prepend singleton: 1xN
-      theta_grid = theta[..., None]  # append singleton: Nx1
+      theta_grid = theta[:, None]  # append singleton: (N, 1)
+      phi_grid = phi[None, :]  # prepend singleton: (1, N)
 
       B = cpm.synth_values(coeffs, radius_grid, theta_grid, phi_grid)
-      print([B[num].shape for num in range(3)])  # NxN output
+      print([B[num].shape for num in range(3)])  # output shape (N, N)
 
-    For convenience, you can do the same by using ``grid=True`` option.
+    For convenience, you can do the same by using ``grid=True`` option, which
+    appends a singleton dimension to ``theta`` and inserts a singleton
+    dimension at the second to last position in the shape of ``phi``.
 
     .. code-block:: python
 
       B = cpm.synth_values(coeffs, radius_grid, theta, phi, grid=True)
-      print([B[num].shape for num in range(3)])  # NxN output
+      print([B[num].shape for num in range(3)])  # output shape (N, N)
 
     Remember that ``grid=False`` (default) will result in
     (N,)-shaped outputs as in the first example.
@@ -487,14 +489,15 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     theta_min = np.amin(theta)
     theta_max = np.amax(theta)
-    poles = False
 
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('The poles are included.')
+            warnings.warn('Supplied coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
+    else:
+        poles = False
 
     nmin = 1 if nmin is None else int(nmin)
     assert nmin > 0, 'The value of "nmin" must be greater than zero.'
@@ -529,13 +532,14 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     # manually broadcast input grid on surface
     if grid:
-        theta = theta[..., None]  # first dimension is theta
-        phi = phi[None, ...]  # second dimension is phi
+        theta = np.expand_dims(theta, axis=-1)  # append singleton dimension
+        phi = np.expand_dims(phi, axis=-2)  # insert singleton before last
 
     # get shape of broadcasted result
     try:
-        b = np.broadcast(radius, theta, phi,
-                         np.broadcast_to(0, coeffs.shape[:-1]))
+        b = np.broadcast(
+            radius, theta, phi, np.broadcast_to(0, coeffs.shape[:-1]))
+
     except ValueError:
         print('Cannot broadcast grid shapes (excl. last dimension of coeffs):')
         print(f'radius: {radius.shape}')
@@ -638,12 +642,12 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     Parameters
     ----------
 
-    radius : ndarray, shape (N,)
-        Array containing the radius of `N` data points in kilometers.
-    theta : ndarray, shape (N,)
+    radius : ndarray, shape (...)
+        Array containing the radius in kilometers.
+    theta : ndarray, shape (...)
         Array containing the colatitude in degrees
         :math:`[0^\\circ,180^\\circ]`.
-    phi : ndarray, shape (N,)
+    phi : ndarray, shape (...)
         Array containing the longitude in degrees.
     nmax : int, positive
         Maximum degree of the sphercial harmonic expansion.
@@ -658,7 +662,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
     Returns
     -------
-    A_radius, A_theta, A_phi : ndarray, shape (N, M)
+    A_radius, A_theta, A_phi : ndarray, shape (..., M)
         Matrices for radial, colatitude and azimuthal field components. The
         second dimension ``M`` varies depending on ``nmax``, ``nmin`` and
         ``mmax``.
@@ -669,7 +673,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     the geographic poles, i.e. where ``theta == 0.`` or ``theta == 180.``.
     However, users should be careful when doing this because the vector basis
     for spherical geocentric coordinates,
-    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`, 
+    :math:`{{\\mathbf{e}_r, \\mathbf{e}_\\theta, \\mathbf{e}_\\phi}}`,
     depends on longitude, which is not well defined at the poles. That is,
     at the poles, any value for the longitude maps to the same location in
     euclidean coordinates but gives a different vector basis in spherical
@@ -680,7 +684,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
 
     .. math::
 
-        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x - 
+        \\mathbf{e}_\\theta &= \\cos\\theta\\cos\\phi\\mathbf{e}_x -
             \\cos\\theta\\sin\\phi\\mathbf{e}_y - \\sin\\theta\\mathbf{e}_z\\\\
         \\mathbf{e}_\\phi &= -\\sin\\phi\\mathbf{e}_x +
             \\cos\\phi\\mathbf{e}_y
@@ -701,19 +705,31 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
 
-    assert radius.shape == theta.shape == phi.shape
-    assert radius.ndim == 1
+    # get shape of broadcasted result
+    try:
+        b = np.broadcast(radius, theta, phi)
+
+    except ValueError:
+        print('Cannot broadcast grid shapes:')
+        print(f'radius: {radius.shape}')
+        print(f'theta:  {theta.shape}')
+        print(f'phi:    {phi.shape}')
+        raise
+
+    shape = b.shape
 
     theta_min = np.amin(theta)
     theta_max = np.amax(theta)
-    poles = False
 
+    # check if poles are included
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('The poles are included.')
+            warnings.warn('Supplied coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
+    else:
+        poles = False
 
     # set internal source as default
     if source is None:
@@ -754,19 +770,19 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
         dim = int((nmax-nmin+1)*(2*mmax+1))
 
     # allocate A_radius, A_theta, A_phi in memeory
-    A_radius = np.zeros((theta.size, dim))
-    A_theta = np.zeros((theta.size, dim))
-    A_phi = np.zeros((theta.size, dim))
+    A_radius = np.zeros(shape + (dim,))
+    A_theta = np.zeros(shape + (dim,))
+    A_phi = np.zeros(shape + (dim,))
 
     num = 0
     for n in range(nmin, nmax+1):
 
         if source == 'internal':
-            A_radius[:, num] = (n+1) * Pnm[n, 0] * r_n
+            A_radius[..., num] = (n+1) * Pnm[n, 0] * r_n
         else:
-            A_radius[:, num] = -n * Pnm[n, 0] * r_n
+            A_radius[..., num] = -n * Pnm[n, 0] * r_n
 
-        A_theta[:, num] = -Pnm[0, n+1] * r_n
+        A_theta[..., num] = -Pnm[0, n+1] * r_n
 
         num += 1
         for m in range(1, min(n, mmax)+1):
@@ -775,14 +791,14 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
             smp = np.sin(m*phi)
 
             if source == 'internal':
-                A_radius[:, num] = (n+1) * Pnm[n, m] * r_n * cmp
-                A_radius[:, num+1] = (n+1) * Pnm[n, m] * r_n * smp
+                A_radius[..., num] = (n+1) * Pnm[n, m] * r_n * cmp
+                A_radius[..., num+1] = (n+1) * Pnm[n, m] * r_n * smp
             else:
-                A_radius[:, num] = -n * Pnm[n, m] * r_n * cmp
-                A_radius[:, num+1] = -n * Pnm[n, m] * r_n * smp
+                A_radius[..., num] = -n * Pnm[n, m] * r_n * cmp
+                A_radius[..., num+1] = -n * Pnm[n, m] * r_n * smp
 
-            A_theta[:, num] = -Pnm[m, n+1] * r_n * cmp
-            A_theta[:, num+1] = -Pnm[m, n+1] * r_n * smp
+            A_theta[..., num] = -Pnm[m, n+1] * r_n * cmp
+            A_theta[..., num+1] = -Pnm[m, n+1] * r_n * smp
 
             # need special treatment at the poles because Pnm/sinth = 0/0 for
             # theta in {0., 180.},
@@ -797,8 +813,8 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
             else:
                 div_Pnm = Pnm[n, m] / sinth
 
-            A_phi[:, num] = m * div_Pnm * r_n * smp
-            A_phi[:, num+1] = -m * div_Pnm * r_n * cmp
+            A_phi[..., num] = m * div_Pnm * r_n * smp
+            A_phi[..., num+1] = -m * div_Pnm * r_n * cmp
 
             num += 2
 

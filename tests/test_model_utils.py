@@ -43,22 +43,36 @@ class ModelUtils(TestCase):
         A2 = np.array(m.design_gauss(radius, theta, phi, nmax=3, mmax=0))
 
         index = [0, 3, 8]
-        self.assertIsNone(np.testing.assert_equal(A[:, :, index], A2))
+        np.testing.assert_equal(A[:, :, index], A2)
 
         # order equal or less than 1
         A = np.array(m.design_gauss(radius, theta, phi, nmax=3))
         A2 = np.array(m.design_gauss(radius, theta, phi, nmax=3, mmax=1))
 
         index = [0, 1, 2, 3, 4, 5, 8, 9, 10]
-        self.assertIsNone(np.testing.assert_equal(A[:, :, index], A2))
+        np.testing.assert_equal(A[:, :, index], A2)
+
+    def test_design_gauss_multidim(self):
+
+        radius = 6371.
+        theta = np.arange(30).reshape((3, 1, 10))
+        phi = np.arange(30).reshape((3, 10, 1))
+        coeffs = np.arange(8) + 1.
+
+        Br, Bt, Bp = m.synth_values(coeffs, radius, theta, phi, nmax=2)
+        Ar, At, Ap = m.design_gauss(radius, theta, phi, nmax=2)
+
+        np.testing.assert_allclose(Br, Ar@coeffs)
+        np.testing.assert_allclose(Bt, At@coeffs)
+        np.testing.assert_allclose(Bp, Ap@coeffs)
 
     def test_degree_correlation(self):
 
         nmax = 4
         coeffs = np.random.random((int(nmax*(nmax+2)),))
 
-        self.assertIsNone(np.testing.assert_equal(
-            m.degree_correlation(coeffs, coeffs), np.ones((nmax,))))
+        np.testing.assert_equal(
+            m.degree_correlation(coeffs, coeffs), np.ones((nmax,)))
 
     def test_power_spectrum(self):
 
@@ -68,7 +82,7 @@ class ModelUtils(TestCase):
 
         R_n = m.power_spectrum(coeffs)
 
-        self.assertIsNone(np.testing.assert_equal(R_n.shape, (10, 2, N)))
+        np.testing.assert_equal(R_n.shape, (10, 2, N))
 
     def test_synth_values_mmax(self):
 
@@ -77,35 +91,35 @@ class ModelUtils(TestCase):
         radius = R_REF
 
         # function for quick testing with "true" solution
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
                            radius, theta, phi),
             m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
-                           radius, theta, phi, nmax=None, mmax=None)))
+                           radius, theta, phi, nmax=None, mmax=None))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             m.synth_values([1., 2., 3., 0., 0., 0., 0., 0.],
                            radius, theta, phi),
             m.synth_values([1., 2., 3., 4., 5., 6., 7., 8.],
-                           radius, theta, phi, nmax=1, mmax=None)))
+                           radius, theta, phi, nmax=1, mmax=None))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             m.synth_values([1., 2., 3., 4., 5., 6., 0., 0.],
                            radius, theta, phi),
             m.synth_values([1., 2., 3., 4., 5., 6.],
-                           radius, theta, phi, nmax=2, mmax=1)))
+                           radius, theta, phi, nmax=2, mmax=1))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             m.synth_values([1., 0., 0., 0., 0., 0., 0., 0.],
                            radius, theta, phi),
             m.synth_values([1.],
-                           radius, theta, phi, nmax=1, mmax=0)))
+                           radius, theta, phi, nmax=1, mmax=0))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             m.synth_values([1., 2., 3., 4., 5., 6., 0., 0.],
                            radius, theta, phi),
             m.synth_values([1., 2., 3., 4., 5., 6.],
-                           radius, theta, phi, nmax=None, mmax=1)))
+                           radius, theta, phi, nmax=None, mmax=1))
 
     def test_synth_values_nmin(self):
 
@@ -236,7 +250,7 @@ class ModelUtils(TestCase):
         # North pole: Bx = -1, Bt = -1
         # South pole: Bx = -1, Bt = 1
         Br, Bt, Bp = m.synth_values([0., 1., 0], radius, theta, phi, grid=True)
-        
+
         # north pole (theta, phi) = (0., 0.)
         npole = (0, 0)
         np.testing.assert_allclose(Br[npole], 0.)
