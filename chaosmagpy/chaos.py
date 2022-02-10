@@ -17,6 +17,7 @@ models.
     load_CHAOS_shcfile
     load_CovObs_txtfile
     load_gufm1_txtfile
+    load_CALS7K_txtfile
 
 """
 
@@ -862,7 +863,7 @@ class CHAOS(object):
                 coeffs=coeffs_tdep,
                 source='internal'
             )
-        
+
         if coeffs_static is None:
             self.model_static = None
         else:
@@ -923,7 +924,7 @@ class CHAOS(object):
             self.model_cal = None
         else:
             satellites = tuple([*breaks_cal.keys()])
-            self.model_cal = dict()            
+            self.model_cal = dict()
 
             for k, satellite in enumerate(satellites):
 
@@ -2672,7 +2673,7 @@ def load_gufm1_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file (not part of ChaosMagPy).
+        Path to txt-file (available from the modellers).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2747,6 +2748,100 @@ def load_gufm1_txtfile(filepath, name=None):
     # insert actual coefficients, endpoint coefficients are now zero
     coeffs[degree:-degree, :] = data[(nbreaks + 2):].reshape(
         (breaks.size - order, nmax * (nmax + 2)))
+
+    return BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal')
+
+
+def load_CALS7K_txtfile(filepath, name=None):
+    """
+    Load the model parameter file of the CALS7K model.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to txt-file (available from the modellers).
+    name : str, optional
+        User defined name of the model. Defaults to the filename.
+
+    Returns
+    -------
+    model : :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    More information about the model and a list of relevant publications can be
+    found at `<https://igppweb.ucsd.edu/~cathy/Projects/Holocene/CALS7K/>`_.
+    The model coefficients file can be downloaded from
+    `<https://earthref.org/ERDA/413/>`_.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_CALS7K_txtfile('CALS7K.2')  # load model txt-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        time = np.linspace(-5000., 1950., 1000)  # decimal years
+        mjd = cp.data_utils.dyear_to_mjd(time)
+
+        coeffs = model.synth_coeffs(mjd, nmax=1)
+
+        ax.plot(time, coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('years')
+        ax.set_ylabel('nT')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    with open(filepath, 'r') as f:
+        lines = f.read()  # read everything as a continuous string
+
+    if name is None:
+        # get name with extension
+        name = os.path.basename(filepath)
+
+    # numpy doesn't understand "D" in decimal representation, replace with E
+    data = np.fromstring(lines.replace('D', 'E'), sep=' ', dtype=float)
+
+    ts = data[0]  # start time
+    te = data[1]  # end time
+    order = data[2]  # cubic B-splines
+    # discard index 3
+    nmax = int(data[4])  # maximum spherical harmonic degree
+    # discard index 5
+    inspl = int(data[6])  # number of inner B-spline segments
+
+    dim = nmax*(nmax+2)  # number of spherical harmonic coefficients
+    order = 4  # cubic splines
+    degree = order - 1  # polynomial degree
+    nbreaks = inspl + order  # number of breaks
+
+    breaks = data[7:(7+nbreaks)]
+    # convert decimal year to modified Julian date
+    breaks = du.dyear_to_mjd(breaks, leap_year=True)
+
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    # add zeros at endpoints to match manually extended knots
+    coeffs = np.zeros((knots.size - order, dim))
+
+    # insert actual coefficients, endpoint coefficients are now zero
+    coeffs[degree:-degree, :] = data[(7+nbreaks):].reshape(
+        (breaks.size - order, dim))
 
     return BaseModel.from_bspline(name, knots, coeffs, order,
                                   source='internal')

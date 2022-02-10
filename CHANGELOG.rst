@@ -3,18 +3,26 @@ Changelog
 
 Version 0.9-dev
 ---------------
-| **Date:** February 02, 2022
+| **Date:** February 10, 2022
 | **Release:** v0.9-dev
 | **Version of CHAOS:** CHAOS-7.9 (0709)
 
 Features
 ^^^^^^^^
+* Added function :func:`chaosmagpy.chaos.load_CALS7K_txtfile` to read the
+  CALS7K coefficients file.
 * Function :func:`chaosmagpy.model_utils.design_gauss` now accepts
   multidimensional shapes of input grids and preserves them in the output.
 * Added new method :meth:`chaosmagpy.chaos.Base.to_ppdict`, which returns a
   dictionary of the pp-form compatible with MATLAB.
 * Added support for calibration parameters.
 * Renamed "params.version" in basicConfig to "params.CHAOS_version".
+
+Bugfixes
+^^^^^^^^
+* Functions :func:`chaosmagpy.data_utils.dyear_to_mjd` and
+  :func:`chaosmagpy.data_utils.mjd_to_dyear` now correctly convert
+  negative decimal years and negative modified Julian dates.
 
 Version 0.8
 -----------
