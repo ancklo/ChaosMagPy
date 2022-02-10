@@ -480,7 +480,7 @@ def is_leap_year(year):
 
     Parameters
     ----------
-    year : ndarray, shape (...)
+    year : int, ndarray, shape (...)
         Years to test for leap year.
 
     Returns
@@ -493,7 +493,19 @@ def is_leap_year(year):
     >>> is_leap_year([2000, 2001, 2004])
         array([ True, False,  True])
 
+    Raises
+    ------
+    TypeError if ``year`` is not of type integer.
+
     """
+
+    year = np.asarray(year)
+
+    if not np.issubdtype(year.dtype, int):
+        raise TypeError('Expected integer values as the input year. Use '
+                        'numpy.floor to extract the integer year '
+                        'from decimal years.')
+
 
     return np.logical_and(np.remainder(year, 4) == 0,
                           np.logical_or(np.remainder(year, 100) != 0,
@@ -533,10 +545,10 @@ def dyear_to_mjd(time, leap_year=None):
     leap_year = True if leap_year is None else leap_year
 
     if leap_year:
-        year = np.asarray(time, dtype=int)
+        year = np.asarray(np.floor(time), dtype=int)  # note: -0.1 is year -1
         frac_of_year = np.remainder(time, 1.)
 
-        isleap = is_leap_year(year)
+        isleap = is_leap_year(year)  # do provide integer years
         days_per_year = np.where(isleap, 366., 365.)
 
         days = frac_of_year * days_per_year
@@ -579,6 +591,9 @@ def mjd_to_dyear(time, leap_year=None):
     >>> mjd_to_dyear([183. , 548.5])  # account for leap years
         array([2000.5, 2001.5])
 
+    >>> mjd_to_dyear([0. , -1., 365.])
+        array([2000., 1999.99726027, 2000.99726776])
+
     >>> mjd_to_dyear([182.625, 547.875], leap_year=False)
         array([2000.5, 2001.5])
 
@@ -587,7 +602,7 @@ def mjd_to_dyear(time, leap_year=None):
     leap_year = True if leap_year is None else leap_year
 
     if leap_year:
-        date = (np.asarray(time, dtype=int)*np.timedelta64(1, 'D')
+        date = (np.asarray(np.floor(time), dtype=int)*np.timedelta64(1, 'D')
                 + np.datetime64('2000-01-01'))  # only precise to date
 
         year = date.astype('datetime64[Y]').astype(int) + 1970
