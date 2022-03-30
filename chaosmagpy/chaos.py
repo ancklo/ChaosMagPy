@@ -771,7 +771,7 @@ class CHAOS(object):
     breaks_cal : dict with ndarrays, shape (:math:`m_c` + 1,)
         Dictionary containing satellite name as key and corresponding break
         vectors for the calibration parameters (keys are ``'cryosat-2_1'``).
-    coeffs_cal :dict with ndarrays, shape (1, :math:`m_c`, 3)
+    coeffs_cal : dict with ndarrays, shape (1, :math:`m_c`, 3)
         Dictionary containing satellite name as key and arrays of the 9 basic
         calibration parameters (3 offsets, 3 sensitivities, 3
         non-orthogonality angles) (keys are ``'cryosat-2_1'``).
