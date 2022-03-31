@@ -209,7 +209,7 @@ def save_RC_h5file(filepath, read_from=None):
         warnings.warn(f"Can't save new RC index. Raised exception: '{err}'.")
 
 
-def load_shcfile(filepath, leap_year=None):
+def load_shcfile(filepath, leap_year=None, comment=None):
     """
     Load shc-file and return coefficient arrays.
 
@@ -220,6 +220,9 @@ def load_shcfile(filepath, leap_year=None):
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
+    comment : str, optional
+        Character at the start of a line to indicate a comment
+        (defaults to ``#``). This can also be a tuple of characters.
 
     Returns
     -------
@@ -238,14 +241,16 @@ def load_shcfile(filepath, leap_year=None):
         piecewise polynomial with ``breaks = time[::step]``.
 
     """
+
     leap_year = True if leap_year is None else leap_year
+    comment = '#' if comment is None else comment
 
     with open(filepath, 'r') as f:
 
         data = np.array([])
         for line in f.readlines():
 
-            if line.strip().startswith('#'):
+            if line.strip().startswith(comment):
                 continue
 
             read_line = np.fromstring(line, sep=' ')
@@ -366,7 +371,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
 def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
     """
-    Computes the modified Julian date as floating point number.
+    Computes the modified Julian date as floating point number (epoch 2000).
 
     It assigns 0 to 0h00 January 1, 2000. Leap seconds are not accounted for.
 
