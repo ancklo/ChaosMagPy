@@ -3,12 +3,15 @@ Changelog
 
 Version 0.9-dev
 ---------------
-| **Date:** February 10, 2022
+| **Date:** March 31, 2022
 | **Release:** v0.9-dev
-| **Version of CHAOS:** CHAOS-7.9 (0709)
+| **Version of CHAOS:** CHAOS-7.10 (0710)
 
 Features
 ^^^^^^^^
+* Changed the default leap year setting when loading/saving shc-files using
+  the model classes to ``leap_year=False``.
+* Updated RC-index file to RC_1997-2022_Feb_v3.
 * Added function :func:`chaosmagpy.chaos.load_CALS7K_txtfile` to read the
   CALS7K coefficients file.
 * Function :func:`chaosmagpy.model_utils.design_gauss` now accepts
@@ -22,7 +25,8 @@ Bugfixes
 ^^^^^^^^
 * Functions :func:`chaosmagpy.data_utils.dyear_to_mjd` and
   :func:`chaosmagpy.data_utils.mjd_to_dyear` now correctly convert
-  negative decimal years and negative modified Julian dates.
+  negative decimal years and negative modified Julian dates (erroneous offset
+  of 1 day due to rounding to integer values).
 
 Version 0.8
 -----------
@@ -40,7 +44,7 @@ Features
 
 Bugfixes
 ^^^^^^^^
-* Removed Euler pre-rotation, which was not correclty implemented, and added
+* Removed Euler pre-rotation, which was not correctly implemented, and added
   a warning.
 * Fixed shc-file loader to correctly exclude extrapolation sites.
 * Fixed numpy broadcasting error in :func:`chaosmagpy.data_utils.mjd2000`.

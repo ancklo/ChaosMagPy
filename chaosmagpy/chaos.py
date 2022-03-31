@@ -145,7 +145,7 @@ class Base(object):
         start = self.breaks[0]
         end = self.breaks[-1]
 
-        if np.amin(time) < start or np.amax(time) > end:
+        if (np.amin(time) < start) or (np.amax(time) > end):
             if isinstance(extrapolate, str):  # convert string to integer
                 dkey = {
                     'linear': 2,
@@ -168,8 +168,9 @@ class Base(object):
 
             message = 'no' if extrapolate in ['off', 0] else extrapolate
             warnings.warn("Requested coefficients are "
-                          "outside of the model period from "
-                          f"{start} to {end}. Doing {message} extrapolation.")
+                          "outside of the model time period from "
+                          f"{start} to {end} Modified Julian Date 2000. "
+                          f"Doing {message} extrapolation.")
 
             if key > 0:
                 for x in [start, end]:  # left and right
@@ -661,9 +662,10 @@ class BaseModel(Base):
         name : str, optional
             User defined name of the model. Defaults to the filename without
             the file extension.
-        leap_year : {True, False}, optional
-            Take leap year in time conversion into account (default).
-            Otherwise, use conversion factor of 365.25 days per year.
+        leap_year : {False, True}, optional
+            Take leap year in time conversion into account. By default set to
+            ``False``, so that a conversion factor of 365.25 days per year is
+            used.
         source : {'internal', 'external'}
             Internal or external source (defaults to ``'internal'``)
         meta : dict, optional
@@ -681,7 +683,7 @@ class BaseModel(Base):
             name = os.path.splitext(os.path.basename(filepath))[0]
 
         source = 'internal' if source is None else source
-        leap_year = True if leap_year is None else leap_year
+        leap_year = False if leap_year is None else leap_year
 
         time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
 
@@ -1979,9 +1981,10 @@ str, {'internal', 'external'}
         deriv : int, optional
             Derivative of the time-dependent field (default is 0, ignored for
             static source).
-        leap_year : {True, False}, optional
-            Take leap years for decimal year conversion into account
-            (defaults to ``True``).
+        leap_year : {False, True}, optional
+            Take leap year in time conversion into account. By default set to
+            ``False``, so that a conversion factor of 365.25 days per year is
+            used.
 
         """
 
@@ -1989,7 +1992,7 @@ str, {'internal', 'external'}
 
         deriv = 0 if deriv is None else deriv
 
-        leap_year = True if leap_year is None else leap_year
+        leap_year = False if leap_year is None else leap_year
 
         if model == 'tdep':
 
@@ -2216,9 +2219,10 @@ str, {'internal', 'external'}
             User defined name of the model. Defaults to ``'CHAOS-<version>'``,
             where <version> is the default in
             ``basicConfig['params.version']``.
-        leap_year : {True, False}, optional
-            Take leap year in time conversion into account (default).
-            Otherwise, use conversion factor of 365.25 days per year.
+        leap_year : {False, True}, optional
+            Take leap year in time conversion into account. By default set to
+            ``False``, so that a conversion factor of 365.25 days per year is
+            used.
 
         Returns
         -------
@@ -2242,7 +2246,7 @@ str, {'internal', 'external'}
 
         """
 
-        leap_year = True if leap_year is None else leap_year
+        leap_year = False if leap_year is None else leap_year
 
         return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year)
 
@@ -2484,9 +2488,10 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
-    leap_year : {True, False}, optional
-        Take leap year in time conversion into account (default). Otherwise,
-        use conversion factor of 365.25 days per year.
+    leap_year : {False, True}, optional
+        Take leap year in time conversion into account. By default set to
+        ``False``, so that a conversion factor of 365.25 days per year is
+        used.
 
     Returns
     -------
@@ -2551,7 +2556,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
         # get name without extension
         name = os.path.splitext(os.path.basename(filepath))[0]
 
-    leap_year = True if leap_year is None else bool(leap_year)
+    leap_year = False if leap_year is None else bool(leap_year)
 
     # create dummy BaseModel since there is no entry point to directly modify
     # CHAOS.model_tdep or CHAOS.model_static at the moment
@@ -2618,9 +2623,11 @@ def load_CovObs_txtfile(filepath, name=None):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
-        # sample model timespan a bit away from endpoints
-        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
-        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+        # sample model timespan
+        time = np.linspace(1840., 2020., 1000)  # decimal years
+        mjd = cp.data_utils.dyear_to_mjd(time, leap_year=False)
+
+        coeffs = model.synth_coeffs(mjd, nmax=1, deriv=1)
 
         ax.plot(cp.data_utils.timestamp(time), coeffs)
         ax.set_title(model.name)
@@ -2673,7 +2680,7 @@ def load_gufm1_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file (available from the modellers).
+        Path to txt-file (provided by the modellers).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2706,11 +2713,13 @@ def load_gufm1_txtfile(filepath, name=None):
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
-        # sample model timespan a bit away from endpoints
-        time = np.linspace(model.breaks[6], model.breaks[-6], 1000)
-        coeffs = model.synth_coeffs(time, nmax=1, deriv=1)
+        # sample model timespan 7.5 years away from endpoints
+        time = np.linspace(1590., 1990., 1000)  # decimal years
+        mjd = cp.data_utils.dyear_to_mjd(time, leap_year=False)
 
-        ax.plot(cp.data_utils.timestamp(time), coeffs)
+        coeffs = model.synth_coeffs(mjd, nmax=1, deriv=1)
+
+        ax.plot(time, coeffs)
         ax.set_title(model.name)
         ax.set_xlabel('Time (years)')
         ax.set_ylabel('nT/yr')
@@ -2790,7 +2799,7 @@ def load_CALS7K_txtfile(filepath, name=None):
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
         time = np.linspace(-5000., 1950., 1000)  # decimal years
-        mjd = cp.data_utils.dyear_to_mjd(time)
+        mjd = cp.data_utils.dyear_to_mjd(time, leap_year=False)
 
         coeffs = model.synth_coeffs(mjd, nmax=1)
 
@@ -2830,8 +2839,8 @@ def load_CALS7K_txtfile(filepath, name=None):
     nbreaks = inspl + order  # number of breaks
 
     breaks = data[7:(7+nbreaks)]
-    # convert decimal year to modified Julian date
-    breaks = du.dyear_to_mjd(breaks, leap_year=True)
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(breaks, leap_year=False)
 
     # add endpoint multiplicity to "trick" scipy's BSpline routine
     knots = mu.augment_breaks(breaks, order)
