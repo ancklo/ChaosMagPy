@@ -5,24 +5,25 @@ keywords.
 
 **Parameters**
 
- ====================  =============  =========================================
- Value                 Type           Description
- ====================  =============  =========================================
- 'params.r_surf'       `float`        Reference radius in kilometers (defaults
-                                      to Earth's surface radius 6371.2 km).
- 'params.r_cmb'        `float`        Core-mantle boundary radius in kilometers
-                                      (defaults to 3485.0 km).
- 'params.dipole'       `list`,        Coefficients of the dipole (used for
-                       `ndarray`,     GSM/SM coordinate transformations) in
-                       `shape (3,)`   units of nanotesla.
- 'params.ellipsoid'    `list`,        Equatorial (index 0) and polar radius
-                       `ndarray`      (index 1) of the spheroid describing
-                       `shape (2,)`   Earth (WGS84) in units of kilometers.
- 'params.version'      `str`          Current version of the CHAOS model, e.g.
-                                      ``'7.1'``.
- 'params.cdf_to_mjd'   `int`          Number of days on Jan 01, 2000 since Jan
-                                      01, 0000 (CDF start epoch)
- ====================  =============  =========================================
+ ======================  =============  =======================================
+ Value                   Type           Description
+ ======================  =============  =======================================
+ 'params.r_surf'         `float`        Reference radius in kilometers
+                                        (defaults to Earth's surface radius of
+                                        6371.2 km).
+ 'params.r_cmb'          `float`        Core-mantle boundary radius in
+                                        kilometers (defaults to 3485.0 km).
+ 'params.dipole'         `list`,        Coefficients of the dipole (used for
+                         `ndarray`,     GSM/SM coordinate transformations) in
+                         `shape (3,)`   units of nanotesla.
+ 'params.ellipsoid'      `list`,        Equatorial (index 0) and polar radius
+                         `ndarray`      (index 1) of the spheroid describing
+                         `shape (2,)`   Earth (WGS84) in units of kilometers.
+ 'params.CHAOS_version'  `str`          Current version of the CHAOS model,
+                                        e.g. ``'7.1'``.
+ 'params.cdf_to_mjd'     `int`          Number of days on Jan 01, 2000 since
+                                        Jan 01, 0000 (CDF start epoch)
+ ======================  =============  =======================================
 
 **Files**
 
@@ -138,7 +139,7 @@ DEFAULTS = {
                       lambda x: check_vector(x, len=3)],
     'params.ellipsoid': [np.array([6378.137, 6356.752]),
                          lambda x: check_vector(x, len=2)],
-    'params.CHAOS_version': ['7.9', check_version_string],
+    'params.CHAOS_version': ['7.10', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files
