@@ -1,8 +1,17 @@
 Changelog
 =========
 
-Version 0.9-dev
----------------
+Version 0.10-dev
+----------------
+| **Date:** April 1, 2022
+| **Release:** v0.10-dev
+| **Version of CHAOS:** CHAOS-7.10 (0710)
+
+Features
+^^^^^^^^
+
+Version 0.9
+-----------
 | **Date:** April 1, 2022
 | **Release:** v0.9
 | **Version of CHAOS:** CHAOS-7.10 (0710)
