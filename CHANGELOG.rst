@@ -3,15 +3,15 @@ Changelog
 
 Version 0.9-dev
 ---------------
-| **Date:** March 31, 2022
+| **Date:** April 1, 2022
 | **Release:** v0.9-dev
 | **Version of CHAOS:** CHAOS-7.10 (0710)
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2022_Feb_v3.
 * Changed the default leap year setting when loading/saving shc-files using
   the model classes to ``leap_year=False``.
-* Updated RC-index file to RC_1997-2022_Feb_v3.
 * Added function :func:`chaosmagpy.chaos.load_CALS7K_txtfile` to read the
   CALS7K coefficients file.
 * Function :func:`chaosmagpy.model_utils.design_gauss` now accepts
