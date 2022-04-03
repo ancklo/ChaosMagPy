@@ -18,8 +18,8 @@ The documentation of the current release is available on
 .. |pypi| image:: https://badge.fury.io/py/chaosmagpy.svg
     :target: https://badge.fury.io/py/chaosmagpy
 
-.. |docs| image:: https://readthedocs.org/projects/chaosmagpy/badge/?version=stable
-   :target: https://chaosmagpy.readthedocs.io/en/stable/?badge=stable
+.. |docs| image:: https://readthedocs.org/projects/chaosmagpy/badge/?version=master
+   :target: https://chaosmagpy.readthedocs.io/en/master/?badge=master
    :alt: Documentation Status
 
 .. |license| image:: https://img.shields.io/badge/License-MIT-blue.svg
