@@ -27,7 +27,8 @@ Change RC index file
 
 Download a new RC-index file either directly as txt-file from
 `spacecenter.dk <http://www.spacecenter.dk/files/magnetic-models/RC/current/>`_
-or by using the function :func:`data_utils.save_RC_h5file` (saves as h5-file):
+or by using the function :func:`~.data_utils.save_RC_h5file` (saves as
+h5-file):
 
 .. code-block:: python
 
