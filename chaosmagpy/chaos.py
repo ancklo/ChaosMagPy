@@ -444,7 +444,7 @@ class BaseModel(Base):
 
         coeffs = self.synth_coeffs(time, **kwargs)
 
-        return mu.power_spectrum(coeffs, radius)
+        return mu.power_spectrum(coeffs, radius, source=self.source)
 
     def plot_power_spectrum(self, time, **kwargs):
         """
