@@ -139,7 +139,7 @@ DEFAULTS = {
                       lambda x: check_vector(x, len=3)],
     'params.ellipsoid': [np.array([6378.137, 6356.752]),
                          lambda x: check_vector(x, len=2)],
-    'params.CHAOS_version': ['7.10', check_version_string],
+    'params.CHAOS_version': ['7.11', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files
