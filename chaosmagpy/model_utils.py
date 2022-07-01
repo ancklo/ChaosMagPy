@@ -309,7 +309,7 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
     if nmax is None:
         nmax = nmax_coeffs
     elif nmax > nmax_coeffs:
-        warnings.warn('Provided nmax = {0} is incompatible with number of '
+        warnings.warn('Supplied nmax = {0} is incompatible with number of '
                       'model coefficients. Using nmax = {1} instead.'.format(
                         nmax, nmax_coeffs))
         nmax = nmax_coeffs
@@ -492,7 +492,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('Provided coordinates include the poles.')
+            warnings.warn('Supplied coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
@@ -724,7 +724,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     # check if poles are included
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('Provided coordinates include the poles.')
+            warnings.warn('Supplied coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
