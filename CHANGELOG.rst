@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.11-dev
+----------------
+| **Date:** July 8, 2022
+| **Release:** v0.11-dev
+| **Version of CHAOS:** CHAOS-7.11 (0711)
+
+Features
+^^^^^^^^
+
 Version 0.10
 ------------
 | **Date:** July 1, 2022

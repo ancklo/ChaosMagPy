@@ -4,7 +4,7 @@ __all__ = [
     "basicConfig", "synth_values"
 ]
 
-__version__ = "0.10"
+__version__ = "0.11-dev"
 
 from .chaos import (
     CHAOS,
