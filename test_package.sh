@@ -32,7 +32,7 @@ while true; do
     esac
 done
 
-echo Installing requested version of ChaosMagPy v$latest.
+echo Installing requested version of ChaosMagPy v$version.
 pip install dist/chaosmagpy-$version.tar.gz
 
 echo Entering test directory.

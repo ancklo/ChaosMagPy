@@ -9,6 +9,9 @@ Version 0.11-dev
 
 Features
 ^^^^^^^^
+* Added more detailed error message when requesting near-magnetospheric
+  coefficients outside the domain covered by the RC-index file.
+* Added input parameters ``rc_e`` and ``rc_i`` to the model call method.
 
 Version 0.10
 ------------

@@ -195,7 +195,8 @@ class Base(object):
         Returns
         -------
         pp : dict
-            Dictionary of the pp-form compatible with MATLAB.
+            Dictionary of the pp-form compatible with MATLAB. Elements are
+            NumPy arrays.
 
         See Also
         --------
@@ -205,9 +206,9 @@ class Base(object):
 
         pp = dict(
             form='pp',
-            order=float(self.order),
-            pieces=float(self.pieces),
-            dim=float(self.dim),
+            order=np.array(self.order, float),
+            pieces=np.array(self.pieces, float),
+            dim=np.array(self.dim, float),
             breaks=self.breaks.copy().reshape((1, -1)),  # ensure 2d
             coefs=np.reshape(self.coeffs.copy(), (self.order, -1)).transpose()
         )
@@ -531,7 +532,7 @@ class BaseModel(Base):
         kwargs.setdefault('label', du.gauss_units(deriv))
         kwargs.setdefault('titles', titles)
 
-        # handle optional argument: nmax > coefficent nmax
+        # handle optional argument: nmax > coefficient nmax
         if nmax > self.nmax:
             warnings.warn(
                 'Supplied nmax = {0} is incompatible with number of model '
@@ -946,13 +947,14 @@ class CHAOS(object):
 
         self.meta = meta
 
-    def __call__(self, time, radius, theta, phi, source_list=None,
-                 verbose=None):
+    def __call__(self, time, radius, theta, phi, rc_e=None, rc_i=None,
+                 source_list=None, nmax_static=None, verbose=None):
         """
         Calculate the magnetic field of all sources from the CHAOS model.
 
-        All sources means the time-dependent and static internal field, the
-        external SM/GSM fields including their induced parts.
+        All sources means the time-dependent and static internal fields, and
+        the external magnetospheric (SM/GSM) fields including their
+        induced parts.
 
         Parameters
         ----------
@@ -964,6 +966,12 @@ class CHAOS(object):
             Colatitude in degrees :math:`[0^\\circ, 180^\\circ]`.
         phi : ndarray, shape (...) or float
             Longitude in degrees.
+        rc_e : ndarray, shape (...), optional
+            External part of the RC-index (defaults to linearly interpolating
+            the hourly values given by the built-in RC-index file).
+        rc_i : ndarray, shape (...), optional
+            Internal part of the RC-index (defaults to linearly interpolating
+            the hourly values given by the built-in RC-index file).
         source_list : list, ['tdep', 'static', 'gsm', 'sm'] or \
 str, {'internal', 'external'}
             Specify sources in any order. Default is all sources. Instead of a
@@ -972,6 +980,9 @@ str, {'internal', 'external'}
             ``source_list='external'`` which is the same as
             ``source_list=['gsm', 'sm']`` (external sources including induced
             part).
+        nmax_static : int, optional
+            Maximum spherical harmonic degree of the static internal magnetic
+            field (defaults to 85).
         verbose : {False, True}, optional
             Print messages (defaults to ``False``).
 
@@ -1046,7 +1057,7 @@ str, {'internal', 'external'}
 
         if 'static' in source_list:
 
-            nmax_static = 85
+            nmax_static = 85 if nmax_static is None else nmax_static
 
             if verbose:
                 print(f'Computing static internal (i.e. small-scale crustal) '
@@ -1088,7 +1099,7 @@ str, {'internal', 'external'}
 
             s = timer()
             B_radius_new, B_theta_new, B_phi_new = self.synth_values_sm(
-                time, radius, theta, phi, source='all')
+                time, radius, theta, phi, rc_e=rc_e, rc_i=rc_i, source='all')
 
             B_radius += B_radius_new
             B_theta += B_theta_new
@@ -1105,14 +1116,14 @@ str, {'internal', 'external'}
         Print model version and initialization timestamp.
         """
 
-        string = (f"This is {self.name} initialized on {self.timestamp} UTC.")
+        string = (f"{self.name}: Initialized on {self.timestamp} UTC.")
 
         return string
 
     def synth_coeffs_tdep(self, time, *, nmax=None, **kwargs):
         """
-        Compute the time-dependent internal field coefficients from the CHAOS
-        model.
+        Compute the spherical harmonic coefficients of the time-dependent
+        internal magnetic field from the CHAOS model.
 
         Parameters
         ----------
@@ -1155,8 +1166,8 @@ str, {'internal', 'external'}
     def synth_values_tdep(self, time, radius, theta, phi, *, nmax=None,
                           deriv=None, grid=None, extrapolate=None):
         """
-        Compute magnetic components of the internal
-        time-dependent field.
+        Compute the vector components of the time-dependent internal
+        magnetic field from the CHAOS model.
 
         Parameters
         ----------
@@ -1227,7 +1238,7 @@ str, {'internal', 'external'}
     def plot_timeseries_tdep(self, radius, theta, phi, **kwargs):
         """
         Plot the time series of the time-dependent internal field from the
-        CHAOS model at a specific location.
+        CHAOS model at a given location.
 
         Parameters
         ----------
@@ -1298,7 +1309,8 @@ str, {'internal', 'external'}
 
     def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
-        Compute the static internal field coefficients from the CHAOS model.
+        Compute the spherical harmonic coefficients of the static internal
+        magnetic field from the CHAOS model.
 
         Parameters
         ----------
@@ -1330,7 +1342,8 @@ str, {'internal', 'external'}
 
     def synth_values_static(self, radius, theta, phi, *, nmax=None, **kwargs):
         """
-        Compute magnetic field components of the internal static field.
+        Compute the vector components of the static internal magnetic field
+        from the CHAOS model.
 
         Parameters
         ----------
@@ -1408,7 +1421,8 @@ str, {'internal', 'external'}
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
-        Compute the external GSM field coefficients from the CHAOS model.
+        Compute the spherical harmonic coefficients of the far-magnetospheric
+        magnetic field from the CHAOS model.
 
         Parameters
         ----------
@@ -1460,10 +1474,11 @@ str, {'internal', 'external'}
         end = self.model_static.breaks[-1]
 
         if np.amin(time) < start or np.amax(time) > end:
-            warnings.warn("Requested coefficients are "
-                          "outside of the model period from "
-                          f"{start} to {end}. Doing linear extrapolation in "
-                          "GSM reference frame.")
+            warnings.warn(
+                'Requested coefficients are outside of the '
+                f'model period from {start} to {end}. Doing linear '
+                'extrapolation of the coefficients in the GSM reference '
+                'frame.')
 
         # build rotation matrix from file
         frequency_spectrum = np.load(basicConfig['file.GSM_spectrum'])
@@ -1506,7 +1521,8 @@ str, {'internal', 'external'}
     def synth_values_gsm(self, time, radius, theta, phi, *, nmax=None,
                          source=None, grid=None):
         """
-        Compute GSM magnetic field components.
+        Compute the vector components of the far-magnetospheric magnetic
+        field from the CHAOS model.
 
         Parameters
         ----------
@@ -1577,7 +1593,8 @@ str, {'internal', 'external'}
 
     def synth_coeffs_sm(self, time, *, nmax=None, source=None, rc=None):
         """
-        Compute the external SM field from the CHAOS model.
+        Compute the spherical harmonic coefficients of the near-magnetospheric
+        magnetic field from the CHAOS model.
 
         Parameters
         ----------
@@ -1608,7 +1625,7 @@ str, {'internal', 'external'}
         --------
         >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
-        >>> model.synth_coeffs_sm(0.0)
+        >>> model.synth_coeffs_sm(0.)
         array([53.20309271,  3.79138724, -8.59458138, -0.62818711,  1.45506171,
                -0.57977672, -0.31660638, -0.43888236])
 
@@ -1645,7 +1662,7 @@ str, {'internal', 'external'}
             warnings.warn(
                 'Requested coefficients are outside of the '
                 f'model period from {start} to {end}. Doing linear '
-                'extrapolation in SM reference frame.')
+                'extrapolation of the coefficients in the SM reference frame.')
 
         # load rotation matrix spectrum from file
         frequency_spectrum = np.load(basicConfig['file.SM_spectrum'])
@@ -1661,14 +1678,29 @@ str, {'internal', 'external'}
 
                     # create linear interpolant of the RC-index
                     RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
-                                      kind='linear', bounds_error=True)
+                                      kind='linear', bounds_error=False)
 
             except OSError:
                 f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
 
                 # create linear interpolant of the RC-index
                 RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
-                                  kind='linear', bounds_error=True)
+                                  kind='linear', bounds_error=False)
+
+            # check RC bounds here to print specific error message
+            rc_below, rc_above = RC._check_bounds(time)
+
+            if rc_below.any() or rc_above.any():
+                raise ValueError("Requested coefficients are outside of the "
+                                 "period covered by the built-in RC-index "
+                                 "file. Either supply values of the RC-index "
+                                 "directly via the ``rc`` input parameter or "
+                                 "provide the path to an extended RC-index "
+                                 "file by replacing the one in "
+                                 "chaosmagpy.basicParams['file.RC_index'] "
+                                 "(see https://chaosmagpy.readthedocs.io/en/"
+                                 "master/configuration.html#change-rc-"
+                                 "index-file for details.")
 
             rc = RC(time)  # interpolate RC-index
 
@@ -1744,10 +1776,12 @@ str, {'internal', 'external'}
 
         return coeffs[..., :nmax*(nmax+2)]
 
-    def synth_values_sm(self, time, radius, theta, phi, *, nmax=None,
-                        source=None, grid=None, rc_e=None, rc_i=None):
+    def synth_values_sm(self, time, radius, theta, phi, *,
+                        rc_e=None, rc_i=None, nmax=None, source=None,
+                        grid=None):
         """
-        Compute SM magnetic field components.
+        Compute the vector components of the near-magnetospheric magnetic
+        field from the CHAOS model.
 
         Parameters
         ----------
