@@ -898,7 +898,7 @@ def legendre_poly(nmax, theta):
     return Pnm
 
 
-def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
+def power_spectrum(coeffs, radius=None, *, nmax=None, source=None, axis=None):
     """
     Compute the spatial power spectrum.
 
@@ -913,6 +913,9 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
         Maximum spherical degree (defaults to `N`).
     source : {'internal', 'external', 'toroidal'}
         Source of the field model (defaults to internal).
+    axis : int, optional
+        Axis of ``coeffs`` along which to compute the spatial power spectrum
+        (defaults to -1, last dimension of ``coeffs``).
 
     Returns
     -------
@@ -951,9 +954,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
 
     """
 
-    ratio = 1 if radius is None else basicConfig['params.r_surf'] / radius
+    axis = -1 if axis is None else int(axis)
+    r = 1 if radius is None else basicConfig['params.r_surf'] / radius
 
-    N = int(np.sqrt(coeffs.shape[-1] + 1) - 1)  # maximum degree
+    N = int(np.sqrt(coeffs.shape[axis] + 1) - 1)  # maximum degree
 
     if nmax is None:
         nmax = N
@@ -965,25 +969,34 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None):
     source = 'internal' if source is None else source
 
     if source == 'internal':
-        def factor(n, ratio):
-            return (n+1)*ratio**(2*n+4)
+        def factor(n, r):
+            return (n+1) * r**(2*n+4)
     elif source == 'external':
-        def factor(n, ratio):
-            return n*ratio**(-(2*n-2))
+        def factor(n, r):
+            return n * r**(-(2*n-2))
     elif source == 'toroidal':
-        def factor(n, ratio):
+        def factor(n, _):
             return n*(n+1) / (2*n+1)
     else:
         raise ValueError(
-            'Wrong source. Use `internal`, `external` or `toroidal`.')
+            'Unknown source. Use `internal`, `external` or `toroidal`.')
 
-    W_n = np.empty(coeffs.shape[:-1] + (nmax,))
+    shape = list(coeffs.shape)
+    shape[axis] = nmax  # replace dim of axis with nmax
+    W_n = np.empty(shape)
 
     for n in range(1, nmax+1):
         min = n**2 - 1
         max = min + (2*n + 1)
-        W_n[..., n-1] = factor(n, ratio)*np.sum(coeffs[..., min:max]**2,
-                                                axis=-1)
+
+        slc1 = coeffs.ndim*[slice(None),]  # index for summation
+        slc1[axis] = slice(min, max)
+
+        slc2 = coeffs.ndim*[slice(None),]  # index for insertion into output
+        slc2[axis] = n-1
+
+        W_n[tuple(slc2)] = factor(n, r)*np.sum(coeffs[tuple(slc1)]**2,
+                                               axis=axis)
 
     return W_n
 

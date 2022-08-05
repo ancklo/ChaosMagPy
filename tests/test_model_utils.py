@@ -76,13 +76,26 @@ class ModelUtils(TestCase):
 
     def test_power_spectrum(self):
 
-        N = 3
-        shape = (10, 2, int(N*(N+2)))
+        shape = (15, 24, 3)  # nmax = (3, 4, 1)
         coeffs = np.ones(shape)
 
-        R_n = m.power_spectrum(coeffs)
+        R_n = m.power_spectrum(coeffs, source='internal')  # axis=-1
+        R_n_desired = 6. * np.ones((15, 24, 1))
+        np.testing.assert_equal(R_n, R_n_desired)
 
-        np.testing.assert_equal(R_n.shape, (10, 2, N))
+        R_n = m.power_spectrum(coeffs, source='internal', axis=0)
+        R_n_desired = np.array([6., 15., 28.])[:, None, None] * np.ones(
+            (3, 24, 3))
+        np.testing.assert_equal(R_n, R_n_desired)
+
+        R_n = m.power_spectrum(coeffs, source='external', axis=1)
+        R_n_desired = np.array([3., 10., 21., 36])[None, :, None] * np.ones(
+            (15, 4, 3))
+        np.testing.assert_equal(R_n, R_n_desired)
+
+        R_n = m.power_spectrum(coeffs, source='toroidal')
+        R_n_desired = 2. * np.ones((15, 24, 1))
+        np.testing.assert_equal(R_n, R_n_desired)
 
     def test_synth_values_mmax(self):
 

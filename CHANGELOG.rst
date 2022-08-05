@@ -3,12 +3,14 @@ Changelog
 
 Version 0.11-dev
 ----------------
-| **Date:** July 8, 2022
+| **Date:** August 5, 2022
 | **Release:** v0.11-dev
 | **Version of CHAOS:** CHAOS-7.11 (0711)
 
 Features
 ^^^^^^^^
+* Extended :func:`chaosmagpy.model_utils.power_spectrum` to accept NumPy style
+  ``axis`` keyword argument, and added new tests for this function.
 * Added more detailed error message when requesting near-magnetospheric
   coefficients outside the domain covered by the RC-index file.
 * Added input parameters ``rc_e`` and ``rc_i`` to the model call method.
