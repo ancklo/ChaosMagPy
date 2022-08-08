@@ -3,12 +3,16 @@ Changelog
 
 Version 0.11-dev
 ----------------
-| **Date:** August 5, 2022
+| **Date:** August 8, 2022
 | **Release:** v0.11-dev
 | **Version of CHAOS:** CHAOS-7.11 (0711)
 
 Features
 ^^^^^^^^
+* Made time conversion functions (:func:`chaosmagpy.data_utils.mjd2000`,
+  :func:`chaosmagpy.data_utils.timestamp`,
+  :func:`chaosmagpy.data_utils.dyear_to_mjd`,
+  :func:`chaosmagpy.data_utils.mjd_to_dyear`) directly available upon import.
 * Extended :func:`chaosmagpy.model_utils.power_spectrum` to accept NumPy style
   ``axis`` keyword argument, and added new tests for this function.
 * Added more detailed error message when requesting near-magnetospheric
