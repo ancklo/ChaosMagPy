@@ -566,7 +566,7 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
     return matrix_time
 
 
-def sh_analysis(func, nmax):
+def sh_analysis(func, nmax, p=None):
     """
     Perform a spherical harmonic expansion of a function defined on a
     spherical surface.
@@ -577,15 +577,22 @@ def sh_analysis(func, nmax):
         Function takes two inputs: colatitude in degrees and longitude in
         degrees. The function must accept 2-D arrays and preserve shapes.
     nmax: int
-        Maximum spherical harmponic degree of the expansion.
+        Maximum spherical harmonic degree of the expansion.
+    p: int, optional, greater than 1
+        Factor to multiply with the number of points in colatitude. This
+        increases the accuracy of the numerical integration (defaults to 1).
+        The number of points in colatitude computes as ``p`` * (``nmax`` + 1).
 
     Returns
     -------
     coeffs: ndarray, shape (nmax*(nmax+2),)
-        Spherical harmonic expansion.
+        Coefficients of the spherical harmonic expansion.
 
     Examples
     --------
+    First, a straight forward example using the spherical harmonic
+    :math:`Y_1^1`:
+
     >>> import chaosmagpy as cp
     >>> import numpy as np
     >>> def func(theta, phi):
@@ -596,12 +603,31 @@ def sh_analysis(func, nmax):
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
 
+    Now, an example where the numerical integration is not sufficiently
+    accurate:
+
+    >>> def func(theta, phi):
+    >>>     n, m = 7, 1  # increased degree to n=7
+    >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
+    >>>     return np.cos(m*np.radians(phi))*Pnm[n, m]
+
+    >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
+        array([0.55555556, 0.00000000e+00, 0.00000000e+00])  # g10 is wrong
+
+    But, by setting ``p=3`` and, thus, increasing the number of integration
+    points:
+
+    >>> cp.coordinate_utils.sh_analysis(func, nmax=1, p=3)
+        array([7.23379689e-16, 0.00000000e+00, -0.00000000e+00])
+
     """
+
+    p = 1 if p is None else int(p)
 
     # define Gauss-Legendre grid for surface integration,
     # quadrature integrates polynomials of degree (2*n_theta - 1) exactly,
     # here the integrands are Pnm(x)*Pkl(x), hence of degree = 2nmax
-    n_theta = nmax + 1  # number of points in colatitude
+    n_theta = p*(nmax + 1)  # number of points in colatitude
     n_phi = 2*n_theta  # number of points in azimuth
 
     x, weights = np.polynomial.legendre.leggauss(n_theta)
