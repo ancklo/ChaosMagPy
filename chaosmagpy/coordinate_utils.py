@@ -566,7 +566,7 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
     return matrix_time
 
 
-def sh_analysis(func, nmax, p=None):
+def sh_analysis(func, nmax, kmax=None):
     """
     Perform a spherical harmonic expansion of a function defined on a
     spherical surface.
@@ -578,10 +578,11 @@ def sh_analysis(func, nmax, p=None):
         degrees. The function must accept 2-D arrays and preserve shapes.
     nmax: int
         Maximum spherical harmonic degree of the expansion.
-    p: int, optional, greater than 1
-        Factor to multiply with the number of points in colatitude. This
-        increases the accuracy of the numerical integration (defaults to 1).
-        The number of points in colatitude computes as ``p`` * (``nmax`` + 1).
+    kmax: int, optional, greater than or equal to nmax
+        Maximum spherical harmonic degree needed to resolve the output of
+        ``func``. This basically increases the number of points in colatitude,
+        which improves the accuracy of the numerical integration
+        (defaults to ``nmax``). Ignored if ``kmax < nmax``.
 
     Returns
     -------
@@ -595,10 +596,14 @@ def sh_analysis(func, nmax, p=None):
 
     >>> import chaosmagpy as cp
     >>> import numpy as np
+    >>> #
     >>> def func(theta, phi):
     >>>     n, m = 1, 1
     >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
-    >>>     return np.cos(m*np.radians(phi))*Pnm[n, m]
+    >>>     if m >= 0:
+    >>>         return np.cos(m*np.radians(phi))*Pnm[n, m]
+    >>>     else:
+    >>>         return np.sin(abs(m)*np.radians(phi))*Pnm[n, abs(m)]
 
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
@@ -607,27 +612,27 @@ def sh_analysis(func, nmax, p=None):
     accurate:
 
     >>> def func(theta, phi):
-    >>>     n, m = 7, 1  # increased degree to n=7
+    >>>     n, m = 7, 0  # increased degree to n=7
     >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
-    >>>     return np.cos(m*np.radians(phi))*Pnm[n, m]
+    >>>     return Pnm[n, m]
 
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.55555556, 0.00000000e+00, 0.00000000e+00])  # g10 is wrong
 
-    But, by setting ``p=3`` and, thus, increasing the number of integration
+    But, by setting ``kmax=7`` and, thus, increasing the number of integration
     points:
 
-    >>> cp.coordinate_utils.sh_analysis(func, nmax=1, p=3)
-        array([7.23379689e-16, 0.00000000e+00, -0.00000000e+00])
+    >>> cp.coordinate_utils.sh_analysis(func, nmax=1, kmax=7)
+        array([-1.14491749e-16, 0.00000000e+00, -0.00000000e+00])
 
     """
 
-    p = 1 if p is None else int(p)
+    kmax = nmax if kmax is None else int(kmax)
 
     # define Gauss-Legendre grid for surface integration,
     # quadrature integrates polynomials of degree (2*n_theta - 1) exactly,
     # here the integrands are Pnm(x)*Pkl(x), hence of degree = 2nmax
-    n_theta = p*(nmax + 1)  # number of points in colatitude
+    n_theta = max(nmax, kmax) + 1  # number of points in colatitude
     n_phi = 2*n_theta  # number of points in azimuth
 
     x, weights = np.polynomial.legendre.leggauss(n_theta)
