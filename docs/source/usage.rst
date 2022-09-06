@@ -59,10 +59,10 @@ The same computation can be done with other sources described by the model:
 |          | time-dep. (SM)  | :meth:`~.CHAOS.synth_values_sm`                   |
 +----------+-----------------+---------------------------------------------------+
 
-Computing a time series of Gauss coefficients
----------------------------------------------
+Computing timeseries of Gauss coefficients
+------------------------------------------
 
-ChaosMagPy can also be used to synthesize a time series of the spherical
+ChaosMagPy can also be used to synthesize a timeseries of the spherical
 harmonic coefficients. For example, in the case of the time-dependent
 internal field:
 
@@ -115,35 +115,52 @@ Converting time formats in ChaosMagPy
 The models in ChaosMagPy only accept modified Julian date. But
 sometimes it is easier to work in different units such as decimal years or
 Numpy's datetime. For those cases, ChaosMagPy offers simple conversion
-functions:
+functions. First, import ChaosMagPy and Numpy:
 
 .. code-block:: python
 
    import chaosmagpy as cp
+   import numpy as np
 
-   mjd = 412.  # 2001-02-16
+From Modified Julian Dates
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   dyear = cp.data_utils.mjd_to_dyear(mjd)  # to decimal years (accounts for leap years)
-   # dyear = 2001.1260273972603
+Convert to decimal years (account for leap years) with
+:func:`chaosmagpy.data_utils.mjd_to_dyear`:
 
-   timestamp = cp.data_utils.timestamp(mjd)  # to Numpy's datetime
-   # timestamp = numpy.datetime64('2001-02-16T00:00:00.000000')
+>>> cp.data_utils.mjd_to_dyear(412.)
+    2001.1260273972603
 
-The inverse operations are also available:
+Convert to Numpy's datetime object with
+:func:`chaosmagpy.data_utils.timestamp`:
 
-.. code-block:: python
+>>> cp.data_utils.timestamp(412.)
+    numpy.datetime64('2001-02-16T00:00:00.000000')
 
-   cp.data_utils.dyear_to_mjd(dyear)  # from decimal years (accounts for leap years)
-   # 412.0
+To Modified Julian Dates
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-   cp.data_utils.mjd2000(timestamp)  # from Numpy's datetime
-   # 412.0
+Convert from decimal years (account for leap years) with
+:func:`chaosmagpy.data_utils.dyear_to_mjd`:
 
-At the same time, :func:`chaosmagpy.data_utils.mjd2000` accepts a wide range of
-inputs (see the documentation).
+>>> cp.data_utils.dyear_to_mjd(2001.25)
+    457.25
 
-Plotting a map of the time-dependent internal field
----------------------------------------------------
+Convert from Numpy's datetime object with
+:func:`chaosmagpy.data_utils.mjd2000`:
+
+>>> cp.data_utils.mjd2000(np.datetime64('2001-02-01T12:00:00'))
+    397.5
+
+Note also that :func:`chaosmagpy.data_utils.mjd2000` (click to see
+documentation) accepts a wide range of inputs. You can also give the date in
+terms of integers for the year, month, and so on:
+
+>>> cp.data_utils.mjd2000(2002, 1, 19, 15)  # 2002-01-19 15:00:00
+    749.625
+
+Plotting maps of the time-dependent internal field
+--------------------------------------------------
 
 Here, we make a map of the first time-derivative of the time-dependent internal
 part of the model. We will plot it on the surface at 3485 km (core-mantle
@@ -173,8 +190,8 @@ field in shc-format to a file:
 
    model.save_shcfile('CHAOS-6-x7_tdep.shc', model='tdep')
 
-Plotting a map of the static internal field
--------------------------------------------
+Plotting maps of the static internal field
+------------------------------------------
 
 Similarly, the static internal (i.e. small-scale crustal) part of the model can
 be plotted on a map:
