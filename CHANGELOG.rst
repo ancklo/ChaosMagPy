@@ -3,12 +3,13 @@ Changelog
 
 Version 0.11-dev
 ----------------
-| **Date:** September 06, 2022
+| **Date:** September 29, 2022
 | **Release:** v0.11-dev
-| **Version of CHAOS:** CHAOS-7.11 (0711)
+| **Version of CHAOS:** CHAOS-7.12 (0712)
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2022_Sept_v3.dat
 * Improved time conversion paragraph in the usage section.
 * Added option to :func:`chaosmagpy.coordinate_utils.sh_analysis` to increase
   the grid size for the numerical integration.
