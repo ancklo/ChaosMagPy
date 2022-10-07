@@ -64,11 +64,13 @@ def plot_timeseries(time, *args, **kwargs):
 
     n = len(args)  # number of subplots
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             n*0.8*basicConfig['plots.figure_width']),
-                    titles=n*[''],
-                    ylabel='',
-                    layout=(n, 1))
+    defaults = {
+        'figsize': (basicConfig['plots.figure_width'],
+                    n*0.8*basicConfig['plots.figure_width']),
+        'titles': n*[''],
+        'ylabel': '',
+        'layout': (n, 1)
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 
@@ -155,15 +157,17 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             n*0.4*basicConfig['plots.figure_width']),
-                    titles=n*[''],
-                    label='',
-                    layout=(n, 1),
-                    cmap='PuOr',
-                    limiter=lambda x: np.amax(np.abs(x)),  # maximum value
-                    projection=ccrs.Mollweide(),
-                    transform=ccrs.PlateCarree())
+    defaults = {
+        'figsize': (basicConfig['plots.figure_width'],
+                    n*0.4*basicConfig['plots.figure_width']),
+        'titles': n*[''],
+        'label': '',
+        'layout': (n, 1),
+        'cmap': 'PuOr_r',
+        'limiter': lambda x: np.amax(np.abs(x)),  # maximum value
+        'projection': ccrs.Mollweide(),
+        'transform': ccrs.PlateCarree()
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 
@@ -242,10 +246,12 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     """
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             0.8*basicConfig['plots.figure_width']),
-                    titles='',
-                    ylabel='')
+    defaults = {
+        'figsize': (basicConfig['plots.figure_width'],
+                    0.8*basicConfig['plots.figure_width']),
+        'titles': '',
+        'ylabel': ''
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 

@@ -30,12 +30,11 @@ import h5py
 import chaosmagpy.coordinate_utils as cu
 import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
+import chaosmagpy.plot_utils as pu
 import matplotlib.pyplot as plt
 from datetime import datetime
 from timeit import default_timer as timer
 from chaosmagpy.config_utils import basicConfig
-from chaosmagpy.plot_utils import (defaultkeys, plot_power_spectrum,
-                                   plot_timeseries, plot_maps)
 
 
 class Base(object):
@@ -444,8 +443,9 @@ class BaseModel(Base):
         radius = basicConfig['params.r_surf'] if radius is None else radius
 
         coeffs = self.synth_coeffs(time, **kwargs)
+        spec = mu.power_spectrum(coeffs, radius, source=self.source)
 
-        return mu.power_spectrum(coeffs, radius, source=self.source)
+        return spec
 
     def plot_power_spectrum(self, time, **kwargs):
         """
@@ -467,7 +467,7 @@ class BaseModel(Base):
                         nmax=self.nmax,
                         titles='spatial power spectrum')
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         radius = kwargs.pop('radius')
         nmax = kwargs.pop('nmax')
@@ -478,7 +478,7 @@ class BaseModel(Base):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        plot_power_spectrum(R_n, **kwargs)
+        pu.plot_power_spectrum(R_n, **kwargs)
         plt.show()
 
     def plot_maps(self, time, radius, **kwargs):
@@ -516,10 +516,9 @@ class BaseModel(Base):
 
         """
 
-        defaults = dict(deriv=0,
-                        nmax=self.nmax)
+        defaults = dict(deriv=0, nmax=self.nmax)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
@@ -548,7 +547,7 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             grid=True, extrapolate=None)
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
@@ -597,7 +596,7 @@ class BaseModel(Base):
                         titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'],
                         extrapolate=None)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
@@ -613,7 +612,7 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             extrapolate=extrapolate)
 
-        plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
+        pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
         plt.show()
 
     @classmethod
@@ -1413,7 +1412,7 @@ str, {'internal', 'external'}
                         vmax=200,
                         vmin=-200)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         time = self.model_static.breaks[0]
 
@@ -1939,8 +1938,8 @@ str, {'internal', 'external'}
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units)
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, titles=titles,
+                     label=units)
         plt.show()
 
     def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,

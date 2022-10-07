@@ -1,6 +1,6 @@
 """
 This module provides functions related to coordinate transformations. Typical
-coordinate reference frames and corresponding abbbreviations are listed in the
+coordinate reference frames and corresponding abbreviations are listed in the
 following.
 
 **Abbreviations**
@@ -20,11 +20,12 @@ USE : Cartesian coordinate system on spherical surface.
     coordinates).
 GSM : Geocentric Solar Magnetic coordinate system (orthogonal).
     With x-axis pointing towards the sun, y-axis perpendicular to plane spanned
-    by Eart-Sun line and dipole axis and z-axis completing right-handed system.
+    by Earth-Sun line and the dipole axis, z-axis completes right-handed
+    system.
 SM : Solar Magnetic coordinate system (orthogonal)
     With z-axis along dipole axis pointing to the geomagnetic north pole,
     y-axis perpendicular to plane containing the dipole axis and the Earth-Sun
-    line, and x-axis completing the right-handed system.
+    line, x-axis completes the right-handed system.
 MAG : Magnetic coordinate system (centered dipole, orthogonal)
     With z-axis pointing to the geomagnetic north pole, x-axis in the plane
     spanned by the dipole axis and Earth's rotation axis, and y-axis completing
