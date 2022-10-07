@@ -3,12 +3,14 @@ Changelog
 
 Version 0.12-dev
 ----------------
-| **Date:** September 29, 2022
+| **Date:** October 7, 2022
 | **Release:** v0.12-dev
 | **Version of CHAOS:** CHAOS-7.12 (0712)
 
 Features
 ^^^^^^^^
+* Changed the default colormap for the component maps to ``'PuOr_r'`` (orange
+  for positive values and purple for negative ones).
 
 Version 0.11
 ------------
