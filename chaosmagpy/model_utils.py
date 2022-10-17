@@ -989,10 +989,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None, axis=None):
         min = n**2 - 1
         max = min + (2*n + 1)
 
-        slc1 = coeffs.ndim*[slice(None),]  # index for summation
+        slc1 = coeffs.ndim*[slice(None), ]  # index for summation
         slc1[axis] = slice(min, max)
 
-        slc2 = coeffs.ndim*[slice(None),]  # index for insertion into output
+        slc2 = coeffs.ndim*[slice(None), ]  # index for insertion into output
         slc2[axis] = n-1
 
         W_n[tuple(slc2)] = factor(n, r)*np.sum(coeffs[tuple(slc1)]**2,

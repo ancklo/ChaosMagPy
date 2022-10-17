@@ -371,9 +371,9 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         # compute Q-response for freqencies and given Gauss coefficient
         response = qfunc(frequency_full, k)
 
-        for l in range(kmax*(kmax+2)):
+        for ll in range(kmax*(kmax+2)):
             # select specific Fourier coefficients from the rotation matrix
-            element = spectrum_full[:, k, l]
+            element = spectrum_full[:, k, ll]
 
             # modify Fourier components with Q-response
             element_ind = response*element
@@ -387,10 +387,10 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
             sort_ind = sort_ind[:filter]  # only keep small number
 
             # write sorted frequency (per day) and fourier components to array
-            frequency[:, k, l] = frequency_full[sort] * (24*3600)
-            frequency_ind[:, k, l] = frequency_full[sort_ind] * (24*3600)
-            spectrum[:, k, l] = element[sort]
-            spectrum_ind[:, k, l] = element_ind[sort_ind]
+            frequency[:, k, ll] = frequency_full[sort] * (24*3600)
+            frequency_ind[:, k, ll] = frequency_full[sort_ind] * (24*3600)
+            spectrum[:, k, ll] = element[sort]
+            spectrum_ind[:, k, ll] = element_ind[sort_ind]
 
     if scaled:
         # scale non-offset coefficients by 2
@@ -523,8 +523,8 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
             col += 1  # update index of column
 
             # l > 0
-            for l in range(1, k+1):
-                sh_ref = Pnm_ref[k, l]*exp_ref[l]
+            for ll in range(1, k+1):
+                sh_ref = Pnm_ref[k, ll]*exp_ref[ll]
                 fft_c = np.fft.fft(sh_ref.real) / n_phi
                 fft_s = np.fft.fft(sh_ref.imag) / n_phi
 

@@ -511,7 +511,6 @@ def is_leap_year(year):
                         'numpy.floor to extract the integer year '
                         'from decimal years.')
 
-
     return np.logical_and(np.remainder(year, 4) == 0,
                           np.logical_or(np.remainder(year, 100) != 0,
                                         np.remainder(year, 400) == 0))

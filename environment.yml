@@ -9,6 +9,7 @@ dependencies:
 - cartopy >= 0.17
 - matplotlib >= 3
 - sphinx
+- flake8
 - pip
 - pip:
     - cdflib

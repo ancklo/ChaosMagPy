@@ -690,8 +690,8 @@ class BaseModel(Base):
         nmin = params['nmin']
         nmax = params['nmax']
         order = params['order']
-        step = order - 1  # actually params['step'], but not reliable for
-                          # older shc-files
+        # step in params['step'], but not reliable for older shc-files
+        step = order - 1
 
         # extract breaks
         if step == 0:
@@ -2858,8 +2858,8 @@ def load_CALS7K_txtfile(filepath, name=None):
     # numpy doesn't understand "D" in decimal representation, replace with E
     data = np.fromstring(lines.replace('D', 'E'), sep=' ', dtype=float)
 
-    ts = data[0]  # start time
-    te = data[1]  # end time
+    # ts = data[0]  # start time
+    # te = data[1]  # end time
     order = data[2]  # cubic B-splines
     # discard index 3
     nmax = int(data[4])  # maximum spherical harmonic degree
