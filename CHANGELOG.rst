@@ -3,7 +3,7 @@ Changelog
 
 Version 0.12-dev
 ----------------
-| **Date:** October 7, 2022
+| **Date:** November 4, 2022
 | **Release:** v0.12-dev
 | **Version of CHAOS:** CHAOS-7.12 (0712)
 
@@ -11,6 +11,12 @@ Features
 ^^^^^^^^
 * Changed the default colormap for the component maps to ``'PuOr_r'`` (orange
   for positive values and purple for negative ones).
+
+Bugfixes
+^^^^^^^^
+* Fixed KeyError that is raised when no name is given to the
+  :class:`chaosmagpy.chaos.CHAOS` constructor. This only affected direct calls
+  to the constructor due to an outdated config keyword.
 
 Version 0.11
 ------------

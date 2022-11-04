@@ -940,7 +940,7 @@ class CHAOS(object):
 
         # give the model a name: CHAOS-x.x or user input
         if name is None:
-            self.name = f"CHAOS-{basicConfig['params.version']}"
+            self.name = f"CHAOS-{basicConfig['params.CHAOS_version']}"
         else:
             self.name = name
 
