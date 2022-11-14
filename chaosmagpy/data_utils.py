@@ -322,7 +322,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     else:
         nmax = int(nmax)
 
-    if nmin <= nmax:
+    if nmin > nmax:
         raise ValueError('``nmin`` must be smaller than or equal to ``nmax``.')
 
     filepath = 'model.shc' if filepath is None else filepath
