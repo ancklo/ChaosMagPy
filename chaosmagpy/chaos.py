@@ -32,6 +32,7 @@ import chaosmagpy.model_utils as mu
 import chaosmagpy.data_utils as du
 import chaosmagpy.plot_utils as pu
 import matplotlib.pyplot as plt
+import textwrap
 from datetime import datetime
 from timeit import default_timer as timer
 from chaosmagpy.config_utils import basicConfig
@@ -649,6 +650,62 @@ class BaseModel(Base):
         return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                    source=source, meta=meta)
 
+    def to_shc(self, filepath, *, leap_year=None, nmin=None, nmax=None,
+               header=None):
+        """
+        Save spherical harmonic coefficients to a file in `shc`-format.
+
+        Parameters
+        ----------
+        filepath : str
+            Path and name of output file `*.shc`.
+        leap_year : {False, True}, optional
+            Take leap year in time conversion into account. By default set to
+            ``False``, so that a conversion factor of 365.25 days per year is
+            used.
+        nmin : int, optional
+            Minimum spherical harmonic degree (defaults to 1). This will remove
+            first values from coeffs if greater than 1.
+        nmax : int, optional
+            Maximum spherical harmonic degree (defaults to the maximum degree
+            of the model given by ``self.nmax``).
+        header : str, optional
+            Optional header at beginning of file (defaults to a comment line
+            with the name of the model given by ``self.name``).
+
+        """
+
+        leap_year = False if leap_year is None else leap_year
+        header = f"# {self.name}\n" if header is None else header
+        nmin = 1 if nmin is None else int(nmin)
+        nmax = self.nmax if nmax is None else int(nmax)
+
+        if self.coeffs is None:
+            raise ValueError("Spline coefficients are missing.")
+
+        step = max(self.order - 1, 1)
+
+        # compute times in mjd2000
+        if (self.order == 1):
+            # piecewise constant, drop coefficients at last break point
+            times = self.breaks[:-1]
+
+        else:
+            # insert extra samples in between break points
+            times = np.array([], dtype=float)
+
+            for start, end in zip(self.breaks[:-1], self.breaks[1:]):
+                delta = (end - start) / step
+                times = np.append(times, np.arange(start, end, delta))
+
+            times = np.append(times, self.breaks[-1])
+
+        gauss_coeffs = self.synth_coeffs(times, nmax=self.nmax)
+
+        du.save_shcfile(times, gauss_coeffs, order=self.order,
+                        filepath=filepath, nmin=nmin, nmax=nmax,
+                        leap_year=leap_year, header=header)
+
     @classmethod
     def from_shc(cls, filepath, *, name=None, leap_year=None,
                  source=None, meta=None):
@@ -687,33 +744,32 @@ class BaseModel(Base):
 
         time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
 
+        coeffs = coeffs.T  # (Nt, Nc): simplifies array manipulations
+
         nmin = params['nmin']
         nmax = params['nmax']
         order = params['order']
-        # step in params['step'], but not reliable for older shc-files
-        step = order - 1
+        step = max(params['step'], 1)
 
-        # extract breaks
-        if step == 0:
+        if order == 1:
+            # piecewise constant
             # duplicate endpoint to have a proper interval for the polynomial
-            breaks = np.append(time, time[-1])
+            breaks = np.append(time, time[-1])  # zero length interval is ok
         else:
             breaks = time[::step]
 
-        # need to pad coefficients
+        # need to pad coefficients if nmin > 1 (no n < nmin coeffs in shc file)
         if nmin > 1:
-            coeffs_pad = np.zeros((nmax*(nmax + 2),) + coeffs.shape[1:])
-            coeffs_pad[int(nmin**2 - 1):, ...] = coeffs
+            coeffs_pad = np.zeros((coeffs.shape[0], nmax*(nmax + 2)))
+            coeffs_pad[:, int(nmin**2 - 1):] = coeffs
         else:
             coeffs_pad = coeffs
 
-        pieces = breaks.size - 1  # number of polynomial pieces
+        if (order == 1):  # piecewise constant
 
-        if (pieces == 1) and (order == 1):  # static field in single bin
+            coeffs_pp = coeffs_pad[None, ...]  # insert singleton at 0th axis
 
-            coeffs_out = coeffs_pad.reshape((1, 1, -1))
-
-            return cls(name, breaks=breaks, order=order, coeffs=coeffs_out,
+            return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                        source=source, meta=meta)
 
         else:  # model must be time-dependent (incl. piecewise constant)
@@ -723,12 +779,12 @@ class BaseModel(Base):
             end = ((time.size - 1) // step) * step + 1
 
             knots = mu.augment_breaks(breaks, order)
-            spl = sip.make_lsq_spline(time[:end], coeffs_pad[:, :end].T,
+            spl = sip.make_lsq_spline(time[:end], coeffs_pad[:end, :],
                                       knots, order - 1)
-            coeffs_out = spl.c.copy()
+            coeffs_pp = spl.c.copy()
 
             # convert B-spline basis to PPoly
-            return cls.from_bspline(name, knots=knots, coeffs=coeffs_out,
+            return cls.from_bspline(name, knots=knots, coeffs=coeffs_pp,
                                     order=order, source=source, meta=meta)
 
 
@@ -2000,8 +2056,7 @@ str, {'internal', 'external'}
 
         return coeffs
 
-    def save_shcfile(self, filepath, *, model=None, deriv=None,
-                     leap_year=None):
+    def save_shcfile(self, filepath, *, model=None, leap_year=None):
         """
         Save spherical harmonic coefficients to a file in `shc`-format.
 
@@ -2011,9 +2066,6 @@ str, {'internal', 'external'}
             Path and name of output file `*.shc`.
         model : {'tdep', 'static'}, optional
             Choose part of the model to save (default is 'tdep').
-        deriv : int, optional
-            Derivative of the time-dependent field (default is 0, ignored for
-            static source).
         leap_year : {False, True}, optional
             Take leap year in time conversion into account. By default set to
             ``False``, so that a conversion factor of 365.25 days per year is
@@ -2022,8 +2074,6 @@ str, {'internal', 'external'}
         """
 
         model = 'tdep' if model is None else model
-
-        deriv = 0 if deriv is None else deriv
 
         leap_year = False if leap_year is None else leap_year
 
@@ -2035,34 +2085,31 @@ str, {'internal', 'external'}
 
             nmin = 1
             nmax = self.model_tdep.nmax
-            breaks = self.model_tdep.breaks
             order = self.model_tdep.order
-
-            # compute times in mjd2000
-            times = np.array([], dtype=float)
-            for start, end in zip(breaks[:-1], breaks[1:]):
-                step = (end - start)/(order-1)
-                times = np.append(times, np.arange(start, end, step))
-            times = np.append(times, breaks[-1])
+            pieces = self.model_tdep.breaks.size - 1
+            step = max(order - 1, 1)
+            np = pieces if order == 1 else (pieces * step + 1)
 
             # create header lines
-            header = (
-                f"# {self}\n"
-                f"# Spherical harmonic coefficients of the time-dependent"
-                f" internal field model (derivative = {deriv})"
-                f" from degree {nmin} to {nmax}.\n"
-                f"# Coefficients ({du.gauss_units(deriv)}) are given at"
-                f" {(breaks.size-1) * (order-1) + 1} points in time\n"
-                f"# and were extracted from order-{order}"
-                f" piecewise polynomial (i.e. break points are every"
-                f" {order} steps of the time sequence).\n"
-            )
+            header = textwrap.dedent(f"""\
+                # {self.name}
+                # Spherical harmonic coefficients of the time-dependent
+                # internal field from degree {nmin} to {nmax}. Coefficients
+                # (units of nT) are given at {np} points in time and were
+                # extracted from a {order}-order piecewise polynomial. The
+                # break points are every {step} step(s) of the time sequence.
+                """)
 
-            gauss_coeffs = self.synth_coeffs_tdep(
-                times, nmax=nmax, deriv=deriv)
+            self.model_tdep.to_shc(
+                filepath,
+                leap_year=leap_year,
+                nmin=nmin,
+                header=header
+            )
 
         # output static field model coefficients
         if model == 'static':
+
             if self.model_static is None:
                 raise ValueError("Static internal field coefficients "
                                  "are missing.")
@@ -2071,22 +2118,20 @@ str, {'internal', 'external'}
             nmax = self.model_static.nmax
             order = 1
 
-            # compute times in mjd2000
-            times = np.atleast_1d(self.model_static.breaks[0])
-
             # create additonal header lines
-            header = (
-                f"# {self}\n"
-                f"# Spherical harmonic coefficients of the static internal"
-                f" field model from degree {nmin} to {nmax}.\n"
-                f"# Given at the first break point.\n"
+            header = textwrap.dedent(f"""\
+                # {self.name}
+                # Spherical harmonic coefficients (units of nT) of the static
+                # internal field model from degree {nmin} to {nmax}. Given at
+                # the first break point.
+                """)
+
+            self.model_static.to_shc(
+                filepath,
+                leap_year=leap_year,
+                nmin=nmin,
+                header=header
             )
-
-            gauss_coeffs = self.synth_coeffs_static(nmax=nmax)
-
-        du.save_shcfile(times, gauss_coeffs, order=order, filepath=filepath,
-                        nmin=nmin, nmax=nmax, leap_year=leap_year,
-                        header=header)
 
     def save_matfile(self, filepath):
         """

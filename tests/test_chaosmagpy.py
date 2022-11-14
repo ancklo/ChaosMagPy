@@ -2,6 +2,7 @@ import os
 import numpy as np
 import textwrap
 import chaosmagpy as cp
+import scipy.interpolate
 from unittest import TestCase, main
 
 try:
@@ -100,39 +101,166 @@ class ChaosMagPy(TestCase):
 
     def test_save_shcfile(self):
 
-        seq = np.random.randint(0, 10, size=(5,))
-        filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.shc'
-        filepath = os.path.join(ROOT, filename)
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
-        model_mat = cp.load_CHAOS_matfile(CHAOS_PATH)
+        filepath = os.path.join(ROOT, 'CHAOS_tdep.shc')
+        model.save_shcfile(filepath, model='tdep')
+        model2 = cp.load_CHAOS_shcfile(filepath)
 
-        print('  Time-dep. internal field\n  ========================')
-        print('  ', end='')
-        model_mat.save_shcfile(filepath, model='tdep')
-        coeffs_tdep_mat = model_mat.model_tdep.coeffs
-
-        model_shc = cp.load_CHAOS_shcfile(filepath)
-        coeffs_tdep_shc = model_shc.model_tdep.coeffs
-
-        print('  Max Error =',
-              np.amax(np.abs(coeffs_tdep_shc - coeffs_tdep_mat)))
+        coeffs_tdep_mat = model.model_tdep.coeffs
+        coeffs_tdep_shc = model2.model_tdep.coeffs
 
         np.testing.assert_allclose(coeffs_tdep_shc, coeffs_tdep_mat, atol=1e-8)
 
-        print('\n  Static internal field\n  =====================')
-        print('  ', end='')
-        model_mat.save_shcfile(filepath, model='static')
-        coeffs_stat_mat = model_mat.model_static.coeffs
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
 
-        model_shc = cp.load_CHAOS_shcfile(filepath)
-        coeffs_stat_shc = model_shc.model_static.coeffs
+        # static internal field
 
-        print('  Max Error =',
-              np.amax(np.abs(coeffs_stat_shc - coeffs_stat_mat)))
+        filepath = os.path.join(ROOT, 'CHAOS_static.shc')
+        model.save_shcfile(filepath, model='static')
+        model2 = cp.load_CHAOS_shcfile(filepath)
+
+        coeffs_stat_mat = model.model_static.coeffs
+        coeffs_stat_shc = model2.model_static.coeffs
 
         np.testing.assert_allclose(coeffs_stat_shc, coeffs_stat_mat, atol=1e-8)
 
-        print(f"  Removing file {filepath}")
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+    def test_io_shcfile(self):
+
+        # piecewise constant, one piece
+
+        order = 1
+        breaks = [0., 10.]
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 3).reshape((1, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order1_piece1.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs)
+
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+        # piecewise constant, multiple pieces
+
+        order = 1
+        breaks = [0., 10., 30., 52., 79., 100.]  # 5 pieces
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 15).reshape((5, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order1_piece5.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs)
+
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+        # piecewise linear, one piece
+
+        order = 2
+        breaks = [0., 10.]
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 6).reshape((2, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order2_piece1.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs)
+
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+        # piecewise linear, multiple pieces
+
+        order = 2
+        breaks = [0., 10., 30., 52., 79., 100.]
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 18).reshape((6, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order2_piece5.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+        # higher order B-spline, one pieces
+
+        order = 3
+        breaks = [0., 10.]
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 9).reshape((3, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order3_piece1.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+
+        print(f"Removing file {filepath}")
+        os.remove(filepath)
+
+        # higher order B-spline, multiple pieces
+
+        order = 3
+        breaks = [0., 10., 30., 52., 79., 100.]
+        knots = cp.model_utils.augment_breaks(breaks, order)
+
+        model = cp.chaos.BaseModel.from_bspline(
+            name='BaseModel',
+            knots=knots,
+            coeffs=np.random.uniform(-100., 100., 21).reshape((7, 3)),
+            order=order
+        )
+
+        filepath = os.path.join(ROOT, 'BaseModel_order3_piece5.shc')
+        model.to_shc(filepath)
+        model2 = cp.chaos.BaseModel.from_shc(filepath)
+
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+
+        print(f"Removing file {filepath}")
         os.remove(filepath)
 
     def test_complete_forward(self):

@@ -3,7 +3,7 @@ Changelog
 
 Version 0.12-dev
 ----------------
-| **Date:** November 4, 2022
+| **Date:** November 14, 2022
 | **Release:** v0.12-dev
 | **Version of CHAOS:** CHAOS-7.12 (0712)
 
@@ -14,6 +14,9 @@ Features
 
 Bugfixes
 ^^^^^^^^
+* Fixed error in :func:`chaosmagpy.data_utils.load_shcfile` when reading
+  single piece, quadratic splines. Error was due to a failure to identify the
+  shc-parameter line as the first non-comment line in the file.
 * Fixed KeyError that is raised when no name is given to the
   :class:`chaosmagpy.chaos.CHAOS` constructor. This only affected direct calls
   to the constructor due to an outdated config keyword.
