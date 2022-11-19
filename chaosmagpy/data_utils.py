@@ -669,7 +669,7 @@ def gauss_units(deriv=None):
         'nT'
 
     >>> gauss_units(1)
-        '$\\\\mathrm{nT}/\\\\mathrm{yr}^{1}$'
+        '$\\\\mathrm{nT}/\\\\mathrm{yr}$'
 
     >>> gauss_units(2)
         '$\\\\mathrm{nT}/\\\\mathrm{yr}^{2}$'
@@ -680,6 +680,8 @@ def gauss_units(deriv=None):
 
     if deriv == 0:
         units = 'nT'
+    elif deriv == 1:
+        units = '$\\mathrm{{nT}}/\\mathrm{{yr}}$'
     else:
         units = '$\\mathrm{{nT}}/\\mathrm{{yr}}^{{{:}}}$'.format(deriv)
 
