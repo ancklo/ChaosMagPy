@@ -29,11 +29,11 @@ internal field:
 
    time = cp.data_utils.mjd2000(2000, 1, 1)  # modified Julian date
 
-   # load the CHAOS model
+   # create a "model" instance by loading the CHAOS model from a mat-file
    model = cp.load_CHAOS_matfile('CHAOS-6-x7.mat')
 
-   # compute field components on the grid using the Gauss coefficients
-   B_radius, B_theta, B_phi = model.synth_values_tdep(coeffs, radius_grid, theta_grid, phi_grid)
+   # compute field components on the grid using the method "synth_values_tdep"
+   B_radius, B_theta, B_phi = model.synth_values_tdep(time, radius_grid, theta_grid, phi_grid)
 
 When using a *regular* grid, consider ``grid=True`` option for
 speed. It will internally compute a grid in ``theta`` and ``phi`` similar to
