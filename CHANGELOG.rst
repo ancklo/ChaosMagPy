@@ -5,7 +5,7 @@ Version 0.12-dev
 ----------------
 | **Date:** November 14, 2022
 | **Release:** v0.12-dev
-| **Version of CHAOS:** CHAOS-7.12 (0712)
+| **Version of CHAOS:** CHAOS-7.13 (0713) and newer
 
 Features
 ^^^^^^^^
