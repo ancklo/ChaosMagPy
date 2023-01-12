@@ -3,12 +3,14 @@ Changelog
 
 Version 0.12-dev
 ----------------
-| **Date:** November 14, 2022
+| **Date:** January 12, 2023
 | **Release:** v0.12-dev
 | **Version of CHAOS:** CHAOS-7.13 (0713) and newer
 
 Features
 ^^^^^^^^
+* Added function :func:`chaosmagpy.model_utils.sensitivity` to compute the
+  sensitivity of spherical harmonic coefficients.
 * Changed the default colormap for the component maps to ``'PuOr_r'`` (orange
   for positive values and purple for negative ones).
 

@@ -1383,6 +1383,7 @@ str, {'internal', 'external'}
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> model.synth_coeffs_static(nmax=50)
         array([ 0.     , 0.     ,  0.     , ...,  0.01655, -0.06339,  0.00715])

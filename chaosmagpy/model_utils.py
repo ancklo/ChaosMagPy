@@ -1,5 +1,5 @@
 """
-This module provide functions for building the CHAOS model and geomagnetic
+This module provides functions for building the CHAOS model and geomagnetic
 field models in general.
 
 .. autosummary::
@@ -15,6 +15,7 @@ field models in general.
     legendre_poly
     power_spectrum
     degree_correlation
+    sensitivity
 
 """
 
@@ -1019,15 +1020,15 @@ def degree_correlation(coeffs_1, coeffs_2):
     """
 
     if coeffs_1.ndim != 1:
-        raise ValueError(f'Only 1-D input allowed {coeffs_1.ndim} != 1')
+        raise ValueError(f'Only 1-D input allowed ({coeffs_1.ndim} != 1)')
 
     if coeffs_2.ndim != 1:
-        raise ValueError(f'Only 1-D input allowed {coeffs_2.ndim} != 1')
+        raise ValueError(f'Only 1-D input allowed ({coeffs_2.ndim} != 1)')
 
     if coeffs_1.size != coeffs_2.size:
         raise ValueError(
-            'Number of coefficients is '
-            'not equal ({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
+            'Number of coefficients must be the same '
+            '({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
 
     nmax = int(np.sqrt(coeffs_1.size + 1) - 1)
 
@@ -1045,3 +1046,55 @@ def degree_correlation(coeffs_1, coeffs_2):
         C_n[n-1] = (np.sum(coeffs_12[min:max]) / np.sqrt(R_n[n-1]*S_n[n-1]))
 
     return C_n
+
+
+def sensitivity(coeffs, coeffs_true):
+    """
+    Sensitivity (degree normalized error) of the input coefficients with
+    respect to the target/true coefficients.
+
+    Parameters
+    ----------
+    coeffs: ndarray, shape (N,)
+        Input spherical harmonic coefficients.
+    coeffs_true: ndarray, shape (N,)
+        Target/true spherical harmonic coefficients.
+
+    Returns
+    -------
+    S: ndarray, shape (N,)
+        Sensitivity of ``coeffs`` with respect to ``coeffs_true``.
+
+    Examples
+    --------
+    >>> import chaosmagpy as cp
+    >>> import numpy as np
+    >>> coeffs = np.array([1., 2., 5.])  # estimated degree 1 coefficients
+    >>> coeffs_true = np.array([1., 2., 3.])  # target degree 1 coefficients
+    >>> cp.model_utils.sensitivity(coeffs, coeffs_true)
+    array([0., 0., 0.63245553])
+
+    """
+    if coeffs.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed ({coeffs.ndim} != 1)')
+
+    if coeffs_true.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed ({coeffs_true.ndim} != 1)')
+
+    if coeffs.size != coeffs_true.size:
+        raise ValueError(
+            'Number of coefficients must be the same '
+            '({0} != {1}).'.format(coeffs.size, coeffs_true.size))
+
+    nmax = int(np.sqrt(coeffs.size + 1) - 1)
+
+    S = coeffs - coeffs_true
+
+    # apply degree-dependent scaling
+    for n in range(1, nmax+1):
+        min = n**2 - 1
+        max = min + (2*n + 1)
+
+        S[min:max] *= 1. / np.sqrt(np.sum(coeffs_true[min:max]**2) / (2*n + 1))
+
+    return S
