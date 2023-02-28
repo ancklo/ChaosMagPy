@@ -348,7 +348,6 @@ Bugfixes
   use ``pip install --no-deps chaosmagpy==0.1a1`` to ignore faulty
   requirements.
 
-
 Version 0.1a1
 -------------
 | **Date:** January 5, 2019
@@ -378,7 +377,6 @@ Deprecations
 * ``synth_static_field`` has been renamed to ``synth_coeffs_static``
 * ``plot_tdep_maps`` has been renamed to ``plot_maps_tdep``
 * ``synth_tdep_field`` has been renamed to ``synth_coeffs_tdep``
-
 
 Version 0.1a0
 -------------
