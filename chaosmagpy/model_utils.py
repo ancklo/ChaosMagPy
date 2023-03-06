@@ -698,6 +698,62 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     :math:`\\mathbf{e}_\\theta = -\\mathbf{e}_x` and ``A_phi``
     along :math:`\\mathbf{e}_\\phi = -\\mathbf{e}_y`.
 
+    Examples
+    --------
+    Create the design matrices given 4 locations on the Earth's surface:
+
+    >>> r = 6371.2
+    >>> theta = np.array([90., 100., 110., 120.])
+    >>> phi = 0.
+    >>> A_radius, A_theta, A_phi = design_gauss(r, theta, phi, nmax=1)
+    >>> A_radius
+    array([[ 1.22464680e-16, 2.00000000e+00, 0.00000000e+00],
+           [-3.47296355e-01, 1.96961551e+00, 0.00000000e+00],
+           [-6.84040287e-01, 1.87938524e+00, 0.00000000e+00],
+           [-1.00000000e+00, 1.73205081e+00, 0.00000000e+00]])
+
+    Say, only the axial dipole coefficient is non-zero, what is the magnetic
+    field in terms of spherical geocentric components?
+
+    >>> m = np.array([-30000, 0., 0.])  # model coefficients in nT
+    >>> Br = A_radius @ m; Br
+    array([-3.67394040e-12, 1.04188907e+04, 2.05212086e+04, 3.00000000e+04])
+    >>> Bt = A_theta @ m; Bt
+    array([-30000. , -29544.23259037, -28190.77862358, -25980.76211353])
+    >>> Bp = A_phi @ m; Bp
+    array([0., 0., 0., 0.])
+
+    A more complete example is given below:
+
+    .. code-block:: python
+
+        import numpy as np
+        from chaosmagpy.model_utils import design_gauss, synth_values
+
+        nmax = 5  # desired truncation degree, i.e. 35 model coefficients
+        coeffs = np.arange(35)  # example model coefficients
+
+        # example locations
+        N = 10
+        radius = 6371.2  # Earth's surface
+        phi = np.linspace(-180., 180., num=N)  # azimuth in degrees
+        theta = np.linspace(1., 179., num=N)  # colatitude in degrees
+
+        # compute design matrices to compute predictions of the
+        # field components from the model coefficients, each is of shape N x 35
+        A_radius, A_theta, A_phi = design_gauss(r, theta, phi, nmax=nmax)
+
+        # magnetic components computed from the model
+        Br_pred = A_radius @ coeffs
+        Bt_pred = A_theta @ coeffs
+        Bp_pred = A_phi @ coeffs
+
+        # compute the magnetic components directly from the coefficients
+        Br, Bt, Bp = synth_values(coeffs, radius, theta, phi)
+        np.linalg.norm(Br - Br_pred)  # approx 0.
+        np.linalg.norm(Bt - Bt_pred)  # approx 0.
+        np.linalg.norm(Bp - Bp_pred)  # approx 0.
+
     """
 
     # ensure ndarray inputs
