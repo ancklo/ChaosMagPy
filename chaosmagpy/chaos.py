@@ -27,15 +27,14 @@ import warnings
 import scipy.interpolate as sip
 import hdf5storage as hdf
 import h5py
-import chaosmagpy.coordinate_utils as cu
-import chaosmagpy.model_utils as mu
-import chaosmagpy.data_utils as du
-import chaosmagpy.plot_utils as pu
-import matplotlib.pyplot as plt
 import textwrap
 from datetime import datetime
 from timeit import default_timer as timer
-from chaosmagpy.config_utils import basicConfig
+from . import coordinate_utils as cu
+from . import model_utils as mu
+from . import data_utils as du
+from . import plot_utils as pu
+from . import config_utils
 
 
 class Base(object):
@@ -415,7 +414,7 @@ class BaseModel(Base):
         time : ndarray, shape (...)
             Time in modified Julian date.
         radius : float, optional
-            Radius in kilometers (defaults to mean Earth's surface defined in
+            Radius in kilometers (defaults to Earth's surface defined in
             ``basicConfig['r_surf']``).
 
         Returns
@@ -441,7 +440,8 @@ class BaseModel(Base):
 
         """
 
-        radius = basicConfig['params.r_surf'] if radius is None else radius
+        if radius is None:
+            radius = config_utils.basicConfig['params.r_surf']
 
         coeffs = self.synth_coeffs(time, **kwargs)
         spec = mu.power_spectrum(coeffs, radius, source=self.source)
@@ -457,9 +457,28 @@ class BaseModel(Base):
         time : float
             Time in modified Julian date.
 
+        Returns
+        -------
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure.
+        axes : :class:`matplotlib.axes.Axes`
+            A single axes instance.
+
+        Other Parameters
+        ----------------
+        radius : float, optional
+            Radius in kilometers (defaults to Earth's surface defined in
+            basicConfig['r_surf']).
+        nmax : int, positive, optional
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+
         See Also
         --------
-        BaseModel.power_spectrum
+        chaosmagpy.model_utils.power_spectrum
 
         """
 
@@ -479,8 +498,9 @@ class BaseModel(Base):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        pu.plot_power_spectrum(R_n, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_power_spectrum(R_n, **kwargs)
+
+        return fig, axes
 
     def plot_maps(self, time, radius, **kwargs):
         """
@@ -489,15 +509,17 @@ class BaseModel(Base):
         Parameters
         ----------
         time : ndarray, shape (), (1,) or float
-            Time given as MJD2000 (modified Julian date).
+            Time in modified Julian date.
         radius : ndarray, shape (), (1,) or float
             Array containing the radius in kilometers.
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         Other Parameters
         ----------------
@@ -548,8 +570,10 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             grid=True, extrapolate=None)
 
-        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                                 **kwargs)
+
+        return fig, axes
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
@@ -567,9 +591,11 @@ class BaseModel(Base):
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Time series plot of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing a time series of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         Other Parameters
         ----------------
@@ -604,7 +630,7 @@ class BaseModel(Base):
         deriv = kwargs.pop('deriv')
         extrapolate = kwargs.pop('extrapolate')
 
-        # add plot_maps options to dictionary
+        # add options to dictionary
         kwargs.setdefault('ylabel', du.gauss_units(deriv))
 
         time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
@@ -613,8 +639,10 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             extrapolate=extrapolate)
 
-        pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_timeseries(time, B_radius, B_theta, B_phi,
+                                       **kwargs)
+
+        return fig, axes
 
     @classmethod
     def from_bspline(cls, name, knots, coeffs, order, source=None, meta=None):
@@ -834,8 +862,7 @@ class CHAOS(object):
         calibration parameters (3 offsets, 3 sensitivities, 3
         non-orthogonality angles) (keys are ``'cryosat-2_1'``).
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the version in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to ``'CHAOS'``.
     meta : dict, optional
         Dictionary containing additional information about the model.
 
@@ -994,9 +1021,9 @@ class CHAOS(object):
                 )
                 self.model_cal[satellite] = model
 
-        # give the model a name: CHAOS-x.x or user input
+        # give the model a name: CHAOS or user input
         if name is None:
-            self.name = f"CHAOS-{basicConfig['params.CHAOS_version']}"
+            self.name = "CHAOS"
         else:
             self.name = name
 
@@ -1315,9 +1342,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Time series plot of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing a time series of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1325,7 +1354,7 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
+        return self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
     def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None, **kwargs):
         """
@@ -1349,9 +1378,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1359,8 +1390,8 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        self.model_tdep.plot_maps(time, radius,
-                                  nmax=nmax, deriv=deriv, **kwargs)
+        return self.model_tdep.plot_maps(time, radius, nmax=nmax, deriv=deriv,
+                                         **kwargs)
 
     def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
@@ -1455,9 +1486,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1473,7 +1506,7 @@ str, {'internal', 'external'}
 
         time = self.model_static.breaks[0]
 
-        self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
+        return self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
@@ -1537,9 +1570,10 @@ str, {'internal', 'external'}
                 'frame.')
 
         # build rotation matrix from file
-        frequency_spectrum = np.load(basicConfig['file.GSM_spectrum'])
-        assert np.all(
-            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
+        frequency_spectrum = np.load(
+            config_utils.basicConfig['file.GSM_spectrum'])
+        assert np.all(frequency_spectrum['dipole']
+                      == config_utils.basicConfig['params.dipole']), \
             "GSM rotation coefficients not compatible with the chosen dipole."
 
         if source == 'external':
@@ -1721,23 +1755,26 @@ str, {'internal', 'external'}
                 'extrapolation of the coefficients in the SM reference frame.')
 
         # load rotation matrix spectrum from file
-        frequency_spectrum = np.load(basicConfig['file.SM_spectrum'])
-        assert np.all(
-            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
+        frequency_spectrum = np.load(
+            config_utils.basicConfig['file.SM_spectrum'])
+        assert np.all(frequency_spectrum['dipole']
+                      == config_utils.basicConfig['params.dipole']), \
             "SM rotation coefficients not compatible with the chosen dipole."
 
         if rc is None:
 
             # load RC-index file: first hdf5 then dat-file format
+            file = config_utils.basicConfig['file.RC_index']
+
             try:
-                with h5py.File(basicConfig['file.RC_index'], 'r') as f_RC:
+                with h5py.File(file, 'r') as f_RC:
 
                     # create linear interpolant of the RC-index
                     RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
                                       kind='linear', bounds_error=False)
 
             except OSError:
-                f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
+                f_RC = du.load_RC_datfile(file)
 
                 # create linear interpolant of the RC-index
                 RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
@@ -1941,9 +1978,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1995,9 +2034,8 @@ str, {'internal', 'external'}
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, titles=titles,
-                     label=units)
-        plt.show()
+        return pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                            titles=titles, label=units)
 
     def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,
                            extrapolate=None):

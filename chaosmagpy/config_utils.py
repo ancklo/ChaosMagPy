@@ -35,16 +35,16 @@ be accessed after importing chaosmagpy through:
  ==========================  ===========  =====================================
  Value                       Type         Description
  ==========================  ===========  =====================================
- 'files.RC_index'            `h5-file`,   RC-index file (used for external
+ 'file.RC_index'             `h5-file`,   RC-index file (used for external
                              `txt-file`   field computation). See also
                                           :func:`data_utils.save_RC_h5file`.
- 'files.GSM_spectrum'        `npz-file`   GSM transformation coefficients. See
+ 'file.GSM_spectrum'         `npz-file`   GSM transformation coefficients. See
                                           also :func:`coordinate_utils.\\
                                           rotate_gauss_fft`.
- 'files.SM_spectrum'         `npz-file`   SM transformation coefficients. See
+ 'file.SM_spectrum'          `npz-file`   SM transformation coefficients. See
                                           also :func:`coordinate_utils.\\
                                           rotate_gauss_fft`.
- 'files.Earth_conductivity'  `txt-file`   Conductivity model of a layered Earth
+ 'file.Earth_conductivity'   `txt-file`   Conductivity model of a layered Earth
                                           (used for induced fields).
  ==========================  ===========  =====================================
 

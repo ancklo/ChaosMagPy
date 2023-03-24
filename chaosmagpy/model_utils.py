@@ -22,8 +22,8 @@ particular.
 
 import numpy as np
 import warnings
-from chaosmagpy.config_utils import basicConfig
 from scipy.interpolate import BSpline, PPoly
+from . import config_utils
 
 
 def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
@@ -485,7 +485,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     # ensure ndarray inputs
     coeffs = np.asarray(coeffs, dtype=float)
-    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    radius = (np.asarray(radius, dtype=float)
+              / config_utils.basicConfig['params.r_surf'])
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
 
@@ -703,7 +704,8 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     """
 
     # ensure ndarray inputs
-    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    radius = (np.asarray(radius, dtype=float)
+              / config_utils.basicConfig['params.r_surf'])
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
 
@@ -957,7 +959,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None, axis=None):
     """
 
     axis = -1 if axis is None else int(axis)
-    r = 1 if radius is None else basicConfig['params.r_surf'] / radius
+    if radius is None:
+        r = 1
+    else:
+        r = config_utils.basicConfig['params.r_surf'] / radius
 
     N = int(np.sqrt(coeffs.shape[axis] + 1) - 1)  # maximum degree
 
