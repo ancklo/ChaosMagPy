@@ -11,7 +11,7 @@ Documentation
 -------------
 
 The documentation of the current release is available on
-`Read the Docs <https://chaosmagpy.readthedocs.io/en/stable/>`_.
+`Read the Docs <https://chaosmagpy.readthedocs.io/en/master/>`_.
 
 |pypi| |docs| |doi| |license|
 

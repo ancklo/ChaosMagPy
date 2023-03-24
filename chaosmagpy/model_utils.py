@@ -1,6 +1,7 @@
 """
-This module provides functions for building the CHAOS model and geomagnetic
-field models in general.
+`chaosmagpy.model_utils` provides functions for analyzing and estimating
+geomagnetic field models in general, and the CHAOS geomagnetic field model in
+particular.
 
 .. autosummary::
     :toctree: functions

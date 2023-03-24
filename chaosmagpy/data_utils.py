@@ -1,6 +1,7 @@
 """
-The module provides functions for loading and writing data and models. It also
-offers functions to do simple time conversions.
+`chaosmagpy.data_utils` provides functions for loading and writing data and
+geomagnetic field models. It also offers functions to do common time
+conversions.
 
 .. autosummary::
     :toctree: functions

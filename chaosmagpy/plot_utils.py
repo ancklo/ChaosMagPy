@@ -1,5 +1,5 @@
 """
-This module provides functions for plotting model outputs.
+`chaosmagpy.plot_utils` provides functions for plotting model outputs.
 
 .. autosummary::
     :toctree: functions

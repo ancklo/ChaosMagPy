@@ -1,7 +1,7 @@
 """
-This module provides functions related to coordinate transformations. Typical
-coordinate reference frames and corresponding abbreviations are listed in the
-following.
+`chaosmagpy.coordinate_utils` provides functions related to coordinate
+transformations. Typical coordinate reference frames and corresponding
+abbreviations are listed in the following.
 
 **Abbreviations**
 

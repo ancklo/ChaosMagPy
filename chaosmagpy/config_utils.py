@@ -1,7 +1,8 @@
 """
-Parameters and options in ChaosMagPy are stored in a dictionary and can be
-modified as desired. The following list gives an overview of the possible
-keywords. The keywords can be accessed after importing chaosmagpy through:
+`chaosmagpy.config_utils` contains functions and classes to manipulate the
+configuration dictionary, which contains parameters and options in ChaosMagPy.
+The following list gives an overview of the possible keywords. The keywords can
+be accessed after importing chaosmagpy through:
 
 >>> import chaosmagpy as cp
 >>> cp.basicConfig['params.r_surf']  # get Earth's mean radius in km

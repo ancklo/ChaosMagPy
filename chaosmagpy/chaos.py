@@ -1,6 +1,6 @@
 """
-Classes and functions to read the CHAOS model and other geomagnetic field
-models.
+`chaosmagpy.chaos` provides classes and functions to read the CHAOS model and
+other geomagnetic field models.
 
 .. autosummary::
     :toctree: classes
