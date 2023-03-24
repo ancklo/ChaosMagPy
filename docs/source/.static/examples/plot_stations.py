@@ -15,7 +15,7 @@ import chaosmagpy as cp
 import matplotlib.pyplot as plt
 import numpy as np
 
-model = cp.CHAOS.from_mat('CHAOS-6-x9.mat')  # load the mat-file of CHAOS-6-x9
+model = cp.CHAOS.from_mat('CHAOS-7.mat')  # load the mat-file of CHAOS-7
 
 data = {
     'Time': np.linspace(cp.data_utils.mjd2000(1998, 1, 1),

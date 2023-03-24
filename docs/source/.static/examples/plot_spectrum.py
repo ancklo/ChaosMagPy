@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
 
-model = cp.CHAOS.from_mat('CHAOS-6-x9.mat')  # load the mat-file of CHAOS-6-x9
+model = cp.CHAOS.from_mat('CHAOS-7.mat')  # load the mat-file of CHAOS-7
 
 nmax = 20
 time = cp.data_utils.mjd2000(2018, 1, 1)
