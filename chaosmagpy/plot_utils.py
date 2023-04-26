@@ -1,5 +1,5 @@
 """
-This module provides functions for plotting model outputs.
+`chaosmagpy.plot_utils` provides functions for plotting model outputs.
 
 .. autosummary::
     :toctree: functions
@@ -16,9 +16,9 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
 import warnings
-from chaosmagpy.config_utils import basicConfig
-from datetime import datetime, timedelta
 from matplotlib.colors import LinearSegmentedColormap
+from . import data_utils
+from . import config_utils
 
 try:  # make cartopy optional
     import cartopy.crs as ccrs
@@ -29,7 +29,7 @@ except ImportError:
 
 def plot_timeseries(time, *args, **kwargs):
     """
-    Returns a line plot showing the timeseries of the input arguments.
+    Returns line plots showing the timeseries of the input arguments.
 
     Parameters
     ----------
@@ -64,11 +64,13 @@ def plot_timeseries(time, *args, **kwargs):
 
     n = len(args)  # number of subplots
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             n*0.8*basicConfig['plots.figure_width']),
-                    titles=n*[''],
-                    ylabel='',
-                    layout=(n, 1))
+    defaults = {
+        'figsize': (config_utils.basicConfig['plots.figure_width'],
+                    n*0.8*config_utils.basicConfig['plots.figure_width']),
+        'titles': n*[''],
+        'ylabel': '',
+        'layout': (n, 1)
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 
@@ -82,8 +84,7 @@ def plot_timeseries(time, *args, **kwargs):
         raise ValueError('Plot layout is not compatible with the number of '
                          'produced subplots.')
 
-    date_time = np.array(  # generate list of datetime objects
-        [timedelta(days=dt) + datetime(2000, 1, 1) for dt in np.ravel(time)])
+    date_time = data_utils.timestamp(np.ravel(time))
 
     fig, axes = plt.subplots(layout[0], layout[1], sharex='all',
                              figsize=figsize, squeeze=False)
@@ -106,7 +107,7 @@ def plot_timeseries(time, *args, **kwargs):
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     """
-    Returns a global map showing the input arguments.
+    Returns global maps of the input arguments.
 
     Parameters
     ----------
@@ -123,7 +124,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     fig : :class:`matplotlib.figure.Figure`
         Matplotlib figure.
     axes : :class:`matplotlib.axes.Axes`, ndarray
-        Array of which singleton dimenions have been squeezed out. Only the
+        Array of which singleton dimensions have been squeezed out. Only the
         axes instance is returned in case of a single axis.
 
     Other Parameters
@@ -137,7 +138,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     layout : 2-tuple of int
         Layout of the subplots (defaults to vertically stacked subplots).
     cmap : str
-        Colormap code (defaults to ``'PuOr'`` colormap).
+        Colormap code (defaults to ``'PuOr_r'`` colormap).
     limiter : function, lambda expression
         Function to compute symmetric colorbar limits (defaults to maximum of
         the absolute values in the input, or use ``'vmin'``, ``'vmax'``
@@ -155,15 +156,17 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     n = len(args)  # number of plots
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             n*0.4*basicConfig['plots.figure_width']),
-                    titles=n*[''],
-                    label='',
-                    layout=(n, 1),
-                    cmap='PuOr',
-                    limiter=lambda x: np.amax(np.abs(x)),  # maximum value
-                    projection=ccrs.Mollweide(),
-                    transform=ccrs.PlateCarree())
+    defaults = {
+        'figsize': (config_utils.basicConfig['plots.figure_width'],
+                    n*0.4*config_utils.basicConfig['plots.figure_width']),
+        'titles': n*[''],
+        'label': '',
+        'layout': (n, 1),
+        'cmap': 'PuOr_r',
+        'limiter': lambda x: np.amax(np.abs(x)),  # maximum value
+        'projection': ccrs.Mollweide(),
+        'transform': ccrs.PlateCarree()
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 
@@ -242,10 +245,12 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     """
 
-    defaults = dict(figsize=(basicConfig['plots.figure_width'],
-                             0.8*basicConfig['plots.figure_width']),
-                    titles='',
-                    ylabel='')
+    defaults = {
+        'figsize': (config_utils.basicConfig['plots.figure_width'],
+                    0.8*config_utils.basicConfig['plots.figure_width']),
+        'titles': '',
+        'ylabel': ''
+    }
 
     kwargs = defaultkeys(defaults, kwargs)
 

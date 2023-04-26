@@ -1,6 +1,28 @@
 Changelog
 =========
 
+Version 0.12-dev
+----------------
+| **Date:** January 12, 2023
+| **Release:** v0.12-dev
+| **Version of CHAOS:** CHAOS-7.13 (0713) and newer
+
+Features
+^^^^^^^^
+* Added function :func:`chaosmagpy.model_utils.sensitivity` to compute the
+  sensitivity of spherical harmonic coefficients.
+* Changed the default colormap for the component maps to ``'PuOr_r'`` (orange
+  for positive values and purple for negative ones).
+
+Bugfixes
+^^^^^^^^
+* Fixed error in :func:`chaosmagpy.data_utils.load_shcfile` when reading
+  single piece, quadratic splines. Error was due to a failure to identify the
+  shc-parameter line as the first non-comment line in the file.
+* Fixed KeyError that is raised when no name is given to the
+  :class:`chaosmagpy.chaos.CHAOS` constructor. This only affected direct calls
+  to the constructor due to an outdated config keyword.
+
 Version 0.11
 ------------
 | **Date:** September 29, 2022
@@ -9,7 +31,7 @@ Version 0.11
 
 Features
 ^^^^^^^^
-* Updated RC-index file to RC_1997-2022_Sept_v3.dat
+* Updated RC-index file to RC_1997-2022_Sept_v3.dat.
 * Improved time conversion paragraph in the usage section.
 * Added option to :func:`chaosmagpy.coordinate_utils.sh_analysis` to increase
   the grid size for the numerical integration.
@@ -326,7 +348,6 @@ Bugfixes
   use ``pip install --no-deps chaosmagpy==0.1a1`` to ignore faulty
   requirements.
 
-
 Version 0.1a1
 -------------
 | **Date:** January 5, 2019
@@ -356,7 +377,6 @@ Deprecations
 * ``synth_static_field`` has been renamed to ``synth_coeffs_static``
 * ``plot_tdep_maps`` has been renamed to ``plot_maps_tdep``
 * ``synth_tdep_field`` has been renamed to ``synth_coeffs_tdep``
-
 
 Version 0.1a0
 -------------

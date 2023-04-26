@@ -1,7 +1,8 @@
 """
-Parameters and options in ChaosMagPy are stored in a dictionary and can be
-modified as desired. The following list gives an overview of the possible
-keywords. The keywords can be accessed after importing chaosmagpy through:
+`chaosmagpy.config_utils` contains functions and classes to manipulate the
+configuration dictionary, which contains parameters and options in ChaosMagPy.
+The following list gives an overview of the possible keywords. The keywords can
+be accessed after importing chaosmagpy through:
 
 >>> import chaosmagpy as cp
 >>> cp.basicConfig['params.r_surf']  # get Earth's mean radius in km
@@ -34,16 +35,16 @@ keywords. The keywords can be accessed after importing chaosmagpy through:
  ==========================  ===========  =====================================
  Value                       Type         Description
  ==========================  ===========  =====================================
- 'files.RC_index'            `h5-file`,   RC-index file (used for external
+ 'file.RC_index'             `h5-file`,   RC-index file (used for external
                              `txt-file`   field computation). See also
                                           :func:`data_utils.save_RC_h5file`.
- 'files.GSM_spectrum'        `npz-file`   GSM transformation coefficients. See
+ 'file.GSM_spectrum'         `npz-file`   GSM transformation coefficients. See
                                           also :func:`coordinate_utils.\\
                                           rotate_gauss_fft`.
- 'files.SM_spectrum'         `npz-file`   SM transformation coefficients. See
+ 'file.SM_spectrum'          `npz-file`   SM transformation coefficients. See
                                           also :func:`coordinate_utils.\\
                                           rotate_gauss_fft`.
- 'files.Earth_conductivity'  `txt-file`   Conductivity model of a layered Earth
+ 'file.Earth_conductivity'   `txt-file`   Conductivity model of a layered Earth
                                           (used for induced fields).
  ==========================  ===========  =====================================
 
@@ -143,7 +144,7 @@ DEFAULTS = {
                       lambda x: check_vector(x, len=3)],
     'params.ellipsoid': [np.array([6378.137, 6356.752]),
                          lambda x: check_vector(x, len=2)],
-    'params.CHAOS_version': ['7.11', check_version_string],
+    'params.CHAOS_version': ['7.12', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files

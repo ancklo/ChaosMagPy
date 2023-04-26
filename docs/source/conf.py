@@ -24,12 +24,13 @@ import matplotlib.pyplot as plt
 matplotlib.use('agg')
 plt.ioff()
 
+import datetime
 import chaosmagpy
 
 # -- Project information -----------------------------------------------------
 
 project = 'ChaosMagPy'
-copyright = '2021, Clemens Kloss'
+copyright = str(datetime.date.today().year) + ', Clemens Kloss'
 author = 'Clemens Kloss'
 
 # The short X.Y version

@@ -11,10 +11,10 @@ ChaosMagPy documentation
 
    readme
    installation
+   references
    usage
    gallery/index
    configuration
-   references
    changelog
    license
 

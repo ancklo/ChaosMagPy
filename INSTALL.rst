@@ -1,7 +1,7 @@
 Installation
 ============
 
-ChaosMagPy relies on the following:
+ChaosMagPy relies on the following (some are optional):
 
 * python>=3.6
 * numpy
@@ -21,7 +21,7 @@ Specific installation steps using the conda/pip package managers are as follows:
 
    >>> conda install python numpy scipy pandas cython cartopy matplotlib h5py
 
-2. Install packages with pip:
+2. Install remaining packages with pip:
 
    >>> pip install cdflib hdf5storage lxml
 
@@ -29,13 +29,13 @@ Specific installation steps using the conda/pip package managers are as follows:
 
    >>> pip install chaosmagpy
 
-   or, if you have downloaded the `package files <https://pypi.org/project/chaosmagpy/#files>`_
-   into the current working directory, with:
+   Or, if you have downloaded the `package files <https://pypi.org/project/chaosmagpy/#files>`_
+   from the Python Package Index (PyPI) , install ChaosMagPy by running the
+   command below, replacing  ``x.x`` with the specific version of the
+   downloaded files:
 
    >>> pip install chaosmagpy-x.x-py3-none-any.whl
 
-   or, alternatively
+   or, using the compressed archive
 
    >>> pip install chaosmagpy-x.x.tar.gz
-
-   replacing ``x.x`` with the correct version.

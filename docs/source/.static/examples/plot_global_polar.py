@@ -14,7 +14,7 @@ import matplotlib.gridspec as gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import cartopy.crs as ccrs
 
-model = cp.CHAOS.from_mat('CHAOS-6-x9.mat')  # load the mat-file of CHAOS-6-x9
+model = cp.CHAOS.from_mat('CHAOS-7.mat')  # load the mat-file of CHAOS-7
 
 time = cp.data_utils.mjd2000(2016, 1, 1)  # convert date to mjd2000
 radius = 3485.  # radius of the core surface in km

@@ -1,6 +1,6 @@
 """
-Classes and functions to read the CHAOS model and other geomagnetic field
-models.
+`chaosmagpy.chaos` provides classes and functions to read the CHAOS model and
+other geomagnetic field models.
 
 .. autosummary::
     :toctree: classes
@@ -27,15 +27,14 @@ import warnings
 import scipy.interpolate as sip
 import hdf5storage as hdf
 import h5py
-import chaosmagpy.coordinate_utils as cu
-import chaosmagpy.model_utils as mu
-import chaosmagpy.data_utils as du
-import matplotlib.pyplot as plt
+import textwrap
 from datetime import datetime
 from timeit import default_timer as timer
-from chaosmagpy.config_utils import basicConfig
-from chaosmagpy.plot_utils import (defaultkeys, plot_power_spectrum,
-                                   plot_timeseries, plot_maps)
+from . import coordinate_utils as cu
+from . import model_utils as mu
+from . import data_utils as du
+from . import plot_utils as pu
+from . import config_utils
 
 
 class Base(object):
@@ -415,7 +414,7 @@ class BaseModel(Base):
         time : ndarray, shape (...)
             Time in modified Julian date.
         radius : float, optional
-            Radius in kilometers (defaults to mean Earth's surface defined in
+            Radius in kilometers (defaults to Earth's surface defined in
             ``basicConfig['r_surf']``).
 
         Returns
@@ -441,11 +440,13 @@ class BaseModel(Base):
 
         """
 
-        radius = basicConfig['params.r_surf'] if radius is None else radius
+        if radius is None:
+            radius = config_utils.basicConfig['params.r_surf']
 
         coeffs = self.synth_coeffs(time, **kwargs)
+        spec = mu.power_spectrum(coeffs, radius, source=self.source)
 
-        return mu.power_spectrum(coeffs, radius, source=self.source)
+        return spec
 
     def plot_power_spectrum(self, time, **kwargs):
         """
@@ -456,9 +457,28 @@ class BaseModel(Base):
         time : float
             Time in modified Julian date.
 
+        Returns
+        -------
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure.
+        axes : :class:`matplotlib.axes.Axes`
+            A single axes instance.
+
+        Other Parameters
+        ----------------
+        radius : float, optional
+            Radius in kilometers (defaults to Earth's surface defined in
+            basicConfig['r_surf']).
+        nmax : int, positive, optional
+            Maximum degree of the harmonic expansion (default is given by the
+            model coefficients, but can also be smaller, if specified).
+        deriv : int, positive, optional
+            Derivative in time (default is 0). For secular variation, choose
+            ``deriv=1``.
+
         See Also
         --------
-        BaseModel.power_spectrum
+        chaosmagpy.model_utils.power_spectrum
 
         """
 
@@ -467,7 +487,7 @@ class BaseModel(Base):
                         nmax=self.nmax,
                         titles='spatial power spectrum')
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         radius = kwargs.pop('radius')
         nmax = kwargs.pop('nmax')
@@ -478,8 +498,9 @@ class BaseModel(Base):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        plot_power_spectrum(R_n, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_power_spectrum(R_n, **kwargs)
+
+        return fig, axes
 
     def plot_maps(self, time, radius, **kwargs):
         """
@@ -488,15 +509,17 @@ class BaseModel(Base):
         Parameters
         ----------
         time : ndarray, shape (), (1,) or float
-            Time given as MJD2000 (modified Julian date).
+            Time in modified Julian date.
         radius : ndarray, shape (), (1,) or float
             Array containing the radius in kilometers.
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         Other Parameters
         ----------------
@@ -516,10 +539,9 @@ class BaseModel(Base):
 
         """
 
-        defaults = dict(deriv=0,
-                        nmax=self.nmax)
+        defaults = dict(deriv=0, nmax=self.nmax)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
@@ -548,8 +570,10 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             grid=True, extrapolate=None)
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                                 **kwargs)
+
+        return fig, axes
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
@@ -567,9 +591,11 @@ class BaseModel(Base):
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Time series plot of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing a time series of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         Other Parameters
         ----------------
@@ -597,14 +623,14 @@ class BaseModel(Base):
                         titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'],
                         extrapolate=None)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         # remove keywords that are not intended for pcolormesh
         nmax = kwargs.pop('nmax')
         deriv = kwargs.pop('deriv')
         extrapolate = kwargs.pop('extrapolate')
 
-        # add plot_maps options to dictionary
+        # add options to dictionary
         kwargs.setdefault('ylabel', du.gauss_units(deriv))
 
         time = np.linspace(self.breaks[0], self.breaks[-1], num=500)
@@ -613,8 +639,10 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             extrapolate=extrapolate)
 
-        plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
-        plt.show()
+        fig, axes = pu.plot_timeseries(time, B_radius, B_theta, B_phi,
+                                       **kwargs)
+
+        return fig, axes
 
     @classmethod
     def from_bspline(cls, name, knots, coeffs, order, source=None, meta=None):
@@ -649,6 +677,62 @@ class BaseModel(Base):
 
         return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                    source=source, meta=meta)
+
+    def to_shc(self, filepath, *, leap_year=None, nmin=None, nmax=None,
+               header=None):
+        """
+        Save spherical harmonic coefficients to a file in `shc`-format.
+
+        Parameters
+        ----------
+        filepath : str
+            Path and name of output file `*.shc`.
+        leap_year : {False, True}, optional
+            Take leap year in time conversion into account. By default set to
+            ``False``, so that a conversion factor of 365.25 days per year is
+            used.
+        nmin : int, optional
+            Minimum spherical harmonic degree (defaults to 1). This will remove
+            first values from coeffs if greater than 1.
+        nmax : int, optional
+            Maximum spherical harmonic degree (defaults to the maximum degree
+            of the model given by ``self.nmax``).
+        header : str, optional
+            Optional header at beginning of file (defaults to a comment line
+            with the name of the model given by ``self.name``).
+
+        """
+
+        leap_year = False if leap_year is None else leap_year
+        header = f"# {self.name}\n" if header is None else header
+        nmin = 1 if nmin is None else int(nmin)
+        nmax = self.nmax if nmax is None else int(nmax)
+
+        if self.coeffs is None:
+            raise ValueError("Spline coefficients are missing.")
+
+        step = max(self.order - 1, 1)
+
+        # compute times in mjd2000
+        if (self.order == 1):
+            # piecewise constant, drop coefficients at last break point
+            times = self.breaks[:-1]
+
+        else:
+            # insert extra samples in between break points
+            times = np.array([], dtype=float)
+
+            for start, end in zip(self.breaks[:-1], self.breaks[1:]):
+                delta = (end - start) / step
+                times = np.append(times, np.arange(start, end, delta))
+
+            times = np.append(times, self.breaks[-1])
+
+        gauss_coeffs = self.synth_coeffs(times, nmax=self.nmax)
+
+        du.save_shcfile(times, gauss_coeffs, order=self.order,
+                        filepath=filepath, nmin=nmin, nmax=nmax,
+                        leap_year=leap_year, header=header)
 
     @classmethod
     def from_shc(cls, filepath, *, name=None, leap_year=None,
@@ -688,33 +772,32 @@ class BaseModel(Base):
 
         time, coeffs, params = du.load_shcfile(filepath, leap_year=leap_year)
 
+        coeffs = coeffs.T  # (Nt, Nc): simplifies array manipulations
+
         nmin = params['nmin']
         nmax = params['nmax']
         order = params['order']
-        step = order - 1  # actually params['step'], but not reliable for
-                          # older shc-files
+        step = max(params['step'], 1)
 
-        # extract breaks
-        if step == 0:
+        if order == 1:
+            # piecewise constant
             # duplicate endpoint to have a proper interval for the polynomial
-            breaks = np.append(time, time[-1])
+            breaks = np.append(time, time[-1])  # zero length interval is ok
         else:
             breaks = time[::step]
 
-        # need to pad coefficients
+        # need to pad coefficients if nmin > 1 (no n < nmin coeffs in shc file)
         if nmin > 1:
-            coeffs_pad = np.zeros((nmax*(nmax + 2),) + coeffs.shape[1:])
-            coeffs_pad[int(nmin**2 - 1):, ...] = coeffs
+            coeffs_pad = np.zeros((coeffs.shape[0], nmax*(nmax + 2)))
+            coeffs_pad[:, int(nmin**2 - 1):] = coeffs
         else:
             coeffs_pad = coeffs
 
-        pieces = breaks.size - 1  # number of polynomial pieces
+        if (order == 1):  # piecewise constant
 
-        if (pieces == 1) and (order == 1):  # static field in single bin
+            coeffs_pp = coeffs_pad[None, ...]  # insert singleton at 0th axis
 
-            coeffs_out = coeffs_pad.reshape((1, 1, -1))
-
-            return cls(name, breaks=breaks, order=order, coeffs=coeffs_out,
+            return cls(name, breaks=breaks, order=order, coeffs=coeffs_pp,
                        source=source, meta=meta)
 
         else:  # model must be time-dependent (incl. piecewise constant)
@@ -724,12 +807,12 @@ class BaseModel(Base):
             end = ((time.size - 1) // step) * step + 1
 
             knots = mu.augment_breaks(breaks, order)
-            spl = sip.make_lsq_spline(time[:end], coeffs_pad[:, :end].T,
+            spl = sip.make_lsq_spline(time[:end], coeffs_pad[:end, :],
                                       knots, order - 1)
-            coeffs_out = spl.c.copy()
+            coeffs_pp = spl.c.copy()
 
             # convert B-spline basis to PPoly
-            return cls.from_bspline(name, knots=knots, coeffs=coeffs_out,
+            return cls.from_bspline(name, knots=knots, coeffs=coeffs_pp,
                                     order=order, source=source, meta=meta)
 
 
@@ -779,8 +862,7 @@ class CHAOS(object):
         calibration parameters (3 offsets, 3 sensitivities, 3
         non-orthogonality angles) (keys are ``'cryosat-2_1'``).
     name : str, optional
-        User defined name of the model. Defaults to ``'CHAOS-<version>'``,
-        where <version> is the version in ``basicConfig['params.version']``.
+        User defined name of the model. Defaults to ``'CHAOS'``.
     meta : dict, optional
         Dictionary containing additional information about the model.
 
@@ -939,9 +1021,9 @@ class CHAOS(object):
                 )
                 self.model_cal[satellite] = model
 
-        # give the model a name: CHAOS-x.x or user input
+        # give the model a name: CHAOS or user input
         if name is None:
-            self.name = f"CHAOS-{basicConfig['params.version']}"
+            self.name = "CHAOS"
         else:
             self.name = name
 
@@ -1260,9 +1342,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Time series plot of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing a time series of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1270,7 +1354,7 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
+        return self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
     def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None, **kwargs):
         """
@@ -1294,9 +1378,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1304,8 +1390,8 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        self.model_tdep.plot_maps(time, radius,
-                                  nmax=nmax, deriv=deriv, **kwargs)
+        return self.model_tdep.plot_maps(time, radius, nmax=nmax, deriv=deriv,
+                                         **kwargs)
 
     def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
@@ -1328,6 +1414,7 @@ str, {'internal', 'external'}
 
         Examples
         --------
+        >>> import chaosmagpy as cp
         >>> model = cp.CHAOS.from_mat('CHAOS-6-x7.mat')
         >>> model.synth_coeffs_static(nmax=50)
         array([ 0.     , 0.     ,  0.     , ...,  0.01655, -0.06339,  0.00715])
@@ -1399,9 +1486,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1413,11 +1502,11 @@ str, {'internal', 'external'}
                         vmax=200,
                         vmin=-200)
 
-        kwargs = defaultkeys(defaults, kwargs)
+        kwargs = pu.defaultkeys(defaults, kwargs)
 
         time = self.model_static.breaks[0]
 
-        self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
+        return self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
@@ -1481,9 +1570,10 @@ str, {'internal', 'external'}
                 'frame.')
 
         # build rotation matrix from file
-        frequency_spectrum = np.load(basicConfig['file.GSM_spectrum'])
-        assert np.all(
-            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
+        frequency_spectrum = np.load(
+            config_utils.basicConfig['file.GSM_spectrum'])
+        assert np.all(frequency_spectrum['dipole']
+                      == config_utils.basicConfig['params.dipole']), \
             "GSM rotation coefficients not compatible with the chosen dipole."
 
         if source == 'external':
@@ -1665,23 +1755,26 @@ str, {'internal', 'external'}
                 'extrapolation of the coefficients in the SM reference frame.')
 
         # load rotation matrix spectrum from file
-        frequency_spectrum = np.load(basicConfig['file.SM_spectrum'])
-        assert np.all(
-            frequency_spectrum['dipole'] == basicConfig['params.dipole']), \
+        frequency_spectrum = np.load(
+            config_utils.basicConfig['file.SM_spectrum'])
+        assert np.all(frequency_spectrum['dipole']
+                      == config_utils.basicConfig['params.dipole']), \
             "SM rotation coefficients not compatible with the chosen dipole."
 
         if rc is None:
 
             # load RC-index file: first hdf5 then dat-file format
+            file = config_utils.basicConfig['file.RC_index']
+
             try:
-                with h5py.File(basicConfig['file.RC_index'], 'r') as f_RC:
+                with h5py.File(file, 'r') as f_RC:
 
                     # create linear interpolant of the RC-index
                     RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
                                       kind='linear', bounds_error=False)
 
             except OSError:
-                f_RC = du.load_RC_datfile(basicConfig['file.RC_index'])
+                f_RC = du.load_RC_datfile(file)
 
                 # create linear interpolant of the RC-index
                 RC = sip.interp1d(f_RC['time'], f_RC['RC_' + source[0]],
@@ -1885,9 +1978,11 @@ str, {'internal', 'external'}
 
         Returns
         -------
-        B_radius, B_theta, B_phi
-            Global map of the radial, colatitude and azimuthal field
-            components.
+        fig : :class:`matplotlib.figure.Figure`
+            Matplotlib figure showing global maps of the radial,
+            colatitude and azimuthal field components.
+        axes : :class:`matplotlib.axes.Axes`, ndarray
+            Array containing three axes, one for each field component.
 
         """
 
@@ -1939,9 +2034,8 @@ str, {'internal', 'external'}
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                  titles=titles, label=units)
-        plt.show()
+        return pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                            titles=titles, label=units)
 
     def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,
                            extrapolate=None):
@@ -2001,8 +2095,7 @@ str, {'internal', 'external'}
 
         return coeffs
 
-    def save_shcfile(self, filepath, *, model=None, deriv=None,
-                     leap_year=None):
+    def save_shcfile(self, filepath, *, model=None, leap_year=None):
         """
         Save spherical harmonic coefficients to a file in `shc`-format.
 
@@ -2012,9 +2105,6 @@ str, {'internal', 'external'}
             Path and name of output file `*.shc`.
         model : {'tdep', 'static'}, optional
             Choose part of the model to save (default is 'tdep').
-        deriv : int, optional
-            Derivative of the time-dependent field (default is 0, ignored for
-            static source).
         leap_year : {False, True}, optional
             Take leap year in time conversion into account. By default set to
             ``False``, so that a conversion factor of 365.25 days per year is
@@ -2023,8 +2113,6 @@ str, {'internal', 'external'}
         """
 
         model = 'tdep' if model is None else model
-
-        deriv = 0 if deriv is None else deriv
 
         leap_year = False if leap_year is None else leap_year
 
@@ -2036,34 +2124,31 @@ str, {'internal', 'external'}
 
             nmin = 1
             nmax = self.model_tdep.nmax
-            breaks = self.model_tdep.breaks
             order = self.model_tdep.order
-
-            # compute times in mjd2000
-            times = np.array([], dtype=float)
-            for start, end in zip(breaks[:-1], breaks[1:]):
-                step = (end - start)/(order-1)
-                times = np.append(times, np.arange(start, end, step))
-            times = np.append(times, breaks[-1])
+            pieces = self.model_tdep.breaks.size - 1
+            step = max(order - 1, 1)
+            np = pieces if order == 1 else (pieces * step + 1)
 
             # create header lines
-            header = (
-                f"# {self}\n"
-                f"# Spherical harmonic coefficients of the time-dependent"
-                f" internal field model (derivative = {deriv})"
-                f" from degree {nmin} to {nmax}.\n"
-                f"# Coefficients ({du.gauss_units(deriv)}) are given at"
-                f" {(breaks.size-1) * (order-1) + 1} points in time\n"
-                f"# and were extracted from order-{order}"
-                f" piecewise polynomial (i.e. break points are every"
-                f" {order} steps of the time sequence).\n"
-            )
+            header = textwrap.dedent(f"""\
+                # {self.name}
+                # Spherical harmonic coefficients of the time-dependent
+                # internal field from degree {nmin} to {nmax}. Coefficients
+                # (units of nT) are given at {np} points in time and were
+                # extracted from a {order}-order piecewise polynomial. The
+                # break points are every {step} step(s) of the time sequence.
+                """)
 
-            gauss_coeffs = self.synth_coeffs_tdep(
-                times, nmax=nmax, deriv=deriv)
+            self.model_tdep.to_shc(
+                filepath,
+                leap_year=leap_year,
+                nmin=nmin,
+                header=header
+            )
 
         # output static field model coefficients
         if model == 'static':
+
             if self.model_static is None:
                 raise ValueError("Static internal field coefficients "
                                  "are missing.")
@@ -2072,22 +2157,20 @@ str, {'internal', 'external'}
             nmax = self.model_static.nmax
             order = 1
 
-            # compute times in mjd2000
-            times = np.atleast_1d(self.model_static.breaks[0])
-
             # create additonal header lines
-            header = (
-                f"# {self}\n"
-                f"# Spherical harmonic coefficients of the static internal"
-                f" field model from degree {nmin} to {nmax}.\n"
-                f"# Given at the first break point.\n"
+            header = textwrap.dedent(f"""\
+                # {self.name}
+                # Spherical harmonic coefficients (units of nT) of the static
+                # internal field model from degree {nmin} to {nmax}. Given at
+                # the first break point.
+                """)
+
+            self.model_static.to_shc(
+                filepath,
+                leap_year=leap_year,
+                nmin=nmin,
+                header=header
             )
-
-            gauss_coeffs = self.synth_coeffs_static(nmax=nmax)
-
-        du.save_shcfile(times, gauss_coeffs, order=order, filepath=filepath,
-                        nmin=nmin, nmax=nmax, leap_year=leap_year,
-                        header=header)
 
     def save_matfile(self, filepath):
         """
@@ -2859,8 +2942,8 @@ def load_CALS7K_txtfile(filepath, name=None):
     # numpy doesn't understand "D" in decimal representation, replace with E
     data = np.fromstring(lines.replace('D', 'E'), sep=' ', dtype=float)
 
-    ts = data[0]  # start time
-    te = data[1]  # end time
+    # ts = data[0]  # start time
+    # te = data[1]  # end time
     order = data[2]  # cubic B-splines
     # discard index 3
     nmax = int(data[4])  # maximum spherical harmonic degree

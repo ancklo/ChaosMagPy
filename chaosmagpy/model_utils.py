@@ -1,6 +1,7 @@
 """
-This module provide functions for building the CHAOS model and geomagnetic
-field models in general.
+`chaosmagpy.model_utils` provides functions for analyzing and estimating
+geomagnetic field models in general, and the CHAOS geomagnetic field model in
+particular.
 
 .. autosummary::
     :toctree: functions
@@ -15,13 +16,14 @@ field models in general.
     legendre_poly
     power_spectrum
     degree_correlation
+    sensitivity
 
 """
 
 import numpy as np
 import warnings
-from chaosmagpy.config_utils import basicConfig
 from scipy.interpolate import BSpline, PPoly
+from . import config_utils
 
 
 def design_matrix(knots, order, n_tdep, time, radius, theta, phi,
@@ -309,7 +311,7 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
     if nmax is None:
         nmax = nmax_coeffs
     elif nmax > nmax_coeffs:
-        warnings.warn('Supplied nmax = {0} is incompatible with number of '
+        warnings.warn('Input nmax = {0} is incompatible with the number of '
                       'model coefficients. Using nmax = {1} instead.'.format(
                         nmax, nmax_coeffs))
         nmax = nmax_coeffs
@@ -483,7 +485,8 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     # ensure ndarray inputs
     coeffs = np.asarray(coeffs, dtype=float)
-    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    radius = (np.asarray(radius, dtype=float)
+              / config_utils.basicConfig['params.r_surf'])
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
 
@@ -492,7 +495,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
 
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('Supplied coordinates include the poles.')
+            warnings.warn('Input coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
@@ -757,7 +760,8 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     """
 
     # ensure ndarray inputs
-    radius = np.asarray(radius, dtype=float) / basicConfig['params.r_surf']
+    radius = (np.asarray(radius, dtype=float)
+              / config_utils.basicConfig['params.r_surf'])
     theta = np.asarray(theta, dtype=float)
     phi = np.asarray(phi, dtype=float)
 
@@ -780,7 +784,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     # check if poles are included
     if (theta_min <= 0.0) or (theta_max >= 180.0):
         if (theta_min == 0.0) or (theta_max == 180.0):
-            warnings.warn('Supplied coordinates include the poles.')
+            warnings.warn('Input coordinates include the poles.')
             poles = True
         else:
             raise ValueError('Colatitude outside bounds [0, 180].')
@@ -1011,7 +1015,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None, axis=None):
     """
 
     axis = -1 if axis is None else int(axis)
-    r = 1 if radius is None else basicConfig['params.r_surf'] / radius
+    if radius is None:
+        r = 1
+    else:
+        r = config_utils.basicConfig['params.r_surf'] / radius
 
     N = int(np.sqrt(coeffs.shape[axis] + 1) - 1)  # maximum degree
 
@@ -1045,10 +1052,10 @@ def power_spectrum(coeffs, radius=None, *, nmax=None, source=None, axis=None):
         min = n**2 - 1
         max = min + (2*n + 1)
 
-        slc1 = coeffs.ndim*[slice(None),]  # index for summation
+        slc1 = coeffs.ndim*[slice(None), ]  # index for summation
         slc1[axis] = slice(min, max)
 
-        slc2 = coeffs.ndim*[slice(None),]  # index for insertion into output
+        slc2 = coeffs.ndim*[slice(None), ]  # index for insertion into output
         slc2[axis] = n-1
 
         W_n[tuple(slc2)] = factor(n, r)*np.sum(coeffs[tuple(slc1)]**2,
@@ -1075,15 +1082,15 @@ def degree_correlation(coeffs_1, coeffs_2):
     """
 
     if coeffs_1.ndim != 1:
-        raise ValueError(f'Only 1-D input allowed {coeffs_1.ndim} != 1')
+        raise ValueError(f'Only 1-D input allowed ({coeffs_1.ndim} != 1)')
 
     if coeffs_2.ndim != 1:
-        raise ValueError(f'Only 1-D input allowed {coeffs_2.ndim} != 1')
+        raise ValueError(f'Only 1-D input allowed ({coeffs_2.ndim} != 1)')
 
     if coeffs_1.size != coeffs_2.size:
         raise ValueError(
-            'Number of coefficients is '
-            'not equal ({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
+            'Number of coefficients must be the same '
+            '({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
 
     nmax = int(np.sqrt(coeffs_1.size + 1) - 1)
 
@@ -1101,3 +1108,55 @@ def degree_correlation(coeffs_1, coeffs_2):
         C_n[n-1] = (np.sum(coeffs_12[min:max]) / np.sqrt(R_n[n-1]*S_n[n-1]))
 
     return C_n
+
+
+def sensitivity(coeffs, coeffs_true):
+    """
+    Sensitivity (degree normalized error) of the input coefficients with
+    respect to the target/true coefficients.
+
+    Parameters
+    ----------
+    coeffs: ndarray, shape (N,)
+        Input spherical harmonic coefficients.
+    coeffs_true: ndarray, shape (N,)
+        Target/true spherical harmonic coefficients.
+
+    Returns
+    -------
+    S: ndarray, shape (N,)
+        Sensitivity of ``coeffs`` with respect to ``coeffs_true``.
+
+    Examples
+    --------
+    >>> import chaosmagpy as cp
+    >>> import numpy as np
+    >>> coeffs = np.array([1., 2., 5.])  # estimated degree 1 coefficients
+    >>> coeffs_true = np.array([1., 2., 3.])  # target degree 1 coefficients
+    >>> cp.model_utils.sensitivity(coeffs, coeffs_true)
+    array([0., 0., 0.63245553])
+
+    """
+    if coeffs.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed ({coeffs.ndim} != 1)')
+
+    if coeffs_true.ndim != 1:
+        raise ValueError(f'Only 1-D input allowed ({coeffs_true.ndim} != 1)')
+
+    if coeffs.size != coeffs_true.size:
+        raise ValueError(
+            'Number of coefficients must be the same '
+            '({0} != {1}).'.format(coeffs.size, coeffs_true.size))
+
+    nmax = int(np.sqrt(coeffs.size + 1) - 1)
+
+    S = coeffs - coeffs_true
+
+    # apply degree-dependent scaling
+    for n in range(1, nmax+1):
+        min = n**2 - 1
+        max = min + (2*n + 1)
+
+        S[min:max] *= 1. / np.sqrt(np.sum(coeffs_true[min:max]**2) / (2*n + 1))
+
+    return S

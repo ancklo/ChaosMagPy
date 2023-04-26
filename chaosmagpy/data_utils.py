@@ -1,6 +1,7 @@
 """
-The module provides functions for loading and writing data and models. It also
-offers functions to do simple time conversions.
+`chaosmagpy.data_utils` provides functions for loading and writing data and
+geomagnetic field models. It also offers functions to do common time
+conversions.
 
 .. autosummary::
     :toctree: functions
@@ -245,6 +246,8 @@ def load_shcfile(filepath, leap_year=None, comment=None):
     leap_year = True if leap_year is None else leap_year
     comment = '#' if comment is None else comment
 
+    first_line = True
+
     with open(filepath, 'r') as f:
 
         data = np.array([])
@@ -253,13 +256,16 @@ def load_shcfile(filepath, leap_year=None, comment=None):
             if line.strip().startswith(comment):
                 continue
 
-            read_line = np.fromstring(line, sep=' ')
-            if read_line.size == 5:
+            newline = np.fromstring(line, sep=' ')
+
+            if first_line:  # first non-comment line contains shc params
                 name = os.path.split(filepath)[1]  # file name string
-                values = [name] + read_line.astype(int).tolist()
+                values = [name] + newline.astype(int).tolist()
+
+                first_line = False
 
             else:
-                data = np.append(data, read_line)
+                data = np.append(data, newline)
 
         # unpack parameter line
         keys = ['SHC', 'nmin', 'nmax', 'N', 'order', 'step']
@@ -267,7 +273,7 @@ def load_shcfile(filepath, leap_year=None, comment=None):
 
         time = data[:parameters['N']]
         coeffs = data[parameters['N']:].reshape((-1, parameters['N']+2))
-        coeffs = np.squeeze(coeffs[:, 2:])  # discard columns with n and m
+        coeffs = coeffs[:, 2:].copy()  # discard columns with n and m
 
         mjd = dyear_to_mjd(time, leap_year=leap_year)
 
@@ -317,8 +323,8 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     else:
         nmax = int(nmax)
 
-    assert (nmin <= nmax), \
-        '``nmin`` must be smaller than or equal to ``nmax``.'
+    if nmin > nmax:
+        raise ValueError('``nmin`` must be smaller than or equal to ``nmax``.')
 
     filepath = 'model.shc' if filepath is None else filepath
 
@@ -365,7 +371,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
             f.write('\n')
 
-    print('Coefficients saved to {}.'.format(
+    print('Created SHC-file {}.'.format(
         os.path.join(os.getcwd(), filepath)))
 
 
@@ -510,7 +516,6 @@ def is_leap_year(year):
         raise TypeError('Expected integer values as the input year. Use '
                         'numpy.floor to extract the integer year '
                         'from decimal years.')
-
 
     return np.logical_and(np.remainder(year, 4) == 0,
                           np.logical_or(np.remainder(year, 100) != 0,
@@ -665,10 +670,10 @@ def gauss_units(deriv=None):
         'nT'
 
     >>> gauss_units(1)
-        '$\\\\mathrm{nT}\\\\mathrm{yr}^{-1}$'
+        '$\\\\mathrm{nT}/\\\\mathrm{yr}$'
 
     >>> gauss_units(2)
-        '$\\\\mathrm{nT}\\\\mathrm{yr}^{-2}$'
+        '$\\\\mathrm{nT}/\\\\mathrm{yr}^{2}$'
 
     """
 
@@ -676,7 +681,9 @@ def gauss_units(deriv=None):
 
     if deriv == 0:
         units = 'nT'
+    elif deriv == 1:
+        units = '$\\mathrm{{nT}}/\\mathrm{{yr}}$'
     else:
-        units = '$\\mathrm{{nT}}\\mathrm{{yr}}^{{{:}}}$'.format(-deriv)
+        units = '$\\mathrm{{nT}}/\\mathrm{{yr}}^{{{:}}}$'.format(deriv)
 
     return units

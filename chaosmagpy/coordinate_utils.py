@@ -1,7 +1,7 @@
 """
-This module provides functions related to coordinate transformations. Typical
-coordinate reference frames and corresponding abbbreviations are listed in the
-following.
+`chaosmagpy.coordinate_utils` provides functions related to coordinate
+transformations. Typical coordinate reference frames and corresponding
+abbreviations are listed in the following.
 
 **Abbreviations**
 
@@ -20,11 +20,12 @@ USE : Cartesian coordinate system on spherical surface.
     coordinates).
 GSM : Geocentric Solar Magnetic coordinate system (orthogonal).
     With x-axis pointing towards the sun, y-axis perpendicular to plane spanned
-    by Eart-Sun line and dipole axis and z-axis completing right-handed system.
+    by Earth-Sun line and the dipole axis, z-axis completes right-handed
+    system.
 SM : Solar Magnetic coordinate system (orthogonal)
     With z-axis along dipole axis pointing to the geomagnetic north pole,
     y-axis perpendicular to plane containing the dipole axis and the Earth-Sun
-    line, and x-axis completing the right-handed system.
+    line, x-axis completes the right-handed system.
 MAG : Magnetic coordinate system (centered dipole, orthogonal)
     With z-axis pointing to the geomagnetic north pole, x-axis in the plane
     spanned by the dipole axis and Earth's rotation axis, and y-axis completing
@@ -62,8 +63,8 @@ MAG : Magnetic coordinate system (centered dipole, orthogonal)
 import numpy as np
 import os
 from math import factorial
-from chaosmagpy.model_utils import legendre_poly
-from chaosmagpy.config_utils import basicConfig
+from . import model_utils
+from . import config_utils
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -370,9 +371,9 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
         # compute Q-response for freqencies and given Gauss coefficient
         response = qfunc(frequency_full, k)
 
-        for l in range(kmax*(kmax+2)):
+        for ll in range(kmax*(kmax+2)):
             # select specific Fourier coefficients from the rotation matrix
-            element = spectrum_full[:, k, l]
+            element = spectrum_full[:, k, ll]
 
             # modify Fourier components with Q-response
             element_ind = response*element
@@ -386,10 +387,10 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
             sort_ind = sort_ind[:filter]  # only keep small number
 
             # write sorted frequency (per day) and fourier components to array
-            frequency[:, k, l] = frequency_full[sort] * (24*3600)
-            frequency_ind[:, k, l] = frequency_full[sort_ind] * (24*3600)
-            spectrum[:, k, l] = element[sort]
-            spectrum_ind[:, k, l] = element_ind[sort_ind]
+            frequency[:, k, ll] = frequency_full[sort] * (24*3600)
+            frequency_ind[:, k, ll] = frequency_full[sort_ind] * (24*3600)
+            spectrum[:, k, ll] = element[sort]
+            spectrum_ind[:, k, ll] = element_ind[sort_ind]
 
     if scaled:
         # scale non-offset coefficients by 2
@@ -403,7 +404,8 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
                  frequency=frequency, spectrum=spectrum,
                  frequency_ind=frequency_ind, spectrum_ind=spectrum_ind,
                  step=step, N=N, filter=filter, reference=reference,
-                 scaled=scaled, dipole=basicConfig['params.dipole'],
+                 scaled=scaled,
+                 dipole=config_utils.basicConfig['params.dipole'],
                  start_date=start_date)
         print("Output saved to {:}".format(save_to))
 
@@ -463,7 +465,7 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
 
     # compute Schmidt quasi-normalized associated Legendre functions and
     # corresponding normalization
-    Pnm = legendre_poly(nmax, theta)
+    Pnm = model_utils.legendre_poly(nmax, theta)
     n_Pnm = int((nmax**2+3*nmax)/2)
     norm = np.empty((n_Pnm,))
     for n in range(1, nmax+1):
@@ -486,7 +488,7 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
 
         # compute Schmidt quasi-normalized associated Legendre functions on
         # grid in rotated reference system: theta_ref, phi_ref
-        Pnm_ref = legendre_poly(kmax, theta_ref)
+        Pnm_ref = model_utils.legendre_poly(kmax, theta_ref)
 
         # compute powers of complex exponentials
         nphi_ref = np.radians(np.multiply.outer(np.arange(kmax+1), phi_ref))
@@ -522,8 +524,8 @@ def rotate_gauss(nmax, kmax, base_1, base_2, base_3):
             col += 1  # update index of column
 
             # l > 0
-            for l in range(1, k+1):
-                sh_ref = Pnm_ref[k, l]*exp_ref[l]
+            for ll in range(1, k+1):
+                sh_ref = Pnm_ref[k, ll]*exp_ref[ll]
                 fft_c = np.fft.fft(sh_ref.real) / n_phi
                 fft_s = np.fft.fft(sh_ref.imag) / n_phi
 
@@ -599,7 +601,7 @@ def sh_analysis(func, nmax, kmax=None):
     >>> #
     >>> def func(theta, phi):
     >>>     n, m = 1, 1
-    >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
+    >>>     Pnm = cp.model_utils.legendre_poly(n, theta)
     >>>     if m >= 0:
     >>>         return np.cos(m*np.radians(phi))*Pnm[n, m]
     >>>     else:
@@ -613,7 +615,7 @@ def sh_analysis(func, nmax, kmax=None):
 
     >>> def func(theta, phi):
     >>>     n, m = 7, 0  # increased degree to n=7
-    >>>     Pnm = cp.coordinate_utils.legendre_poly(n, theta)
+    >>>     Pnm = cp.model_utils.legendre_poly(n, theta)
     >>>     return Pnm[n, m]
 
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
@@ -640,7 +642,7 @@ def sh_analysis(func, nmax, kmax=None):
     phi = np.arange(n_phi) * np.degrees(2*np.pi)/n_phi
 
     # compute Schmidt quasi-normalized associated Legendre functions
-    Pnm = legendre_poly(nmax, theta)
+    Pnm = model_utils.legendre_poly(nmax, theta)
 
     # generate surface grid: [0., 360.] x [0., 180.]
     theta_grid, phi_grid = np.meshgrid(theta, phi)
@@ -861,8 +863,8 @@ def gg_to_geo(height, beta):
 
     """
 
-    a = basicConfig['params.ellipsoid'][0]  # equatorial radius
-    b = basicConfig['params.ellipsoid'][1]  # polar radius
+    a = config_utils.basicConfig['params.ellipsoid'][0]  # equatorial radius
+    b = config_utils.basicConfig['params.ellipsoid'][1]  # polar radius
 
     # convert geodetic colatitude to latitude
     alpha = np.radians(90. - beta)
@@ -917,8 +919,8 @@ def geo_to_gg(radius, theta):
 
     """
 
-    a = basicConfig['params.ellipsoid'][0]  # equatorial radius
-    b = basicConfig['params.ellipsoid'][1]  # polar radius
+    a = config_utils.basicConfig['params.ellipsoid'][0]  # equatorial radius
+    b = config_utils.basicConfig['params.ellipsoid'][1]  # polar radius
 
     a2 = a**2
     b2 = b**2
@@ -984,7 +986,7 @@ def basevectors_gsm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = basicConfig['params.dipole']
+        dipole = config_utils.basicConfig['params.dipole']
 
     vec = _dipole_to_unit(dipole)
 
@@ -1038,7 +1040,7 @@ def basevectors_sm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = basicConfig['params.dipole']
+        dipole = config_utils.basicConfig['params.dipole']
 
     vec = _dipole_to_unit(dipole)
 
@@ -1091,7 +1093,7 @@ def basevectors_mag(dipole=None):
     """
 
     if dipole is None:
-        dipole = basicConfig['params.dipole']
+        dipole = config_utils.basicConfig['params.dipole']
 
     mag_3 = _dipole_to_unit(dipole)
 
@@ -1262,7 +1264,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
     inverse = False if inverse is None else inverse
 
     if dipole is None:
-        dipole = basicConfig['params.dipole']
+        dipole = config_utils.basicConfig['params.dipole']
 
     if reference == 'gsm':
         # compute GSM base vectors
@@ -1416,7 +1418,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     reference = str(reference).lower()
 
     if dipole is None:
-        dipole = basicConfig['params.dipole']
+        dipole = config_utils.basicConfig['params.dipole']
 
     if reference == 'gsm':
         # compute GSM base vectors
@@ -1774,7 +1776,7 @@ def q_response(frequency, nmax):
     """
 
     # load conductivity model
-    filepath = basicConfig['file.Earth_conductivity']
+    filepath = config_utils.basicConfig['file.Earth_conductivity']
     sigma_model = np.loadtxt(filepath)
 
     radius_ref = 6371.2  # reference radius in km
