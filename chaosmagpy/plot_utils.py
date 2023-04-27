@@ -29,7 +29,7 @@ except ImportError:
 
 def plot_timeseries(time, *args, **kwargs):
     """
-    Returns line plots showing the timeseries of the input arguments.
+    Creates line plots for the timeseries of the input arguments.
 
     Parameters
     ----------
@@ -38,14 +38,6 @@ def plot_timeseries(time, *args, **kwargs):
     *args : ndarray, shape (N, k)
         Array containing `k` columns of values to plot against time. Several
         arrays can be provided as separated arguments.
-
-    Returns
-    -------
-    fig : :class:`matplotlib.figure.Figure`
-        Matplotlib figure.
-    axes : :class:`matplotlib.axes.Axes`, ndarray
-        Array of which singleton dimenions have been squeezed out. Only the
-        axes instance is returned in case of a single axis.
 
     Other Parameters
     ----------------
@@ -59,6 +51,12 @@ def plot_timeseries(time, *args, **kwargs):
         Layout of the subplots (defaults to vertically stacked subplots).
     **kwargs : keywords
         Other options to pass to matplotlib plotting method.
+
+    Notes
+    -----
+    For more customization get access to the figure and axes handles
+    through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+    right after the call to this plotting function.
 
     """
 
@@ -99,15 +97,10 @@ def plot_timeseries(time, *args, **kwargs):
 
     fig.tight_layout(rect=(0, 0.02, 1, 1))
 
-    if axes.shape == (1, 1):
-        return fig, axes[0, 0]
-    else:
-        return fig, np.squeeze(axes)
-
 
 def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     """
-    Returns global maps of the input arguments.
+    Plots global maps of the input arguments.
 
     Parameters
     ----------
@@ -118,14 +111,6 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     *args : ndarray
         Array of values to plot on the global map. Several
         arrays can be provided as separated arguments.
-
-    Returns
-    -------
-    fig : :class:`matplotlib.figure.Figure`
-        Matplotlib figure.
-    axes : :class:`matplotlib.axes.Axes`, ndarray
-        Array of which singleton dimensions have been squeezed out. Only the
-        axes instance is returned in case of a single axis.
 
     Other Parameters
     ----------------
@@ -151,6 +136,12 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
         :func:`cartopy.crs.PlateCarree()`)
     **kwargs : keywords
         Other options to pass to matplotlib :func:`pcolormesh` method.
+
+    Notes
+    -----
+    For more customization get access to the figure and axes handles
+    through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+    right after the call to this plotting function.
 
     """
 
@@ -210,27 +201,15 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     fig.tight_layout()
 
-    if axes.shape == (1, 1):
-        return fig, axes[0, 0]
-    else:
-        return fig, np.squeeze(axes)
-
 
 def plot_power_spectrum(spectrum, **kwargs):
     """
-    Plot spherical harmonic spectrum.
+    Plot the spherical harmonic spectrum.
 
     Parameters
     ----------
     spectrum : ndarray, shape (N,)
         Spherical harmonics spectrum of degree `N`.
-
-    Returns
-    -------
-    fig : :class:`matplotlib.figure.Figure`
-        Matplotlib figure.
-    axes : :class:`matplotlib.axes.Axes`
-        A single axes instance.
 
     Other Parameters
     ----------------
@@ -242,6 +221,12 @@ def plot_power_spectrum(spectrum, **kwargs):
         Label of the vertical axis (defaults to an empty string).
     **kwargs
         Keywords passed to :func:`matplotlib.pyplot.semilogy`
+
+    Notes
+    -----
+    For more customization get access to the figure and axes handles
+    through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+    right after the call to this plotting function.
 
     """
 
@@ -271,10 +256,9 @@ def plot_power_spectrum(spectrum, **kwargs):
     ax.set(ylabel=ylabel, xlabel='degree')
 
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    plt.xlim((0, degrees[-1]))
-    plt.tight_layout()
+    ax.set_xlim((0, degrees[-1]))
 
-    return fig, ax
+    fig.tight_layout()
 
 
 def fmt(x, pos):

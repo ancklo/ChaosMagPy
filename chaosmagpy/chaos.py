@@ -457,13 +457,6 @@ class BaseModel(Base):
         time : float
             Time in modified Julian date.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure.
-        axes : :class:`matplotlib.axes.Axes`
-            A single axes instance.
-
         Other Parameters
         ----------------
         radius : float, optional
@@ -475,6 +468,12 @@ class BaseModel(Base):
         deriv : int, positive, optional
             Derivative in time (default is 0). For secular variation, choose
             ``deriv=1``.
+
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         See Also
         --------
@@ -498,9 +497,8 @@ class BaseModel(Base):
 
         R_n = self.power_spectrum(time, radius, nmax=nmax, deriv=deriv)
 
-        fig, axes = pu.plot_power_spectrum(R_n, **kwargs)
+        pu.plot_power_spectrum(R_n, **kwargs)
 
-        return fig, axes
 
     def plot_maps(self, time, radius, **kwargs):
         """
@@ -513,14 +511,6 @@ class BaseModel(Base):
         radius : ndarray, shape (), (1,) or float
             Array containing the radius in kilometers.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing global maps of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
-
         Other Parameters
         ----------------
         nmax : int, positive, optional
@@ -532,6 +522,12 @@ class BaseModel(Base):
         **kwargs : keywords
             Other options are passed to :func:`plot_utils.plot_maps`
             function.
+
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         See Also
         --------
@@ -564,16 +560,13 @@ class BaseModel(Base):
 
         time = np.array(time, dtype=float)
         theta = np.linspace(1, 179, num=320)
-        phi = np.linspace(-180, 180, num=721)
+        phi = np.linspace(-180, 180, num=640)
 
         B_radius, B_theta, B_phi = self.synth_values(
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             grid=True, extrapolate=None)
 
-        fig, axes = pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                                 **kwargs)
-
-        return fig, axes
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi, **kwargs)
 
     def plot_timeseries(self, radius, theta, phi, **kwargs):
         """
@@ -589,14 +582,6 @@ class BaseModel(Base):
         phi : ndarray, shape (), (1,) or float
             Longitude in degrees.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing a time series of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
-
         Other Parameters
         ----------------
         nmax : int, positive, optional
@@ -611,6 +596,12 @@ class BaseModel(Base):
         **kwargs : keywords
             Other options to pass to :func:`plot_utils.plot_timeseries`
             function.
+
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         See Also
         --------
@@ -639,10 +630,7 @@ class BaseModel(Base):
             time, radius, theta, phi, nmax=nmax, deriv=deriv,
             extrapolate=extrapolate)
 
-        fig, axes = pu.plot_timeseries(time, B_radius, B_theta, B_phi,
-                                       **kwargs)
-
-        return fig, axes
+        pu.plot_timeseries(time, B_radius, B_theta, B_phi, **kwargs)
 
     @classmethod
     def from_bspline(cls, name, knots, coeffs, order, source=None, meta=None):
@@ -1340,13 +1328,11 @@ str, {'internal', 'external'}
             Other options to pass to :meth:`BaseModel.plot_timeseries`
             method.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing a time series of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         """
 
@@ -1354,7 +1340,7 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        return self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
+        self.model_tdep.plot_timeseries(radius, theta, phi, **kwargs)
 
     def plot_maps_tdep(self, time, radius, *, nmax=None, deriv=None, **kwargs):
         """
@@ -1376,13 +1362,11 @@ str, {'internal', 'external'}
         **kwargs : keywords
             Other options are passed to :meth:`BaseModel.plot_maps` method.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing global maps of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         """
 
@@ -1390,8 +1374,8 @@ str, {'internal', 'external'}
             raise ValueError("Time-dependent internal field coefficients "
                              "are missing.")
 
-        return self.model_tdep.plot_maps(time, radius, nmax=nmax, deriv=deriv,
-                                         **kwargs)
+        self.model_tdep.plot_maps(time, radius, nmax=nmax,
+                                  deriv=deriv, **kwargs)
 
     def synth_coeffs_static(self, *, nmax=None, **kwargs):
         """
@@ -1484,13 +1468,11 @@ str, {'internal', 'external'}
             Other options are passed to :meth:`BaseModel.plot_maps`
             method.
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing global maps of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         """
 
@@ -1506,7 +1488,7 @@ str, {'internal', 'external'}
 
         time = self.model_static.breaks[0]
 
-        return self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
+        self.model_static.plot_maps(time, radius, nmax=nmax, **kwargs)
 
     def synth_coeffs_gsm(self, time, *, nmax=None, source=None):
         """
@@ -1976,13 +1958,11 @@ str, {'internal', 'external'}
             Choose source to be external (inducing), internal (induced) or
             both added (default is 'all').
 
-        Returns
-        -------
-        fig : :class:`matplotlib.figure.Figure`
-            Matplotlib figure showing global maps of the radial,
-            colatitude and azimuthal field components.
-        axes : :class:`matplotlib.axes.Axes`, ndarray
-            Array containing three axes, one for each field component.
+        Notes
+        -----
+        For more customization get access to the figure and axes handles
+        through matplotlib by using ``fig = plt.gcf()`` and ``axes = fig.axes``
+        right after the call to this plotting method.
 
         """
 
@@ -2034,8 +2014,8 @@ str, {'internal', 'external'}
                       f'$B_\\theta$ ({reference.upper()} {source} sources)',
                       f'$B_\\phi$ ({reference.upper()} {source} sources)']
 
-        return pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
-                            titles=titles, label=units)
+        pu.plot_maps(theta, phi, B_radius, B_theta, B_phi,
+                     titles=titles, label=units)
 
     def synth_euler_angles(self, time, satellite, *, dim=None, deriv=None,
                            extrapolate=None):
