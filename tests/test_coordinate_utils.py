@@ -1,9 +1,9 @@
 import numpy as np
 import os
 import textwrap
+import chaosmagpy as cp
+from chaosmagpy import coordinate_utils as cpc
 from unittest import TestCase, main
-from chaosmagpy import coordinate_utils as c
-from chaosmagpy import data_utils as d
 from math import pi
 from timeit import default_timer as timer
 
@@ -32,16 +32,16 @@ class CoordinateUtils(TestCase):
     def test_dipole_to_unit(self):
 
         self.assertIsNone(np.testing.assert_allclose(
-            c.igrf_dipole('2010'),
-            c._dipole_to_unit(11.32, 289.59)))
+            cpc.igrf_dipole('2010'),
+            cpc._dipole_to_unit(11.32, 289.59)))
 
         self.assertIsNone(np.testing.assert_allclose(
-            c.igrf_dipole('2015'),
-            c._dipole_to_unit(np.array([-29442.0, -1501.0, 4797.1]))))
+            cpc.igrf_dipole('2015'),
+            cpc._dipole_to_unit(np.array([-29442.0, -1501.0, 4797.1]))))
 
         self.assertIsNone(np.testing.assert_allclose(
-            c.igrf_dipole('2015'),
-            c._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
+            cpc.igrf_dipole('2015'),
+            cpc._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
 
     def test_zenith_angle(self):
         """
@@ -53,23 +53,23 @@ class CoordinateUtils(TestCase):
 
         """
 
-        zeta = c.zenith_angle(d.mjd2000(2019, 8, 1), 90., 0.)
+        zeta = cpc.zenith_angle(cp.mjd2000(2019, 8, 1), 90., 0.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 161.79462, rtol=1e-5))
 
-        zeta = c.zenith_angle(d.mjd2000(2013, 8, 1), 77., -54.)
+        zeta = cpc.zenith_angle(cp.mjd2000(2013, 8, 1), 77., -54.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 117.00128, rtol=1e-5))
 
-        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 12), 90., 0.)
+        zeta = cpc.zenith_angle(cp.mjd2000(2013, 3, 20, 12), 90., 0.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 1.85573, rtol=1e-4))
 
-        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 10), 90., 0.)
+        zeta = cpc.zenith_angle(cp.mjd2000(2013, 3, 20, 10), 90., 0.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 31.85246, rtol=1e-3))
 
-        zeta = c.zenith_angle(d.mjd2000(2013, 3, 20, 14), 90., 0.)
+        zeta = cpc.zenith_angle(cp.mjd2000(2013, 3, 20, 14), 90., 0.)
         self.assertIsNone(np.testing.assert_allclose(
             zeta, 28.14153, rtol=1e-3))
 
@@ -96,7 +96,7 @@ class CoordinateUtils(TestCase):
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
-        C_n, rho_a, phi, Q_n = c.q_response_1D(periods, sigma, radius, n,
+        C_n, rho_a, phi, Q_n = cpc.q_response_1D(periods, sigma, radius, n,
                                                kind='constant')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
@@ -117,14 +117,14 @@ class CoordinateUtils(TestCase):
         phi_mat = np.ravel(test['phi'])
         Q_n_mat = np.ravel(test['Q_n'])
 
-        model = np.loadtxt(c.basicConfig['file.Earth_conductivity'])
+        model = np.loadtxt(cp.basicConfig['file.Earth_conductivity'])
 
         radius = a - model[:, 0]
         sigma = model[:, 1]
 
         periods = np.logspace(np.log10(1/48), np.log10(365*24))*3600
 
-        C_n, rho_a, phi, Q_n = c.q_response_1D(
+        C_n, rho_a, phi, Q_n = cpc.q_response_1D(
             periods, sigma, radius, n, kind='quadratic')
 
         self.assertIsNone(np.testing.assert_allclose(C_n, C_n_mat))
@@ -144,7 +144,7 @@ class CoordinateUtils(TestCase):
             print(f'  Testing {reference} frame of reference.')
 
             # load spectrum to synthesize matrices in time-domain
-            filepath = c.basicConfig[f'file.{reference}_spectrum']
+            filepath = cp.basicConfig[f'file.{reference}_spectrum']
 
             try:
                 data = np.load(filepath)
@@ -160,10 +160,10 @@ class CoordinateUtils(TestCase):
             for freq, spec in zip(['frequency', 'frequency_ind'],
                                   ['spectrum', 'spectrum_ind']):
 
-                matrix = c.synth_rotate_gauss(
+                matrix = cpc.synth_rotate_gauss(
                     time, data[freq], data[spec], scaled=True)
 
-                matrix_mat = c.synth_rotate_gauss(
+                matrix_mat = cpc.synth_rotate_gauss(
                     time, data_mat[reference + '_' + freq],
                     data_mat[reference + '_' + spec], scaled=True)
 
@@ -183,7 +183,7 @@ class CoordinateUtils(TestCase):
             print(f'  Testing {reference.upper()} frame of reference.')
 
             # load spectrum to synthesize matrices in time-domain
-            filepath = c.basicConfig[f'file.{reference.upper()}_spectrum']
+            filepath = cp.basicConfig[f'file.{reference.upper()}_spectrum']
 
             try:
                 data = np.load(filepath)
@@ -199,18 +199,18 @@ class CoordinateUtils(TestCase):
             print("  Testing 50 times within 1996 and 2024.")
             for time in np.linspace(-4*365.25, 24*365.25, 50):
 
-                matrix_time = c.synth_rotate_gauss(
+                matrix_time = cpc.synth_rotate_gauss(
                     time, frequency, spectrum, scaled=data['scaled'])
 
                 nmax = int(np.sqrt(spectrum.shape[1] + 1) - 1)
                 kmax = int(np.sqrt(spectrum.shape[2] + 1) - 1)
 
                 if reference == 'gsm':
-                    base_1, base_2, base_3 = c.basevectors_gsm(time)
+                    base_1, base_2, base_3 = cpc.basevectors_gsm(time)
                 elif reference == 'sm':
-                    base_1, base_2, base_3 = c.basevectors_sm(time)
+                    base_1, base_2, base_3 = cpc.basevectors_sm(time)
 
-                matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
+                matrix = cpc.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
                 stat = np.amax(np.abs(matrix-np.squeeze(matrix_time)))
                 print('  Computed year {:4.2f}, '
@@ -234,7 +234,7 @@ class CoordinateUtils(TestCase):
 
         for reference in ['gsm', 'sm']:
 
-            frequency, amplitude, _, _ = c.rotate_gauss_fft(
+            frequency, amplitude, _, _ = cpc.rotate_gauss_fft(
                 nmax, kmax, step=1., N=int(365*24), filter=20,
                 save_to=False, reference=reference, scaled=False)
 
@@ -262,8 +262,8 @@ class CoordinateUtils(TestCase):
 
         s = timer()
 
-        base_1, base_2, base_3 = c.basevectors_gsm(time)
-        matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
+        base_1, base_2, base_3 = cpc.basevectors_gsm(time)
+        matrix = cpc.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
         e = timer()
 
@@ -290,7 +290,7 @@ class CoordinateUtils(TestCase):
         nmax = 1  # only dipole terms
         kmax = 1
 
-        matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
+        matrix = cpc.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
         desired = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
 
         self.assertIsNone(np.testing.assert_allclose(
@@ -301,8 +301,8 @@ class CoordinateUtils(TestCase):
         nmax = 4
         kmax = 2
 
-        base_1, base_2, base_3 = c.basevectors_gsm(time)
-        matrix = c.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
+        base_1, base_2, base_3 = cpc.basevectors_gsm(time)
+        matrix = cpc.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
         self.assertEqual(matrix.shape, (3, 3, 24, 8))
 
@@ -317,7 +317,7 @@ class CoordinateUtils(TestCase):
         phi = 180.
 
         result = (radius, theta, phi)
-        self.assertAlmostEqual(c.cartesian_to_spherical(x, y, z), result)
+        self.assertAlmostEqual(cpc.cartesian_to_spherical(x, y, z), result)
 
     def test_spherical_to_cartesian(self):
 
@@ -333,18 +333,18 @@ class CoordinateUtils(TestCase):
 
         theta, phi = np.degrees(theta), np.degrees(phi)
 
-        self.assertEqual(c.spherical_to_cartesian(radius, theta, phi), result)
-        self.assertEqual(c.spherical_to_cartesian(1, theta, phi), result)
-        self.assertEqual(c.spherical_to_cartesian(
+        self.assertEqual(cpc.spherical_to_cartesian(radius, theta, phi), result)
+        self.assertEqual(cpc.spherical_to_cartesian(1, theta, phi), result)
+        self.assertEqual(cpc.spherical_to_cartesian(
             theta=theta, radius=radius, phi=phi), result)
-        self.assertEqual(c.spherical_to_cartesian(
+        self.assertEqual(cpc.spherical_to_cartesian(
             radius=1, phi=phi, theta=theta), result)
 
     def test_gg_to_geo(self):
 
         mat = load_matfile(MATFILE_PATH, 'test_gg_to_geo')
 
-        radius, theta = c.gg_to_geo(mat['height'], mat['beta'])
+        radius, theta = cpc.gg_to_geo(mat['height'], mat['beta'])
 
         self.assertIsNone(np.testing.assert_allclose(radius, mat['radius']))
         self.assertIsNone(np.testing.assert_allclose(theta, mat['theta']))
@@ -353,7 +353,7 @@ class CoordinateUtils(TestCase):
 
         mat = load_matfile(MATFILE_PATH, 'test_geo_to_gg')
 
-        height, beta = c.geo_to_gg(mat['radius'], mat['theta'])
+        height, beta = cpc.geo_to_gg(mat['radius'], mat['theta'])
 
         self.assertIsNone(np.testing.assert_allclose(height, mat['height']))
         self.assertIsNone(np.testing.assert_allclose(beta, mat['beta']))
@@ -362,9 +362,9 @@ class CoordinateUtils(TestCase):
 
         mat = load_matfile(MATFILE_PATH, 'test_gg_to_geo')
 
-        radius, theta = c.gg_to_geo(mat['height'], mat['beta'])
+        radius, theta = cpc.gg_to_geo(mat['height'], mat['beta'])
 
-        height, beta = c.geo_to_gg(radius, theta)
+        height, beta = cpc.geo_to_gg(radius, theta)
 
         self.assertIsNone(
             np.testing.assert_allclose(height, mat['height'], atol=1e-10))
@@ -381,16 +381,16 @@ class CoordinateUtils(TestCase):
             print(f'  Testing {reference.upper()}')
 
             if reference == 'mag':
-                base_1, base_2, base_3 = c.basevectors_mag()
+                base_1, base_2, base_3 = cpc.basevectors_mag()
             elif reference == 'sm':
-                base_1, base_2, base_3 = c.basevectors_sm(time)
+                base_1, base_2, base_3 = cpc.basevectors_sm(time)
             elif reference == 'gsm':
-                base_1, base_2, base_3 = c.basevectors_gsm(time)
+                base_1, base_2, base_3 = cpc.basevectors_gsm(time)
 
-            theta_ref, phi_ref, R = c.matrix_geo_to_base(
+            theta_ref, phi_ref, R = cpc.matrix_geo_to_base(
                 theta_geo, phi_geo, base_1, base_2, base_3, inverse=False)
 
-            theta_geo2, phi_geo2, R2 = c.matrix_geo_to_base(
+            theta_geo2, phi_geo2, R2 = cpc.matrix_geo_to_base(
                 theta_ref, phi_ref, base_1, base_2, base_3, inverse=True)
 
             self.assertIsNone(
@@ -419,7 +419,7 @@ class CoordinateUtils(TestCase):
         theta_sm_mat = np.ravel(test['theta_sm'])
         phi_sm_mat = np.ravel(test['phi_sm'])
 
-        theta_sm, phi_sm = c.transform_points(theta_geo, phi_geo,
+        theta_sm, phi_sm = cpc.transform_points(theta_geo, phi_geo,
                                               time=time, reference='sm')
 
         self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm_mat))
@@ -438,7 +438,7 @@ class CoordinateUtils(TestCase):
         theta_gsm_mat = np.ravel(test['theta_gsm'])
         phi_gsm_mat = np.ravel(test['phi_gsm'])
 
-        theta_gsm, phi_gsm = c.transform_points(
+        theta_gsm, phi_gsm = cpc.transform_points(
             theta_geo, phi_geo, time=time, reference='gsm')
 
         self.assertIsNone(np.testing.assert_allclose(theta_gsm, theta_gsm_mat))
@@ -458,29 +458,29 @@ class CoordinateUtils(TestCase):
         theta_gsm_mat = np.ravel(test['theta_gsm'])
         phi_gsm_mat = np.ravel(test['phi_gsm'])
 
-        gsm_1, gsm_2, gsm_3 = c.basevectors_gsm(time)
+        gsm_1, gsm_2, gsm_3 = cpc.basevectors_gsm(time)
 
-        theta_gsm, phi_gsm = c.geo_to_base(
+        theta_gsm, phi_gsm = cpc.geo_to_base(
             theta_geo, phi_geo, gsm_1, gsm_2, gsm_3)
 
         self.assertIsNone(np.testing.assert_allclose(theta_gsm, theta_gsm_mat))
         self.assertIsNone(np.testing.assert_allclose(phi_gsm, phi_gsm_mat))
 
         # test the inverse option: GEO -> GSM -> GEO
-        theta_geo2, phi_geo2 = c.geo_to_base(
+        theta_geo2, phi_geo2 = cpc.geo_to_base(
             theta_gsm, phi_gsm, gsm_1, gsm_2, gsm_3, inverse=True)
 
         self.assertIsNone(np.testing.assert_allclose(theta_geo, theta_geo2))
         self.assertIsNone(np.testing.assert_allclose(
-            phi_geo, c.center_azimuth(phi_geo2)))
+            phi_geo, cpc.center_azimuth(phi_geo2)))
 
         # test the inverse option: GSM -> GEO -> GSM
-        theta_gsm2, phi_gsm2 = c.geo_to_base(
+        theta_gsm2, phi_gsm2 = cpc.geo_to_base(
             theta_geo2, phi_geo2, gsm_1, gsm_2, gsm_3)
 
         self.assertIsNone(np.testing.assert_allclose(theta_gsm, theta_gsm2))
         self.assertIsNone(np.testing.assert_allclose(
-            c.center_azimuth(phi_gsm), c.center_azimuth(phi_gsm2)))
+            cpc.center_azimuth(phi_gsm), cpc.center_azimuth(phi_gsm2)))
 
         # TEST SM COORDINATES
         # SM test: load matfile
@@ -490,23 +490,23 @@ class CoordinateUtils(TestCase):
         theta_sm_mat = np.ravel(test['theta_sm'])
         phi_sm_mat = np.ravel(test['phi_sm'])
 
-        sm_1, sm_2, sm_3 = c.basevectors_sm(time)
+        sm_1, sm_2, sm_3 = cpc.basevectors_sm(time)
 
-        theta_sm, phi_sm = c.geo_to_base(
+        theta_sm, phi_sm = cpc.geo_to_base(
             theta_geo, phi_geo, sm_1, sm_2, sm_3)
 
         self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm_mat))
         self.assertIsNone(np.testing.assert_allclose(phi_sm, phi_sm_mat))
 
         # test the inverse option: GEO -> SM -> GEO
-        theta_geo2, phi_geo2 = c.geo_to_base(
+        theta_geo2, phi_geo2 = cpc.geo_to_base(
             theta_sm, phi_sm, sm_1, sm_2, sm_3, inverse=True)
 
         self.assertIsNone(np.testing.assert_allclose(theta_geo, theta_geo2))
         self.assertIsNone(np.testing.assert_allclose(phi_geo, phi_geo2))
 
         # test the inverse option: SM -> GEO -> SM
-        theta_sm2, phi_sm2 = c.geo_to_base(
+        theta_sm2, phi_sm2 = cpc.geo_to_base(
             theta_geo2, phi_geo2, sm_1, sm_2, sm_3)
 
         self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm2))
@@ -515,14 +515,14 @@ class CoordinateUtils(TestCase):
     def test_basevectors_use(self):
 
         # test local transformation at specific point
-        R = np.stack(c.basevectors_use(
+        R = np.stack(cpc.basevectors_use(
             theta=90., phi=180.), axis=-1)
         desired = np.array([[-1, 0, 0], [0, 0, -1], [0, -1, 0]])
 
         self.assertIsNone(np.testing.assert_allclose(R, desired, atol=1e-10))
 
         # test local transformation at specific point
-        R = np.stack(c.basevectors_use(
+        R = np.stack(cpc.basevectors_use(
             theta=90., phi=-90.), axis=-1)
         desired = np.array([[0, 0, 1], [-1, 0, 0], [0, -1, 0]])
 
@@ -530,11 +530,11 @@ class CoordinateUtils(TestCase):
 
     def test_sun_position(self):
 
-        start = d.mjd2000(1910, 1, 1)
-        end = d.mjd2000(2090, 12, 31)
+        start = cp.mjd2000(1910, 1, 1)
+        end = cp.mjd2000(2090, 12, 31)
         time = np.linspace(start, end, 100)
 
-        theta, phi = c.sun_position(time)
+        theta, phi = cpc.sun_position(time)
 
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_sun_position')
@@ -550,7 +550,7 @@ class CoordinateUtils(TestCase):
         # (lat 51.48, lon -0.0077) on July 18, 2018, 12h06 (from
         # sunearthtools.com):
 
-        time_gmt = d.mjd2000(2018, 7, 18, 12, 6)
+        time_gmt = cp.mjd2000(2018, 7, 18, 12, 6)
         lat = 51.4825766  # geogr. latitude
         lon = -0.0076589  # geogr. longitude
         el = 59.59  # elevation above horizon
@@ -559,7 +559,7 @@ class CoordinateUtils(TestCase):
         theta_gmt = 180. - (el + lat)  # subsolar colat. given geogr. lat.
         phi_gmt = 180. + (lon - az)  # subsolar phi given geogr. longitude
 
-        theta, phi = c.sun_position(time_gmt)
+        theta, phi = cpc.sun_position(time_gmt)
 
         self.assertAlmostEqual(theta_gmt, theta, places=0)
         self.assertAlmostEqual(phi_gmt, phi, places=0)
@@ -568,14 +568,14 @@ class CoordinateUtils(TestCase):
 
         angle = 180.
 
-        self.assertAlmostEqual(c.center_azimuth(0.25*angle), 0.25*angle)
-        self.assertAlmostEqual(c.center_azimuth(0.75*angle), 0.75*angle)
-        self.assertAlmostEqual(c.center_azimuth(1.25*angle), -0.75*angle)
-        self.assertAlmostEqual(c.center_azimuth(1.75*angle), -0.25*angle)
-        self.assertAlmostEqual(c.center_azimuth(-0.25*angle), -0.25*angle)
-        self.assertAlmostEqual(c.center_azimuth(-0.75*angle), -0.75*angle)
-        self.assertAlmostEqual(c.center_azimuth(-1.25*angle), 0.75*angle)
-        self.assertAlmostEqual(c.center_azimuth(-1.75*angle), 0.25*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(0.25*angle), 0.25*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(0.75*angle), 0.75*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(1.25*angle), -0.75*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(1.75*angle), -0.25*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(-0.25*angle), -0.25*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(-0.75*angle), -0.75*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(-1.25*angle), 0.75*angle)
+        self.assertAlmostEqual(cpc.center_azimuth(-1.75*angle), 0.25*angle)
 
 
 if __name__ == '__main__':

@@ -14,7 +14,7 @@ version=${version:-$latest}
 
 env_name=Test_$version
 
-printf "%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
+printf "\n%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
 
 echo Setting up fresh conda environment.
 conda env create --name $env_name -f environment.yml
