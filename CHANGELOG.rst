@@ -1,14 +1,17 @@
 Changelog
 =========
 
-Version 0.12-dev
-----------------
-| **Date:** January 12, 2023
-| **Release:** v0.12-dev
-| **Version of CHAOS:** CHAOS-7.13 (0713) and newer
+Version 0.12
+------------
+| **Date:** April 27, 2023
+| **Release:** v0.12
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2023_Feb_v8_Dst_mod.dat (used during the
+  construction of CHAOS-7.14).
+* Plotting function do not return figure and axes handles any more. If needed,
+  they can be accessed through matplotlib's ``gcf()`` and ``gca()``.
 * Added function :func:`chaosmagpy.model_utils.sensitivity` to compute the
   sensitivity of spherical harmonic coefficients.
 * Changed the default colormap for the component maps to ``'PuOr_r'`` (orange
@@ -27,7 +30,7 @@ Version 0.11
 ------------
 | **Date:** September 29, 2022
 | **Release:** v0.11
-| **Version of CHAOS:** CHAOS-7.12 (0712) and newer
+| **Version of CHAOS:** CHAOS-7.12 (0712) and CHAOS-7.13 (0713)
 
 Features
 ^^^^^^^^

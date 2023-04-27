@@ -7,7 +7,7 @@ read -e -p "Version of CHAOS [e.g.: 0706]: " vchaos
 version=$(grep __version__ chaosmagpy/__init__.py | sed 's/.*"\(.*\)".*/\1/')
 out=chaosmagpy_package_"$version"_"$vchaos".zip
 
-echo \\n------- ChaosMagPy Version $version / CHAOS Version $vchaos -------\\n
+echo -e "\n------- ChaosMagPy Version $version / CHAOS Version $vchaos -------\n"
 echo "Building package with CHAOS-matfile in '$chaos'."
 
 while true; do

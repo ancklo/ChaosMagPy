@@ -27,7 +27,7 @@ __all__ = [
     "mjd_to_dyear"
 ]
 
-__version__ = "0.12-dev"
+__version__ = "0.12"
 
 from .chaos import (
     CHAOS,
