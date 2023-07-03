@@ -138,14 +138,13 @@ ls -lrt dist | grep --color=auto chaosmagpy-$version
 
 cat << EOF
 -------------------------------------------------------------
-Check that the RC-index file has been updated.
+Check that the desired RC-index file has been included.
+Check that the CHAOS version in basicConfig was built with the included RC-index file.
 Check that example output agrees with MATLAB example output.
-Check that correct model file was used.
 Check license date.
 Check changelog date.
 Check url to CHAOS at the top of the usage section.
 Check overview section in the documentation.
-Check default CHAOS version in basicConfig.
 -------------------------------------------------------------
 EOF
 
