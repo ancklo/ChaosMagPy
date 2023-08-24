@@ -2,7 +2,7 @@
 Create a Global Map and Polar Views
 ===================================
 
-Compute a map of the first time-derivative of the radial field component on the
+Create a map of the first time-derivative of the radial field component on the
 core surface in 2016 using CHAOS.
 
 """
@@ -25,7 +25,7 @@ phi = np.linspace(-180., 180, 361)  # longitude in degrees
 B, _, _ = model.synth_values_tdep(time, radius, theta, phi,
                                   nmax=16, deriv=1, grid=True)
 
-limit = 30e3  # nT colorbar limit
+limit = 30e3  # nT/yr colorbar limit
 
 # create figure
 fig = plt.figure(figsize=(12, 8))
@@ -51,10 +51,10 @@ axes = [
 for ax in axes:
     pc = ax.pcolormesh(phi, 90. - theta, B, cmap='PuOr', vmin=-limit,
                        vmax=limit, transform=ccrs.PlateCarree())
-    ax.gridlines(linewidth=0.5, linestyle='dashed',
+    ax.gridlines(linewidth=0.5, linestyle='dashed', color='grey',
                  ylocs=np.linspace(-90, 90, num=7),  # parallels
                  xlocs=np.linspace(-180, 180, num=13))  # meridians
-    ax.coastlines(linewidth=0.5)
+    ax.coastlines(linewidth=0.8, color='k')
 
 # inset axes into global map and move upwards
 cax = inset_axes(axes[-1], width="45%", height="5%", loc='upper center',

@@ -2,8 +2,8 @@
 Spatial Power Spectra
 =====================
 
-Compute and plot the spatial power spectrum of the time-dependent internal
-field given by CHAOS.
+Create a plot of the spatial power spectrum of the time-dependent internal
+field as given by CHAOS.
 
 """
 

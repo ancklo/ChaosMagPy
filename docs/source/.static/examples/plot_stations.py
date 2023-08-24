@@ -2,8 +2,8 @@
 Evaluate CHAOS at a Ground Observatory
 ======================================
 
-Compute a time series of the first time-derivative of the field components
-(SV) given by CHAOS.
+Create a time series plot of the first time-derivative of the field components
+(SV) as given by CHAOS.
 
 In this example the location of the ground observatory in Niemegk (Germany)
 is used. Also, the spherical harmonic coefficients of the SV are truncated
