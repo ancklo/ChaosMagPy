@@ -31,17 +31,38 @@ class CoordinateUtils(TestCase):
 
     def test_dipole_to_unit(self):
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             cpc.igrf_dipole('2010'),
-            cpc._dipole_to_unit(11.32, 289.59)))
+            cpc._dipole_to_unit(11.32, 289.59))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             cpc.igrf_dipole('2015'),
-            cpc._dipole_to_unit(np.array([-29442.0, -1501.0, 4797.1]))))
+            cpc._dipole_to_unit(np.array([-29442.0, -1501.0, 4797.1])))
 
-        self.assertIsNone(np.testing.assert_allclose(
+        np.testing.assert_allclose(
             cpc.igrf_dipole('2015'),
-            cpc._dipole_to_unit(-29442.0, -1501.0, 4797.1)))
+            cpc._dipole_to_unit(-29442.0, -1501.0, 4797.1))
+
+        # test higher-dimensional arrays
+
+        desired = np.tile(cpc.igrf_dipole('2010'), (5, 3, 1))  # (5, 3, 3)
+        result = cpc._dipole_to_unit(
+            11.32*np.ones((5, 3)), 289.59*np.ones((5, 3))
+        )
+        np.testing.assert_allclose(desired, result)
+
+        desired = np.tile(cpc.igrf_dipole('2015'), (5, 2, 1))  # (5, 2, 3)
+        result = cpc._dipole_to_unit(
+            np.tile(np.array([-29442.0, -1501.0, 4797.1]), (5, 2, 1))
+        )
+        np.testing.assert_allclose(desired, result)
+
+        desired = np.tile(cpc.igrf_dipole('2015'), (5, 2, 1))  # (5, 2, 3)
+        result = cpc._dipole_to_unit(
+            -29442.0*np.ones((5, 2)), -1501.0*np.ones((5, 2)),
+            4797.1*np.ones((5, 2))
+        )
+        np.testing.assert_allclose(desired, result)
 
     def test_zenith_angle(self):
         """

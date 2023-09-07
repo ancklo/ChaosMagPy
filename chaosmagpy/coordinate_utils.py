@@ -115,30 +115,40 @@ def _dipole_to_unit(*args):
 
     Parameters
     ----------
-    *args
-        Takes ``theta``, ``phi`` in degrees, ``[g10, g11, h11]`` or
-        ``g10``, ``g11``, ``h11`` as input.
+    *args : ndarray, shapes (...) or (..., 3)
+        Takes as input either two arrays ``theta``, ``phi`` in degrees, or a
+        single array where the trailing dimension contains
+        ``[g10, g11, h11]``, or three arrays ``g10``, ``g11``, ``h11``
+        (in that order). All arrays must broadcast.
 
     Returns
     -------
-    vector : ndarray, shape (3,)
+    vector : ndarray, shape (..., 3)
         Unit vector pointing to geomagnetic north pole.
+
     """
 
     if len(args) == 1:
-        vector = np.roll(args[0], -1)  # g11, h11, g10: dipole
+        vector = np.roll(args[0], shift=-1, axis=-1)  # g11, h11, g10: dipole
+
         # unit vector, opposite to dipole
-        vector = -vector/np.linalg.norm(vector)
+        vector = -vector / np.linalg.norm(vector, axis=-1, keepdims=True)
+
     elif len(args) == 2:
         theta = np.radians(args[0])
         phi = np.radians(args[1])
-        vector = np.array([np.sin(theta)*np.cos(phi),
+
+        vector = np.stack([np.sin(theta)*np.cos(phi),
                            np.sin(theta)*np.sin(phi),
-                           np.cos(theta)])
+                           np.cos(theta)], axis=-1)
+
     elif len(args) == 3:
-        vector = np.array([args[1], args[2], args[0]])  # g11, h11, g10: dipole
+        # g11, h11, g10: dipole
+        vector = np.stack([args[1], args[2], args[0]], axis=-1)
+
         # unit vector, opposite to dipole
-        vector = -vector/np.linalg.norm(vector)
+        vector = -vector / np.linalg.norm(vector, axis=-1, keepdims=True)
+
     else:
         raise ValueError('Only 1, 2 or 3 inputs accepted '
                          f'but {len(args)} given.')
@@ -973,7 +983,7 @@ def basevectors_gsm(time, dipole=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    dipole : ndarray, shape (3,), optional
+    dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
@@ -1026,7 +1036,7 @@ def basevectors_sm(time, dipole=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    dipole : ndarray, shape (3,), optional
+    dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
@@ -1056,9 +1066,9 @@ def basevectors_sm(time, dipole=None):
 
     # set third unit base vector of SM to dipole unit vector
     sm_3 = np.empty(x_sun.shape + (3,))
-    sm_3[..., 0] = vec[0]
-    sm_3[..., 1] = vec[1]
-    sm_3[..., 2] = vec[2]
+    sm_3[..., 0] = vec[..., 0]
+    sm_3[..., 1] = vec[..., 1]
+    sm_3[..., 2] = vec[..., 2]
 
     # compute second base vector of SM using the cross product of the IGRF
     # dipole unit vector and the sun direction vector
@@ -1081,7 +1091,7 @@ def basevectors_mag(dipole=None):
 
     Parameters
     ----------
-    dipole : ndarray, shape (3,), optional
+    dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
@@ -1098,7 +1108,7 @@ def basevectors_mag(dipole=None):
     mag_3 = _dipole_to_unit(dipole)
 
     mag_2 = np.cross(np.array([0., 0., 1.]), mag_3)
-    mag_2 = mag_2 / np.linalg.norm(mag_2)
+    mag_2 = mag_2 / np.linalg.norm(mag_2, axis=-1, keepdims=True)
 
     mag_1 = np.cross(mag_2, mag_3)
 
@@ -1241,7 +1251,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
     inverse : bool
         Use inverse transformation instead, i.e. transform from the rotated
         geocentric coordinates to GEO (default is False).
-    dipole : ndarray, shape (3,), optional
+    dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
@@ -1276,7 +1286,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
 
     elif reference == 'mag':
         # compute centered dipole base vectors
-        base_1, base_2, base_3 = basevectors_mag()
+        base_1, base_2, base_3 = basevectors_mag(dipole=dipole)
 
     else:
         raise ValueError('Unknown target reference system. Use one of '
@@ -1388,7 +1398,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         coordinates to geographic (default is False).
-    dipole : ndarray, shape (3,), optional
+    dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
 
@@ -1430,7 +1440,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
 
     elif reference == 'mag':
         # compute centered dipole base vectors
-        base_1, base_2, base_3 = basevectors_mag()
+        base_1, base_2, base_3 = basevectors_mag(dipole=dipole)
 
     else:
         raise ValueError('Unknown target reference system. Use one of '
@@ -1474,7 +1484,8 @@ def center_azimuth(phi):
 
 def local_time(time, phi):
     """
-    Compute local time from the azimuthal distance to prime meridian.
+    Compute local time in terms of the azimuthal distance to the prime
+    meridian.
 
     Parameters
     ----------
