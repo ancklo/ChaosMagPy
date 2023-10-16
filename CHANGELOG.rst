@@ -1,13 +1,16 @@
 Changelog
 =========
 
-Version 0.13-dev
-----------------
-| **Date:** April 27, 2023
-| **Release:** v0.13-dev
+Version 0.13
+------------
+| **Date:** October 11, 2023
+| **Release:** v0.13
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2023_Sept23_v6.dat.
+* Added function :func:`chaosmagpy.chaos.load_IGRF_txtfile` to load the IGRF
+  model from the coefficient TXT-file.
 
 Version 0.12
 ------------
@@ -18,7 +21,7 @@ Features
 ^^^^^^^^
 * Updated RC-index file to RC_1997-2023_Feb_v8_Dst_mod.dat (used during the
   construction of CHAOS-7.14).
-* Plotting function do not return figure and axes handles any more. If needed,
+* Plotting function do not return figure and axes handles anymore. If needed,
   they can be accessed through matplotlib's ``gcf()`` and ``gca()``.
 * Added function :func:`chaosmagpy.model_utils.sensitivity` to compute the
   sensitivity of spherical harmonic coefficients.

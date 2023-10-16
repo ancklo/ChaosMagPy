@@ -18,6 +18,7 @@ other geomagnetic field models.
     load_CovObs_txtfile
     load_gufm1_txtfile
     load_CALS7K_txtfile
+    load_IGRF_txtfile
 
 """
 
@@ -91,8 +92,8 @@ class Base(object):
         extrapolate : {'linear', 'quadratic', 'cubic', 'spline', 'constant', \
 'off'} or int, optional
             Extrapolate to times outside of the piecewise polynomial bounds.
-            Specify polynomial degree as string or any order as integer.
-            Defaults to ``'linear'`` (equiv. to order 2 polynomials).
+            Specify the polynomial degree as string or the order as an integer.
+            Defaults to ``'linear'`` (equiv. to order-2 polynomials).
 
              +------------+---------------------------------------------------+
              | Value      | Description                                       |
@@ -145,27 +146,33 @@ class Base(object):
         end = self.breaks[-1]
 
         if (np.amin(time) < start) or (np.amax(time) > end):
-            if isinstance(extrapolate, str):  # convert string to integer
+
+            if isinstance(extrapolate, (str, bool)):  # convert to integer
                 dkey = {
                     'linear': 2,
                     'quadratic': 3,
                     'cubic': 4,
                     'constant': 1,
                     'spline': self.order,
-                    'off': 0
+                    'off': 0,
+                    True: 2,
+                    False: 0
                 }
                 try:
                     key = min(dkey[extrapolate], self.order)
                 except KeyError:
-                    string = '", "'.join(list(dkey.keys()))
+                    string = '", "'.join([str(key) for key in dkey.keys()])
                     raise ValueError(
                         f'Unknown extrapolation method "{extrapolate}". Use '
                         f'one of {{"{string}"}}.')
-
             else:
                 key = min(extrapolate, self.order)
 
-            message = 'no' if extrapolate in ['off', 0] else extrapolate
+            if key == 0:
+                message = 'no'
+            else:
+                message = f'degree-{key - 1}'
+
             warnings.warn("Requested coefficients are "
                           "outside of the model time period from "
                           f"{start} to {end} Modified Julian Date 2000. "
@@ -216,14 +223,14 @@ class Base(object):
 
     def save_matfile(self, filepath, path=None):
         """
-        Save piecewise polynomial as mat-file.
+        Save piecewise polynomial as MAT-file.
 
         Parameters
         ----------
         filepath : str
-            Filepath and name of mat-file.
+            Filepath and name of MAT-file.
         path : str
-            Location in mat-file. Defaults to ``'/pp'``.
+            Location in MAT-file. Defaults to ``'/pp'``.
 
         See Also
         --------
@@ -726,12 +733,12 @@ class BaseModel(Base):
     def from_shc(cls, filepath, *, name=None, leap_year=None,
                  source=None, meta=None):
         """
-        Return BaseModel instance by loading a model from an shc-file.
+        Return BaseModel instance by loading a model from an SHC-file.
 
         Parameters
         ----------
         filepath : str
-            Path to shc-file.
+            Path to SHC-file.
         name : str, optional
             User defined name of the model. Defaults to the filename without
             the file extension.
@@ -889,7 +896,7 @@ class CHAOS(object):
 
     Examples
     --------
-    Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+    Load for example the MAT-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
     >>> import chaosmagpy as cp
@@ -1508,8 +1515,8 @@ str, {'internal', 'external'}
         Returns
         -------
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
-            Coefficients of the external GSM field in term of geographic
-            coordinates (GEO).
+            Spherical harmonic coefficients of the far-magnetospheric magnetic
+            field with respect to geographic coordinates (GEO).
 
         Examples
         --------
@@ -1680,18 +1687,33 @@ str, {'internal', 'external'}
         rc : ndarray, shape (...), optional
             External (internal) part of the RC-index (defaults to linearly
             interpolating the hourly values given by the built-in RC-index
-            file).
-
-            .. note::
-
-                Use the external part of the RC-index for ``source='external'``
-                (default) and the internal part for ``source='internal'``.
+            file). Use the external part of the RC-index for
+            ``source='external'`` (default) and the internal part for
+            ``source='internal'``. See also the notes section below for more
+            information on the RC-index file.
 
         Returns
         -------
         coeffs : ndarray, shape (..., ``nmax`` * (``nmax`` + 2))
-            Coefficients of the external SM field coefficients in terms of
-            geographic coordinates (GEO).
+            Spherical harmonic coefficients of the near-magnetospheric magnetic
+            field with respect to geographic coordinates (GEO).
+
+        Notes
+        -----
+        The computation of the near-magnetospheric field coefficients requires
+        the RC-index. If the values of the RC-index are not supplied
+        directly via the ``rc`` input argument, a built-in RC-index file is
+        loaded. This file goes with a specific version of the CHAOS model,
+        which you can inspect by running
+        ``print(chaosmagpy.basicConfig['params.CHAOS_version'])`` in a Python
+        session. It is recommended to use this version of the CHAOS model
+        together with the built-in RC-index.
+
+        The latest RC-index file, which is suitable for the latest CHAOS model,
+        is available at :rc_url:`\ `. To overwrite the usage of the built-in
+        RC-file, provide the path of the downloaded file to ChaosMagPy by
+        changing the path in ``chaosmagpy.basicParams['file.RC_index']`` (see
+        Sect. :ref:`sec-configuration-change-rc-index-file` for details).
 
         Examples
         --------
@@ -1736,17 +1758,32 @@ str, {'internal', 'external'}
                 f'model period from {start} to {end}. Doing linear '
                 'extrapolation of the coefficients in the SM reference frame.')
 
-        # load rotation matrix spectrum from file
+        # load the Fourier spectrum of the coordinate transformation from file
         frequency_spectrum = np.load(
             config_utils.basicConfig['file.SM_spectrum'])
         assert np.all(frequency_spectrum['dipole']
                       == config_utils.basicConfig['params.dipole']), \
-            "SM rotation coefficients not compatible with the chosen dipole."
+            ("Coefficients for the SM coordinate transformation are not " +
+             "compatible with the chosen dipole.")
 
         if rc is None:
 
             # load RC-index file: first hdf5 then dat-file format
             file = config_utils.basicConfig['file.RC_index']
+            default = config_utils.basicConfig.defaults['file.RC_index'][0]
+
+            if file == default:
+                warnings.warn(
+                    'Health warning: ChaosMagPy is loading the built-in '
+                    'RC-index file, which is the recommended file for the '
+                    'CHAOS model of version '
+                    f'{config_utils.basicConfig["params.CHAOS_version"]}. If '
+                    'this is not the version you are using, consider changing '
+                    'the model and/or the built-in RC-index file '
+                    '(see https://chaosmagpy.readthedocs.io/en/'
+                    'master/configuration.html#change-rc-index-file '
+                    'on how to change this file).'
+                )
 
             try:
                 with h5py.File(file, 'r') as f_RC:
@@ -1771,11 +1808,11 @@ str, {'internal', 'external'}
                                  "file. Either supply values of the RC-index "
                                  "directly via the ``rc`` input parameter or "
                                  "provide the path to an extended RC-index "
-                                 "file by replacing the one in "
+                                 "file by changing the path in "
                                  "chaosmagpy.basicParams['file.RC_index'] "
                                  "(see https://chaosmagpy.readthedocs.io/en/"
                                  "master/configuration.html#change-rc-"
-                                 "index-file for details.")
+                                 "index-file for details).")
 
             rc = RC(time)  # interpolate RC-index
 
@@ -1886,6 +1923,23 @@ str, {'internal', 'external'}
             Internal part of the RC-index (defaults to linearly interpolating
             the hourly values given by the built-in RC-index file).
 
+        Notes
+        -----
+        The computation of the near-magnetospheric field coefficients requires
+        the RC-index. If the values of the RC-index are not supplied
+        directly via the ``rc`` input arguments, a built-in RC-index file is
+        loaded. This file goes with a specific version of the CHAOS model,
+        which you can inspect by running
+        ``print(chaosmagpy.basicConfig['params.CHAOS_version'])`` in a Python
+        session. It is recommended to use this version of the CHAOS model
+        together with the built-in RC-index.
+
+        The latest RC-index file, which is suitable for the latest CHAOS model,
+        is available at :rc_url:`\ `. To overwrite the usage of the built-in
+        RC-file, provide the path of the downloaded file to ChaosMagPy by
+        changing the path in ``chaosmagpy.basicParams['file.RC_index']`` (see
+        Sect. :ref:`sec-configuration-change-rc-index-file` for details).
+
         Returns
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
@@ -1952,11 +2006,11 @@ str, {'internal', 'external'}
             Maximum degree harmonic expansion (default is given by the model
             coefficients, but can also be smaller, if specified).
         reference : {'all', 'GSM', 'SM'}, optional
-            Choose contribution either from GSM, SM or both added
-            (default is 'all').
+            Choose contribution either from GSM, SM or the sum of both
+            (default).
         source : {'all', 'external', 'internal'}, optional
             Choose source to be external (inducing), internal (induced) or
-            both added (default is 'all').
+            the sum of both (default).
 
         Notes
         -----
@@ -1967,7 +2021,7 @@ str, {'internal', 'external'}
         """
 
         reference = 'all' if reference is None else reference.lower()
-        source = 'all' if source is None else source
+        source = 'all' if source is None else source.lower()
 
         time = np.array(time, dtype=float)
         radius = np.array(radius, dtype=float)
@@ -2154,15 +2208,15 @@ str, {'internal', 'external'}
 
     def save_matfile(self, filepath):
         """
-        Save CHAOS model to a `mat`-file.
+        Save CHAOS model to a MAT-file.
 
         The model must be fully specified as is the case if originally loaded
-        from a `mat`-file.
+        from a MAT-file.
 
         Parameters
         ----------
         filepath : str
-            Path and name of `mat`-file that is to be saved.
+            Path and name of MAT-file that is to be saved.
 
         """
 
@@ -2270,14 +2324,14 @@ str, {'internal', 'external'}
         Parameters
         ----------
         filepath : str
-            Path to mat-file containing the CHAOS model.
+            Path to MAT-file containing the CHAOS model.
         name : str, optional
             User defined name of the model. Defaults to the filename without
             the file extension.
         satellites : list of strings, optional
             List of satellite names whose Euler angles are stored in the
-            mat-file. This is needed for correct referencing as this
-            information is not given in the standard CHAOS mat-file format
+            MAT-file. This is needed for correct referencing as this
+            information is not given in the standard CHAOS MAT-file format
             (defaults to ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
             'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
 
@@ -2288,7 +2342,7 @@ str, {'internal', 'external'}
 
         Examples
         --------
-        Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+        Load for example the MAT-file ``CHAOS-6-x7.mat`` in the current working
         directory like this:
 
         >>> from chaosmagpy import CHAOS
@@ -2311,7 +2365,7 @@ str, {'internal', 'external'}
         Parameters
         ----------
         filepath : str
-            Path to shc-file.
+            Path to SHC-file.
         name : str, optional
             User defined name of the model. Defaults to ``'CHAOS-<version>'``,
             where <version> is the default in
@@ -2329,7 +2383,7 @@ str, {'internal', 'external'}
 
         Examples
         --------
-        Load for example the shc-file ``CHAOS-6-x7_tdep.shc`` in the current
+        Load for example the SHC-file ``CHAOS-6-x7_tdep.shc`` in the current
         working directory, containing the coefficients of time-dependent
         internal part of the CHAOS-6-x7 model.
 
@@ -2350,19 +2404,19 @@ str, {'internal', 'external'}
 
 def load_CHAOS_matfile(filepath, name=None, satellites=None):
     """
-    Load CHAOS model from mat-file.
+    Load CHAOS model from MAT-file.
 
     Parameters
     ----------
     filepath : str
-        Path to mat-file containing the CHAOS model.
+        Path to MAT-file containing the CHAOS model.
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
     satellites : list of strings, optional
-        List of satellite names whose Euler angles are stored in the mat-file.
+        List of satellite names whose Euler angles are stored in the MAT-file.
         This is needed for correct referencing as this information is not
-        given in the standard CHAOS mat-file format (defaults to
+        given in the standard CHAOS MAT-file format (defaults to
         ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
         'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
 
@@ -2373,7 +2427,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
     Examples
     --------
-    Load for example the mat-file ``CHAOS-6-x7.mat`` in the current working
+    Load for example the MAT-file ``CHAOS-6-x7.mat`` in the current working
     directory like this:
 
     >>> import chaosmagpy as cp
@@ -2572,7 +2626,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
 def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     """
-    Load CHAOS model from shc-file.
+    Load CHAOS model from SHC-file.
 
     The file should contain the coefficients of the time-dependent or static
     internal part of the CHAOS model. In case of the time-dependent part, a
@@ -2581,7 +2635,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     Parameters
     ----------
     filepath : str
-        Path to shc-file.
+        Path to SHC-file.
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2598,7 +2652,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 
     Examples
     --------
-    Load for example the shc-file ``CHAOS-6-x7_tdep.shc`` in the current
+    Load for example the SHC-file ``CHAOS-6-x7_tdep.shc`` in the current
     working directory, containing the coefficients of time-dependent internal
     part of the CHAOS-6-x7 model.
 
@@ -2659,7 +2713,7 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
     # CHAOS.model_tdep or CHAOS.model_static at the moment
     model = BaseModel.from_shc(filepath, name=name, leap_year=leap_year)
 
-    if (model.pieces == 1) and (model.order == 1):  # static field in one bin
+    if (model.pieces == 1) and (model.order == 1):  # static in single bin
 
         return CHAOS(
             breaks=model.breaks,
@@ -2680,12 +2734,12 @@ def load_CHAOS_shcfile(filepath, name=None, leap_year=None):
 def load_CovObs_txtfile(filepath, name=None):
     """
     Load the ensemble mean of the internal model from the COV-OBS
-    txt-file in spline format.
+    TXT-file in spline format.
 
     Parameters
     ----------
     filepath : str
-        Path to spline-formatted txt-file (not part of ChaosMagPy).
+        Path to spline-formatted TXT-file (not part of ChaosMagPy).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2716,7 +2770,7 @@ def load_CovObs_txtfile(filepath, name=None):
         import matplotlib.pyplot as plt
         import numpy as np
 
-        model = cp.load_CovObs_txtfile('COV-OBS.x2-int')  # load model txt-file
+        model = cp.load_CovObs_txtfile('COV-OBS.x2-int')  # load model TXT-file
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
@@ -2777,7 +2831,7 @@ def load_gufm1_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file (provided by the modellers).
+        Path to TXT-file (provided by the modellers).
     name : str, optional
         User defined name of the model. Defaults to the filename without the
         file extension.
@@ -2806,7 +2860,7 @@ def load_gufm1_txtfile(filepath, name=None):
         import matplotlib.pyplot as plt
         import numpy as np
 
-        model = cp.load_gufm1_txtfile('gufm1')  # load model txt-file
+        model = cp.load_gufm1_txtfile('gufm1')  # load model TXT-file
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
@@ -2866,7 +2920,7 @@ def load_CALS7K_txtfile(filepath, name=None):
     Parameters
     ----------
     filepath : str
-        Path to txt-file (available from the modellers).
+        Path to TXT-file (available from the modellers).
     name : str, optional
         User defined name of the model. Defaults to the filename.
 
@@ -2891,7 +2945,7 @@ def load_CALS7K_txtfile(filepath, name=None):
         import matplotlib.pyplot as plt
         import numpy as np
 
-        model = cp.load_CALS7K_txtfile('CALS7K.2')  # load model txt-file
+        model = cp.load_CALS7K_txtfile('CALS7K.2')  # load model TXT-file
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
@@ -2951,3 +3005,95 @@ def load_CALS7K_txtfile(filepath, name=None):
 
     return BaseModel.from_bspline(name, knots, coeffs, order,
                                   source='internal')
+
+
+def load_IGRF_txtfile(filepath, name=None):
+    """
+    Load the IGRF internal field model from the TXT-file with the
+    piecewise-polynomial coefficients.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to the IGRF TXT-file (not part of ChaosMagPy).
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model : :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    The latest IGRF coefficients can be downloaded at
+    `<https://www.ncei.noaa.gov/products/international-geomagnetic-reference-field>`_.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_IGRF_txtfile('irgf13coeffs.txt')  # load model TXT-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        time = np.linspace(1900., 2020., 1000)  # decimal years
+        mjd = cp.data_utils.dyear_to_mjd(time, leap_year=True)
+
+        coeffs = model.synth_coeffs(mjd, nmax=1)
+
+        ax.plot(time, coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('years')
+        ax.set_ylabel('nT')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    first_line = True
+    data = np.array([])
+
+    with open(filepath, 'r') as f:
+        for line in f.readlines():
+
+            if line.lstrip().startswith(('#', 'c/s')):
+                continue
+
+            tmp = line.split()  # also splits consecutive whitespaces
+
+            if first_line:  # first non-comment line contains breaks
+                breaks = np.array(tmp[3:-1], dtype=float)
+                breaks = np.append(breaks, breaks[-1] + 5.)
+
+                first_line = False
+
+            else:
+                newline = np.array(tmp[3:], dtype=float)  # strip degree/order
+                data = np.append(data, newline)
+
+    data = np.reshape(data, (-1, breaks.size))
+    data[:, -1] = 5*data[:, -1] + data[:, -2]  # sv is in the last column
+    coeffs = data.T
+
+    order = 2
+    breaks_mjd = du.dyear_to_mjd(breaks, leap_year=True)
+    knots = mu.augment_breaks(breaks_mjd, order)
+
+    model =  BaseModel.from_bspline(name, knots, coeffs, order,
+                                    source='internal')
+
+    return model

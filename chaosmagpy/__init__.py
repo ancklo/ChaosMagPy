@@ -8,26 +8,26 @@ be downloaded at `http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/`.
 
 The following modules are available:
 
-* chaosmagpy.chaos
-* chaosmagpy.coordinate_utils
-* chaosmagpy.model_utils
-* chaosmagpy.plot_utils
-* chaosmagpy.data_utils
-* chaosmagpy.config_utils
+* chaosmagpy.chaos (functions for loading well-known field models)
+* chaosmagpy.coordinate_utils (tools for transforming coordinates/components)
+* chaosmagpy.model_utils (tools for evaluating field models)
+* chaosmagpy.plot_utils (tools for plotting)
+* chaosmagpy.data_utils (tools for reading/writing data files)
+* chaosmagpy.config_utils (tools for customizing ChaosMagPy parameters)
 
 More information on how to use ChaosMagPy can be found in the documentation
-available at `https://chaosmagpy.readthedocs.io/en/master/`.
+available at `https://chaosmagpy.readthedocs.io/en/`.
 
 """
 
 __all__ = [
     "CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile",
     "load_CovObs_txtfile", "load_gufm1_txtfile", "load_CALS7K_txtfile",
-    "basicConfig", "synth_values", "mjd2000", "timestamp", "dyear_to_mjd",
-    "mjd_to_dyear"
+    "load_IGRF_txtfile", "basicConfig", "synth_values", "mjd2000",
+    "timestamp", "dyear_to_mjd", "mjd_to_dyear"
 ]
 
-__version__ = "0.13-dev"
+__version__ = "0.13"
 
 from .chaos import (
     CHAOS,
@@ -35,7 +35,8 @@ from .chaos import (
     load_CHAOS_shcfile,
     load_CovObs_txtfile,
     load_gufm1_txtfile,
-    load_CALS7K_txtfile
+    load_CALS7K_txtfile,
+    load_IGRF_txtfile
 )
 
 from .config_utils import basicConfig
