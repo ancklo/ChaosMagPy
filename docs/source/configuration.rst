@@ -22,13 +22,14 @@ used as reference radius for the spherical harmonic representation of the
 magnetic potential field. For a complete list, see
 :ref:`sec-configuration-utilities`.
 
+.. _sec-configuration-change-rc-index-file:
+
 Change RC index file
 --------------------
 
-Download a new RC-index file either directly as txt-file from
-`spacecenter.dk <http://www.spacecenter.dk/files/magnetic-models/RC/current/>`_
-or by using the function :func:`~.data_utils.save_RC_h5file` (saves as
-h5-file):
+Download a new RC-index file either directly as TXT-file (``*.dat``) from
+:rc_url:`spacecenter.dk <>` or by using the function
+:func:`~.data_utils.save_RC_h5file` (saves the RC-index as HDF5-file):
 
 .. code-block:: python
 
@@ -36,7 +37,7 @@ h5-file):
 
    save_RC_h5file('my_RC_file.h5')
 
-There is no significant difference in speed when using txt-file or h5-file
+There is no significant difference in speed when using TXT-file or HDF5-file
 formats in this case. After importing ChaosMagPy, provide the path to the new
 RC-index file:
 

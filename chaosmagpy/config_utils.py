@@ -25,29 +25,28 @@ be accessed after importing chaosmagpy through:
                          `ndarray`      (index 1) of the spheroid describing
                          `shape (2,)`   Earth (WGS84) in units of kilometers.
  'params.CHAOS_version'  `str`          Version of the CHAOS model that was
-                                        constructed with the built-in RC-index,
-                                        e.g. ``'7.1'``.
+                                        constructed with the built-in RC-index.
  'params.cdf_to_mjd'     `int`          Number of days on Jan 01, 2000 since
                                         Jan 01, 0000 (CDF start epoch)
  ======================  =============  =======================================
 
 **Files**
 
- ==========================  ===========  =====================================
- Value                       Type         Description
- ==========================  ===========  =====================================
- 'file.RC_index'             `h5-file`,   RC-index file (used for external
-                             `txt-file`   field computation). See also
-                                          :func:`data_utils.save_RC_h5file`.
- 'file.GSM_spectrum'         `npz-file`   GSM transformation coefficients. See
-                                          also :func:`coordinate_utils.\\
-                                          rotate_gauss_fft`.
- 'file.SM_spectrum'          `npz-file`   SM transformation coefficients. See
-                                          also :func:`coordinate_utils.\\
-                                          rotate_gauss_fft`.
- 'file.Earth_conductivity'   `txt-file`   Conductivity model of a layered Earth
-                                          (used for induced fields).
- ==========================  ===========  =====================================
+ ==========================  ============  =====================================
+ Value                       Type          Description
+ ==========================  ============  =====================================
+ 'file.RC_index'             `HDF5-file`,  RC-index file (used for external
+                             `TXT-file`    field computation). See also
+                                           :func:`data_utils.save_RC_h5file`.
+ 'file.GSM_spectrum'         `NPZ-file`    GSM transformation coefficients. See
+                                           also :func:`coordinate_utils.\\
+                                           rotate_gauss_fft`.
+ 'file.SM_spectrum'          `NPZ-file`    SM transformation coefficients. See
+                                           also :func:`coordinate_utils.\\
+                                           rotate_gauss_fft`.
+ 'file.Earth_conductivity'   `TXT-file`    Conductivity model of a layered Earth
+                                           (deprecated).
+ ==========================  ============  =====================================
 
 **Plots**
 
@@ -55,7 +54,7 @@ be accessed after importing chaosmagpy through:
  Value                       Type         Description
  ==========================  ===========  =====================================
  'plots.figure_width'        `float`      Plot width in inches (defaults to 6.3
-                                          or equiv. 16cm)
+                                          inches or 16 cm)
  ==========================  ===========  =====================================
 
 .. autosummary::
@@ -145,7 +144,7 @@ DEFAULTS = {
                       lambda x: check_vector(x, len=3)],
     'params.ellipsoid': [np.array([6378.137, 6356.752]),
                          lambda x: check_vector(x, len=2)],
-    'params.CHAOS_version': ['7.14', check_version_string],
+    'params.CHAOS_version': ['7.16', check_version_string],
     'params.cdf_to_mjd': [730485, check_int],
 
     # location of coefficient files

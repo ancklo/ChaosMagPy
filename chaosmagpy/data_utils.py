@@ -34,19 +34,19 @@ import textwrap
 
 def load_matfile(filepath, variable_names=None, **kwargs):
     """
-    Load mat-file and return dictionary.
+    Load MAT-file and return dictionary.
 
-    Function loads mat-file by traversing the structure converting data into
+    Function loads MAT-file by traversing the structure converting data into
     low-level numpy arrays of different types. There is no guarantee that any
     kind of data is read in correctly. The data dtype can also vary depending
-    on the mat-file (v7.3 returns floats instead of integers). But it should
-    work identically for v7.3 and prior mat-files. Arrays are squeezed if
+    on the MAT-file (v7.3 returns floats instead of integers). But it should
+    work identically for v7.3 and prior MAT-files. Arrays are squeezed if
     possible. Relies on the :mod:`hdf5storage` package.
 
     Parameters
     ----------
     filepath : str
-        Filepath and name of mat-file.
+        Filepath and name of MAT-file.
     variable_names : list of strings
         Top-level variables to be loaded.
     **kwargs : keywords
@@ -163,7 +163,7 @@ def load_RC_datfile(filepath=None, parse_dates=None):
 
 def save_RC_h5file(filepath, read_from=None):
     """
-    Return hdf-file of the RC index.
+    Return HDF5-file of the RC index.
 
     Parameters
     ----------
@@ -171,18 +171,17 @@ def save_RC_h5file(filepath, read_from=None):
         Filepath and name of ``*.h5`` output file.
     read_from : str, optional
         Filepath of RC index ``*.dat``. If ``None``, the RC
-        index will be fetched from `spacecenter.dk <http://www.spacecenter.dk/\
-        files/magnetic-models/RC/current/>`_.
+        index will be fetched from :rc_url:`spacecenter.dk <>`.
 
     Notes
     -----
-    Saves an h5-file of the RC index with keywords
+    Saves an HDF5-file of the RC index with keywords
     ['time', 'RC', 'RC_e', 'RC_i', 'flag']. Time is given in modified Julian
     dates 2000.
 
     Examples
     --------
-    Save RC-index txt-file (``RC_1997-2020_Aug_v4.dat``) as file in hdf format
+    Save RC-index TXT-file (``RC_1997-2020_Aug_v4.dat``) as file in HDF5 format
     (``RC_index.h5``).
 
     >>> save_RC_h5file('RC_index.h5', read_from='RC_1997-2020_Aug_v4.dat')
@@ -212,12 +211,12 @@ def save_RC_h5file(filepath, read_from=None):
 
 def load_shcfile(filepath, leap_year=None, comment=None):
     """
-    Load shc-file and return coefficient arrays.
+    Load SHC-file and return coefficient arrays.
 
     Parameters
     ----------
     filepath : str
-        File path to spherical harmonic coefficient shc-file.
+        File path to spherical harmonic coefficient SHC-file.
     leap_year : {True, False}, optional
         Take leap year in time conversion into account (default). Otherwise,
         use conversion factor of 365.25 days per year.
@@ -235,7 +234,7 @@ def load_shcfile(filepath, leap_year=None, comment=None):
         spherical degree and order `nmax`.
     parameters : dict, {'SHC', 'nmin', 'nmax', 'N', 'order', 'step'}
         Dictionary containing parameters of the model snapshots and the
-        following keys: ``'SHC'`` shc-file name, ``'nmin'`` minimum degree,
+        following keys: ``'SHC'`` SHC-file name, ``'nmin'`` minimum degree,
         ``'nmax'`` maximum degree, ``'N'`` number of snapshot models,
         ``'order'`` piecewise polynomial order and ``'step'`` number of
         snapshots until next break point. Extract break points of the
@@ -283,7 +282,7 @@ def load_shcfile(filepath, leap_year=None, comment=None):
 def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
                  leap_year=None, header=None):
     """
-    Save Gauss coefficients as shc-file.
+    Save Gauss coefficients as SHC-file.
 
     Parameters
     ----------

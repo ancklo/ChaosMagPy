@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# need to build the package first
 # run script from conda environment
 if [ -f "/home/ancklo/miniconda3/etc/profile.d/conda.sh" ]; then
     . "/home/ancklo/miniconda3/etc/profile.d/conda.sh"

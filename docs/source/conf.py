@@ -56,6 +56,7 @@ extensions = [
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx.ext.extlinks',
     'sphinx_gallery.gen_gallery',
     'matplotlib.sphinxext.plot_directive',
 ]
@@ -77,7 +78,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -205,6 +206,17 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# -- Options for extlinks extension ------------------------------------------
+# Note the "%s" in the base url. You can display the link itself with
+# :chaos_url:`\ ` or insert a clickable caption with :chaos_url:`click here <>`
+
+extlinks = {
+    'chaos_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/%s', None),
+    'docs_url': ('https://chaosmagpy.readthedocs.io/en/%s', None),
+    'zenodo_url': ('https://doi.org/10.5281/zenodo.3352398%s', None),
+    'rc_url': ('http://www.spacecenter.dk/files/magnetic-models/RC/current/%s', None)
+}
 
 # -- Options for sphinx gallery ----------------------------------------------
 
