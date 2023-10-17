@@ -1710,10 +1710,11 @@ str, {'internal', 'external'}
         together with the built-in RC-index.
 
         The latest RC-index file, which is suitable for the latest CHAOS model,
-        is available at :rc_url:`\ `. To overwrite the usage of the built-in
-        RC-file, provide the path of the downloaded file to ChaosMagPy by
-        changing the path in ``chaosmagpy.basicParams['file.RC_index']`` (see
-        Sect. :ref:`sec-configuration-change-rc-index-file` for details).
+        can be downlaoded at :rc_url:`\ `. To overwrite the usage of the
+        built-in RC-index file, replace the path in ChaosMagPy's configuration
+        dictionary ``chaosmagpy.basicParams['file.RC_index']`` with the path of
+        the downloaded file (for details, see Sect.
+        :ref:`sec-configuration-change-rc-index-file`).
 
         Examples
         --------
