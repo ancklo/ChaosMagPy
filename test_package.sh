@@ -39,8 +39,8 @@ pip install dist/chaosmagpy-$version.tar.gz
 echo Entering test directory.
 cd tests
 
-echo python -m unittest test_chaosmagpy
-python -m unittest test_chaosmagpy
+echo python -m unittest test_chaos
+python -m unittest test_chaos
 
 echo python -m unittest test_coordinate_utils
 python -m unittest test_coordinate_utils
