@@ -152,7 +152,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
         'layout': (n, 1),
         'cmap': 'PuOr_r',
         'limiter': lambda x: np.amax(np.abs(x)),  # maximum value
-        'projection': 'mollweide'
+        'projection': 'mollweide',
+        'shading': 'auto'
     }
 
     kwargs = defaultkeys(defaults, kwargs)
