@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.data_utils` provides functions for loading and writing data and
 geomagnetic field models. It also offers functions to do common time
@@ -346,7 +353,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
             ord = np.append(ord, [m, -m])
 
     comment = header + textwrap.dedent(f"""\
-        # Created on {dt.datetime.utcnow()} UTC.
+        # Created on {dt.datetime.now(dt.timezone.utc)} UTC.
         # Leap years are accounted for in decimal years format ({leap_year}).
         {nmin} {nmax} {time.size} {order} {order-1}
         """)

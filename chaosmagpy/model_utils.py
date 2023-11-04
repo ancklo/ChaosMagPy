@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.model_utils` provides functions for analyzing and estimating
 geomagnetic field models in general, and the CHAOS geomagnetic field model in

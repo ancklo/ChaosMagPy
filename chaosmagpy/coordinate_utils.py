@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.coordinate_utils` provides functions related to coordinate
 transformations. Typical coordinate reference frames and corresponding

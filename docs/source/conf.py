@@ -30,7 +30,8 @@ import chaosmagpy
 # -- Project information -----------------------------------------------------
 
 project = 'ChaosMagPy'
-copyright = str(datetime.date.today().year) + ', Clemens Kloss'
+copyright = (str(datetime.date.today().year)
+             + ' Technical University of Denmark. Developed by Clemens Kloss')
 author = 'Clemens Kloss'
 
 # The short X.Y version
@@ -154,7 +155,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'chaosmagpy.tex', 'ChaosMagPy Documentation',
-     'Clemens Kloss', 'manual'),
+     author, 'manual'),
 ]
 
 
@@ -175,8 +176,8 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'chaosmagpy', 'ChaosMagPy Documentation',
-     author, 'ChaosMagPy', 'Package to read the CHAOS model and '
-     'compute the geomagnetic field.',
+     author, 'ChaosMagPy', 'Package to evaluate the CHAOS model and '
+     'other geomagnetic field models.',
      'Miscellaneous'),
 ]
 
@@ -209,7 +210,8 @@ todo_include_todos = True
 
 # -- Options for extlinks extension ------------------------------------------
 # Note the "%s" in the base url. You can display the link itself with
-# :chaos_url:`\ ` or insert a clickable caption with :chaos_url:`click here <>`
+# :chaos_url:`\\ `, or insert a clickable caption with
+# :chaos_url:`click here <>`
 
 extlinks = {
     'chaos_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/%s', None),

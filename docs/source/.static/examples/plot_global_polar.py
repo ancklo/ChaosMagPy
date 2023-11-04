@@ -2,10 +2,27 @@
 Create a Global Map and Polar Views
 ===================================
 
-Create a map of the first time-derivative of the radial field component on the
-core surface in 2016 using CHAOS.
+This script creates a map of the first time-derivative of the radial field
+component from the CHAOS geomagnetic field model on the core surface
+in 2016. The map projections are handled by the Cartopy package, which you
+need to install in addition to ChaosMagPy to execute the script.
 
 """
+
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This script is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This script is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this script. If not, see <https://www.gnu.org/licenses/>.
 
 import chaosmagpy as cp
 import numpy as np

@@ -1,8 +1,15 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 import os
 import numpy as np
 import textwrap
 import chaosmagpy as cp
-import scipy.interpolate
+import matplotlib.pyplot as plt
 from unittest import TestCase, main
 
 try:
@@ -21,7 +28,7 @@ if os.path.isfile(MATFILE_PATH) is False:
     MATFILE_PATH = str(input('Matfile path for chaosmagpy test?: '))
 
 
-class ChaosMagPy(TestCase):
+class Chaos(TestCase):
     def setUp(self):
 
         print(textwrap.dedent(f"""\
@@ -496,6 +503,16 @@ class ChaosMagPy(TestCase):
         B_geo_2 = np.matmul(R.transpose(), B_gsm)
 
         np.testing.assert_allclose(B_geo_1, B_geo_2, rtol=1e-5)
+
+    def test_plot_maps(self):
+
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
+
+        model.plot_maps_tdep(0., 6371.2)
+        plt.close('all')
+
+        model.plot_maps_static(6371.2, nmax=min(50, model.model_static.nmax))
+        plt.close('all')
 
 
 def profiler_complete_forward(n_data=300):

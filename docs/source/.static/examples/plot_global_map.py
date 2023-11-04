@@ -2,9 +2,27 @@
 Create a Global Map
 ===================
 
-Create a map of the radial magnetic field from CHAOS at the core surface.
+This script creates a map of the radial magnetic field from the CHAOS
+geomagnetic field model at the core surface in 2016. The map projections are
+handled by the Cartopy package, which you need to install in addition to
+ChaosMagPy to execute the script.
 
 """
+
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This script is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This script is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this script. If not, see <https://www.gnu.org/licenses/>.
 
 import chaosmagpy as cp
 import numpy as np
@@ -42,7 +60,7 @@ pc = ax.pcolormesh(phi, 90. - theta, Br/1e6, cmap='PuOr', vmin=-limit,
 
 ax.gridlines(linewidth=0.5, linestyle='dashed', color='grey',
              ylocs=np.linspace(-90, 90, num=7),  # parallels
-             xlocs=np.linspace(-180, 180, num=13)) # meridians
+             xlocs=np.linspace(-180, 180, num=13))  # meridians
 
 ax.coastlines(linewidth=0.8, color='k')
 

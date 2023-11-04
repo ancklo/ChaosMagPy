@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.config_utils` contains functions and classes to manipulate the
 configuration dictionary, which contains parameters and options in ChaosMagPy.
@@ -46,6 +53,8 @@ be accessed after importing chaosmagpy through:
                                            rotate_gauss_fft`.
  'file.Earth_conductivity'   `TXT-file`    Conductivity model of a layered Earth
                                            (deprecated).
+ 'file.shp_coastline'        `SHP-file`,   Coastline shapefile (default file
+                             `ZIP-file`    provided by Natural Earth).
  ==========================  ============  =====================================
 
 **Plots**
@@ -156,6 +165,8 @@ DEFAULTS = {
                          check_path_exists],
     'file.Earth_conductivity': [os.path.join(LIB, 'Earth_conductivity.dat'),
                                 check_path_exists],
+    'file.shp_coastline': [os.path.join(LIB, 'ne_110m_coastline.zip'),
+                           check_path_exists],
 
     # plot related configuration
     'plots.figure_width': [6.3, check_float],
