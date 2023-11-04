@@ -130,7 +130,7 @@ done
 
 cat << EOF
 -------------------------------------------------------------
-Check that the produced package files have the current date.
+Check that the produced package files have been updated:
 EOF
 
 ls -lrt build | grep --color=auto chaosmagpy_package_$version
@@ -138,13 +138,13 @@ ls -lrt dist | grep --color=auto chaosmagpy-$version
 
 cat << EOF
 -------------------------------------------------------------
-Check that the desired RC-index file has been included.
+Check that the correct RC-index file has been included.
 Check that the CHAOS version in basicConfig was built with the included RC-index file.
-Check that example output agrees with MATLAB example output.
-Check license date.
-Check changelog date.
-Check url to CHAOS at the top of the usage section.
-Check overview section in the documentation.
+Check that example_script.py output agrees with MATLAB example output.
+Check the copyright notice and update the year if needed.
+Check changelog dates and entries.
+Check urls in the config file of the documentation.
+Check the readme file in the root of the repository.
 -------------------------------------------------------------
 EOF
 

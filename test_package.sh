@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # need to build the package first
 # run script from conda environment
-if [ -f "/home/ancklo/miniconda3/etc/profile.d/conda.sh" ]; then
-    . "/home/ancklo/miniconda3/etc/profile.d/conda.sh"
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+    . "$HOME/miniconda3/etc/profile.d/conda.sh"
 else
-    export PATH="/home/ancklo/miniconda3/bin:$PATH"
+    export PATH="$HOME/miniconda3/bin:$PATH"
 fi
 
 # extract from __init__.py on line with __version__ the expr between ""
@@ -17,15 +17,15 @@ env_name=Test_$version
 
 printf "\n%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
 
-echo Setting up fresh conda environment.
-conda env create --name $env_name -f environment.yml
+# echo Setting up fresh conda environment.
+# conda env create --name $env_name -f environment.yml
 
 conda activate $env_name
 
 conda env list
 
 while true; do
-    read -p "Do you wish to proceed installing ChaosMagPy (y/n)?: " yn
+    read -p "Install ChaosMagPy in the starred environment (y/n)?: " yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) echo Abort.; exit;;
