@@ -6,7 +6,8 @@ dependencies:
 - pandas
 - cython
 - h5py
-- cartopy >= 0.17
+- pyshp >= 2.3.1
+- lxml
 - matplotlib >= 3
 - sphinx
 - flake8
@@ -14,5 +15,4 @@ dependencies:
 - pip:
     - cdflib
     - hdf5storage >= 0.1.17
-    - lxml
     - sphinx-gallery
