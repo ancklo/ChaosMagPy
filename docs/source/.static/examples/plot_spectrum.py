@@ -2,8 +2,8 @@
 Spatial Power Spectra
 =====================
 
-Create a plot of the spatial power spectrum of the time-dependent internal
-field as given by CHAOS.
+This script creates a plot of the spatial power spectrum of the time-dependent
+internal field from the CHAOS geomagnetic field model.
 
 """
 
