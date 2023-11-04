@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.plot_utils` provides functions for plotting model outputs.
 
@@ -15,16 +22,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import matplotlib.dates as mdates
-import warnings
+import shapefile
 from matplotlib.colors import LinearSegmentedColormap
 from . import data_utils
 from . import config_utils
-
-try:  # make cartopy optional
-    import cartopy.crs as ccrs
-except ImportError:
-    warnings.warn('Could not import Cartopy package. Plotting data on maps '
-                  'is not available in chaosmagpy.')
 
 
 def plot_timeseries(time, *args, **kwargs):
@@ -64,7 +65,7 @@ def plot_timeseries(time, *args, **kwargs):
 
     defaults = {
         'figsize': (config_utils.basicConfig['plots.figure_width'],
-                    n*0.8*config_utils.basicConfig['plots.figure_width']),
+                    0.8*n*config_utils.basicConfig['plots.figure_width']),
         'titles': n*[''],
         'ylabel': '',
         'layout': (n, 1)
@@ -90,7 +91,7 @@ def plot_timeseries(time, *args, **kwargs):
     for ax, component, title in zip(axes.flat, args, titles):
         ax.plot(date_time, component, **kwargs)
         ax.set_title(title)
-        ax.grid()
+        ax.grid(True)
         ax.set(ylabel=ylabel, xlabel='time')
         fig.autofmt_xdate()
         ax.fmt_xdata = mdates.DateFormatter('%Y-%m-%d-%h')
@@ -128,12 +129,8 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
         Function to compute symmetric colorbar limits (defaults to maximum of
         the absolute values in the input, or use ``'vmin'``, ``'vmax'``
         keywords instead).
-    projection : :mod:`cartopy.crs`
-        Projection of the target frame (defaults to
-        :func:`cartopy.crs.Mollweide()`).
-    transform : :mod:`cartopy.crs`
-        Projection of input frame (defaults to
-        :func:`cartopy.crs.PlateCarree()`)
+    projection : str
+        Projection of the target frame (defaults to `'mollweide'`).
     **kwargs : keywords
         Other options to pass to matplotlib :func:`pcolormesh` method.
 
@@ -149,14 +146,13 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     defaults = {
         'figsize': (config_utils.basicConfig['plots.figure_width'],
-                    n*0.4*config_utils.basicConfig['plots.figure_width']),
+                    0.4*n*config_utils.basicConfig['plots.figure_width']),
         'titles': n*[''],
         'label': '',
         'layout': (n, 1),
         'cmap': 'PuOr_r',
         'limiter': lambda x: np.amax(np.abs(x)),  # maximum value
-        'projection': ccrs.Mollweide(),
-        'transform': ccrs.PlateCarree()
+        'projection': 'mollweide'
     }
 
     kwargs = defaultkeys(defaults, kwargs)
@@ -172,31 +168,41 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
     if layout[0]*layout[1] != n:
         raise ValueError('Plot layout is not compatible with the number of '
                          'produced subplots.')
+
+    # load shapefile with the coastline
+    shp = config_utils.basicConfig['file.shp_coastline']
+
     # create axis handle
-    fig, axes = plt.subplots(layout[0], layout[1], sharex=True, sharey=True,
+    fig, axes = plt.subplots(layout[0], layout[1], figsize=figsize,
                              subplot_kw=dict(projection=projection),
-                             figsize=figsize, squeeze=False)
+                             squeeze=False)
 
     # make subplots
     for ax, component, title in zip(axes.flat, args, titles):
+
         # evaluate colorbar limits depending on vmax/vmin in kwargs
         kwargs.setdefault('vmax', limiter(component))
         kwargs.setdefault('vmin', -limiter(component))
 
+        with shapefile.Reader(shp) as sf:
+
+            for rec in sf.shapeRecords():
+                lon = np.radians([point[0] for point in rec.shape.points[:]])
+                lat = np.radians([point[1] for point in rec.shape.points[:]])
+
+                ax.plot(lon, lat, color='k', linewidth=0.8)
+
         # produce colormesh and evaluate keywords (defaults and input)
-        pc = ax.pcolormesh(phi_grid, 90. - theta_grid, component, **kwargs)
+        pc = ax.pcolormesh(np.radians(phi_grid), np.radians(90. - theta_grid),
+                           component, **kwargs)
 
-        ax.gridlines(linewidth=0.5, linestyle='dashed',
-                     ylocs=np.linspace(-90, 90, num=7),  # parallels
-                     xlocs=np.linspace(-180, 180, num=13))  # meridians
+        plt.colorbar(pc, ax=ax, extend='both', label=label)
 
-        ax.coastlines(linewidth=0.5)
+        ax.xaxis.set_ticks(np.radians(np.linspace(-180., 180., num=13)))
+        ax.yaxis.set_ticks(np.radians(np.linspace(-60., 60., num=5)))
+        ax.xaxis.set_major_formatter('')
+        ax.grid(True)
 
-        clb = plt.colorbar(pc, ax=ax, format=ticker.FuncFormatter(fmt),
-                           extend='both')
-
-        clb.set_label(label)
-        ax.set_global()
         ax.set_title(title)
 
     fig.tight_layout()
@@ -251,12 +257,11 @@ def plot_power_spectrum(spectrum, **kwargs):
 
     ax.semilogy(degrees, spectrum, **kwargs)
     ax.set_title(titles)
-    ax.grid(b=True, which='minor', linestyle=':')
-    ax.grid(b=True, which='major', linestyle='-', axis='both')
+    ax.grid(True, which='minor', linestyle=':')
+    ax.grid(True, which='major', linestyle='-', axis='both')
     ax.set(ylabel=ylabel, xlabel='degree')
 
     ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-    ax.set_xlim((0, degrees[-1]))
 
     fig.tight_layout()
 
