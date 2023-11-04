@@ -1,3 +1,10 @@
+# Copyright (C) 2023 Technical University of Denmark
+#
+# This file is part of ChaosMagPy.
+#
+# ChaosMagPy is released under the MIT license. See LICENSE in the root of the
+# repository for full licensing details.
+
 """
 `chaosmagpy.chaos` provides classes and functions to read the CHAOS model and
 other geomagnetic field models.
@@ -29,7 +36,7 @@ import scipy.interpolate as sip
 import hdf5storage as hdf
 import h5py
 import textwrap
-from datetime import datetime
+import datetime
 from timeit import default_timer as timer
 from . import coordinate_utils as cu
 from . import model_utils as mu
@@ -506,7 +513,6 @@ class BaseModel(Base):
 
         pu.plot_power_spectrum(R_n, **kwargs)
 
-
     def plot_maps(self, time, radius, **kwargs):
         """
         Plot global maps of the field components.
@@ -930,7 +936,7 @@ class CHAOS(object):
 
         """
 
-        self.timestamp = str(datetime.utcnow())
+        self.timestamp = str(datetime.datetime.now(datetime.timezone.utc))
 
         # internal field
         if coeffs_tdep is None:
@@ -1710,7 +1716,7 @@ str, {'internal', 'external'}
         together with the built-in RC-index.
 
         The latest RC-index file, which is suitable for the latest CHAOS model,
-        can be downlaoded at :rc_url:`\ `. To overwrite the usage of the
+        can be downloaded at :rc_url:`\\ `. To overwrite the usage of the
         built-in RC-index file, replace the path in ChaosMagPy's configuration
         dictionary ``chaosmagpy.basicParams['file.RC_index']`` with the path of
         the downloaded file (for details, see Sect.
@@ -1769,23 +1775,22 @@ str, {'internal', 'external'}
 
         if rc is None:
 
-            # load RC-index file: first hdf5 then dat-file format
-            file = config_utils.basicConfig['file.RC_index']
             default = config_utils.basicConfig.defaults['file.RC_index'][0]
+            file = config_utils.basicConfig['file.RC_index']
 
             if file == default:
                 warnings.warn(
-                    'Health warning: ChaosMagPy is loading the built-in '
-                    'RC-index file, which is the recommended file for the '
-                    'CHAOS model of version '
+                    'HEALTH warning: ChaosMagPy is loading the RC-index file '
+                    'that is recommended for the CHAOS model version '
                     f'{config_utils.basicConfig["params.CHAOS_version"]}. If '
-                    'this is not the version you are using, consider changing '
-                    'the model and/or the built-in RC-index file '
-                    '(see https://chaosmagpy.readthedocs.io/en/'
+                    'this is not the CHAOS model version you are using, '
+                    'consider changing the model and/or the built-in RC-index '
+                    'file (see https://chaosmagpy.readthedocs.io/en/'
                     'master/configuration.html#change-rc-index-file '
                     'on how to change this file).'
                 )
 
+            # load RC-index file: first hdf5 then dat-file format
             try:
                 with h5py.File(file, 'r') as f_RC:
 
@@ -1807,7 +1812,7 @@ str, {'internal', 'external'}
                 raise ValueError("Requested coefficients are outside of the "
                                  "period covered by the built-in RC-index "
                                  "file. Either supply values of the RC-index "
-                                 "directly via the ``rc`` input parameter or "
+                                 "directly via the ``rc`` input argument or "
                                  "provide the path to an extended RC-index "
                                  "file by changing the path in "
                                  "chaosmagpy.basicParams['file.RC_index'] "
@@ -1936,7 +1941,7 @@ str, {'internal', 'external'}
         together with the built-in RC-index.
 
         The latest RC-index file, which is suitable for the latest CHAOS model,
-        is available at :rc_url:`\ `. To overwrite the usage of the built-in
+        is available at :rc_url:`\\ `. To overwrite the usage of the built-in
         RC-file, provide the path of the downloaded file to ChaosMagPy by
         changing the path in ``chaosmagpy.basicParams['file.RC_index']`` (see
         Sect. :ref:`sec-configuration-change-rc-index-file` for details).
@@ -3094,7 +3099,7 @@ def load_IGRF_txtfile(filepath, name=None):
     breaks_mjd = du.dyear_to_mjd(breaks, leap_year=True)
     knots = mu.augment_breaks(breaks_mjd, order)
 
-    model =  BaseModel.from_bspline(name, knots, coeffs, order,
-                                    source='internal')
+    model = BaseModel.from_bspline(name, knots, coeffs, order,
+                                   source='internal')
 
     return model
