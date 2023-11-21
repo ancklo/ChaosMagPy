@@ -29,13 +29,13 @@ Specific installation steps using the conda/pip package managers are as follows:
 
    >>> pip install chaosmagpy
 
-   Or, if you have downloaded the package files from the Python Package Index
-   (PyPI) at https://pypi.org/project/chaosmagpy/#files, install ChaosMagPy by
-   running the command below, replacing  ``x.x`` with the specific version of
-   the downloaded files:
+   Or, if you have downloaded the built distribution from the Python Package
+   Index (PyPI) at https://pypi.org/project/chaosmagpy/#files, install
+   ChaosMagPy by running the command below, replacing  ``x.x`` with the
+   relevant version:
 
    >>> pip install chaosmagpy-x.x-py3-none-any.whl
 
-   or, using the compressed archive
+   or, using the source distribution that is also available on PyPI
 
    >>> pip install chaosmagpy-x.x.tar.gz
