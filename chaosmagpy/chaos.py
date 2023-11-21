@@ -3036,6 +3036,12 @@ def load_IGRF_txtfile(filepath, name=None):
     The latest IGRF coefficients can be downloaded at
     `<https://www.ncei.noaa.gov/products/international-geomagnetic-reference-field>`_.
 
+    Notes
+    -----
+    The field is linearly extrapolated in the 5-year period at the
+    end of the model time interval (i.e. in the period 2020-2025 for IGRF-13)
+    using the predictive secular variation in the IGRF.
+
     Examples
     --------
 
