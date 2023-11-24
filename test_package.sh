@@ -34,7 +34,8 @@ while true; do
 done
 
 echo Installing requested version of ChaosMagPy v$version.
-pip install dist/chaosmagpy-$version.tar.gz
+pip install dist/chaosmagpy-$version.tar.gz --dry-run
+pip install dist/chaosmagpy-$version-py3-none-any.whl
 
 echo Entering test directory.
 cd tests

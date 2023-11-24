@@ -6,4 +6,4 @@ except ImportError:
     have_setuptools = False
 
 if __name__ == '__main__':
-    setup()  # see configuration in setup.cfg
+    setup()

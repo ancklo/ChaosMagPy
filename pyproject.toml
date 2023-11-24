@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chaosmagpy"
+dynamic = ["version", "readme"]
+dependencies = [
+  "numpy",
+  "scipy",
+  "pandas",
+  "Cython",
+  "h5py",
+  "matplotlib>=3",
+  "pyshp>=2.3.1",
+  "hdf5storage>=0.1.17"
+]
+requires-python = ">=3.6"
+authors = [
+  {name = "Clemens Kloss", email = "ancklo@space.dtu.dk"}
+]
+maintainers = [
+  {name = "Clemens Kloss", email = "ancklo@space.dtu.dk"}
+]
+description = "Evaluates the CHAOS geomagnetic field model and other models of Earth's magnetic field."
+license = {file = "LICENSE"}
+keywords = [
+  "CHAOS",
+  "geomagnetic field",
+  "spherical harmonics model",
+  "secular variation",
+  "core field",
+  "crustal field",
+  "magnetospheric field"
+]
+classifiers = [
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: Unix",
+  "Operating System :: POSIX",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3.6",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Scientific/Engineering :: Physics"
+]
+
+[project.urls]
+Homepage = "https://github.com/ancklo/ChaosMagPy"
+Documentation = "https://chaosmagpy.readthedocs.io/en/"
+Repository = "https://github.com/ancklo/ChaosMagPy.git"
+Issues = "https://github.com/ancklo/ChaosMagPy/issues"
+Changelog = "https://github.com/ancklo/ChaosMagPy/blob/master/CHANGELOG.rst"
+
+[tool.setuptools.packages.find]
+include = ["chaosmagpy*"]
+exclude = ["data*"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = {attr = "chaosmagpy.__version__"}
+readme = {file = ["README.rst", "CITATION", "INSTALL.rst"], content-type = "text/x-rst"}

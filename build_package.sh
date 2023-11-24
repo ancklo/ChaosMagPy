@@ -22,10 +22,8 @@ done
 # delete old dist files if exist
 rm -f dist/chaosmagpy-$version*
 
-# build distribution, build binary in /tmp because of windows shared dir
-tempdir=$(mktemp -t -d XXXXXX)
-echo "Creating temporary directory '$tempdir'"
-python setup.py sdist bdist_wheel --bdist-dir $tempdir
+# create source distribution and built distribution
+python -m build --sdist --wheel
 
 # clean build and compile documentary as html
 make --directory ./docs clean html

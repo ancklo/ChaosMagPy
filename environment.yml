@@ -10,6 +10,7 @@ dependencies:
 - lxml
 - matplotlib >= 3
 - sphinx
+- build
 - flake8
 - pip
 - pip:
