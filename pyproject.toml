@@ -57,7 +57,10 @@ Changelog = "https://github.com/ancklo/ChaosMagPy/blob/master/CHANGELOG.rst"
 [tool.setuptools.packages.find]
 include = ["chaosmagpy*"]
 exclude = ["data*"]
-namespaces = false
+namespaces = true
+
+[tool.setuptools.package-data]
+"chaosmagpy.lib" = ["*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "chaosmagpy.__version__"}

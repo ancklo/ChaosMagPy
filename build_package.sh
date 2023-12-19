@@ -20,7 +20,7 @@ while true; do
 done
 
 # delete old dist files if exist
-rm -f dist/chaosmagpy-$version*
+rm -rf chaosmagpy.egg-info
 
 # create source distribution and built distribution
 python -m build --sdist --wheel
@@ -48,10 +48,7 @@ cp data/SW_OPER_MAGA_LR_1B_20180801T000000_20180801T235959_PT15S.cdf $tempdir/da
 cp -r docs/build/html/* $tempdir/html/
 
 # create readme.txt and write introduction (without citation rst link)
-cat > $tempdir/readme.txt <(head -9 README.rst)
-
-# create readme.txt and write documentation information
-cat >> $tempdir/readme.txt <(tail -17 README.rst)
+cat > $tempdir/readme.txt <(echo) README.rst
 
 # create readme.txt and write introduction
 cat >> $tempdir/readme.txt <(echo) CITATION
