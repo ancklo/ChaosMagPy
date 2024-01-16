@@ -372,19 +372,25 @@ class CoordinateUtils(TestCase):
 
         mat = load_matfile(MATFILE_PATH, 'test_gg_to_geo')
 
-        radius, theta = cpc.gg_to_geo(mat['height'], mat['beta'])
+        radius, theta, Br, Bt = cpc.gg_to_geo(mat['height'], mat['beta'],
+                                              mat['X'], mat['Z'])
 
-        self.assertIsNone(np.testing.assert_allclose(radius, mat['radius']))
-        self.assertIsNone(np.testing.assert_allclose(theta, mat['theta']))
+        np.testing.assert_allclose(radius, mat['radius'])
+        np.testing.assert_allclose(theta, mat['theta'])
+        np.testing.assert_allclose(Br, mat['Br'], atol=1e-6)
+        np.testing.assert_allclose(Bt, mat['Bt'], atol=1e-6)
 
     def test_geo_to_gg(self):
 
         mat = load_matfile(MATFILE_PATH, 'test_geo_to_gg')
 
-        height, beta = cpc.geo_to_gg(mat['radius'], mat['theta'])
+        height, beta, X, Z = cpc.geo_to_gg(mat['radius'], mat['theta'],
+                                           mat['Br'], mat['Bt'])
 
-        self.assertIsNone(np.testing.assert_allclose(height, mat['height']))
-        self.assertIsNone(np.testing.assert_allclose(beta, mat['beta']))
+        np.testing.assert_allclose(height, mat['height'])
+        np.testing.assert_allclose(beta, mat['beta'])
+        np.testing.assert_allclose(X, mat['X'], atol=1e-6)
+        np.testing.assert_allclose(Z, mat['Z'], atol=1e-6)
 
     def test_gg_geo_gg(self):
 
@@ -394,10 +400,8 @@ class CoordinateUtils(TestCase):
 
         height, beta = cpc.geo_to_gg(radius, theta)
 
-        self.assertIsNone(
-            np.testing.assert_allclose(height, mat['height'], atol=1e-10))
-        self.assertIsNone(
-            np.testing.assert_allclose(beta, mat['beta'], atol=1e-10))
+        np.testing.assert_allclose(height, mat['height'], atol=1e-10)
+        np.testing.assert_allclose(beta, mat['beta'], atol=1e-10)
 
     def test_matrix_geo_to_base(self):
 

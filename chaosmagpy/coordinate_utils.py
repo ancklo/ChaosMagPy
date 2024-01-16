@@ -50,6 +50,7 @@ MAG : Magnetic coordinate system (centered dipole, orthogonal)
     zenith_angle
     spherical_to_cartesian
     cartesian_to_spherical
+    basevectors_gg
     basevectors_gsm
     basevectors_sm
     basevectors_use
@@ -797,7 +798,7 @@ def zenith_angle(time, theta, phi):
 
 def spherical_to_cartesian(radius, theta, phi):
     """
-    Convert spherical to cartesian coordinates.
+    Convert spherical coordinates to cartesian coordinates.
 
     Parameters
     ----------
@@ -826,7 +827,7 @@ def spherical_to_cartesian(radius, theta, phi):
 
 def cartesian_to_spherical(x, y, z):
     """
-    Convert geocentric cartesian to spherical coordinates.
+    Convert cartesian coordinates to spherical coordinates.
 
     Parameters
     ----------
@@ -849,11 +850,11 @@ def cartesian_to_spherical(x, y, z):
     return radius, np.degrees(theta), np.degrees(phi)
 
 
-def gg_to_geo(height, beta):
+def gg_to_geo(height, beta, X=None, Z=None):
     """
-    Compute geocentric colatitude and radius from geodetic colatitude and
-    vertical height above the ellipsoid as defined by the World Geodetic System
-    1984 (WGS84).
+    Compute spherical geographic coordinates and components from geodetic
+    coordinates and components as defined by the World Geodetic System 1984
+    (WGS84).
 
     The equatorial and polar radius of the ellipsoid that approximates Earth's
     surface are stored in ``chaosmagpy.basicConfig['params.ellipsoid']``.
@@ -864,19 +865,31 @@ def gg_to_geo(height, beta):
         Altitude in kilometers.
     beta : ndarray, shape (...)
         Geodetic colatitude
+    X : ndarray, shape (...), optional
+        Geodetic northward vector component.
+    Z : ndarray, shape (...), optional
+        Geodetic downward vector component.
 
     Returns
     -------
     radius : ndarray, shape (...)
-        Geocentric radius in kilometers.
+        Geographic radius in kilometers.
     theta : ndarray, shape (...)
-        Geocentric colatitude in degrees.
+        Geographic colatitude in degrees.
+    B_radius : ndarray, shape (...), optional
+        Radially upward vector component (only returned if ``X`` and ``Z``
+        are provided).
+    B_theta : ndarray, shape (...), optional
+        Spherical southward vector component (only returned if ``X`` and ``Z``
+        are provided).
 
     References
     ----------
-    Equations (51)-(53) from "The main field" (chapter 4) by Langel, R. A. in:
-
-    "Geomagnetism", Volume 1, Jacobs, J. A., Academic Press, 1987.
+    The coordinate transformations are taken from Equations (51)-(53) in
+    "The main field" (chapter 4) by Langel, R. A. in: "Geomagnetism", Volume 1,
+    Jacobs, J. A., Academic Press, 1987. The vector rotation is taken from
+    Equation (4) in "5.02 - The Present and Future Geomagnetic Field" by Hulot
+    et al. in: Treatise on Geophysics, Elsevier, 2015.
 
     """
 
@@ -897,21 +910,37 @@ def gg_to_geo(height, beta):
                      a**2*(1. - (1. - (b/a)**4)*sin_alpha_2) /
                           (1. - (1. - (b/a)**2)*sin_alpha_2))
 
-    return radius, theta
+    # transform vector components
+    if (X is not None) and (Z is not None):
+
+        gg_1, _, gg_3 = basevectors_gg(theta, beta)
+
+        # components of base vectors are the columns of the rotation matrix
+        B_radius = gg_1[..., 0]*X + gg_3[..., 0]*Z
+        B_theta = gg_1[..., 1]*X + gg_3[..., 1]*Z
+
+        return radius, theta, B_radius, B_theta
+
+    else:
+        return radius, theta
 
 
-def geo_to_gg(radius, theta):
+def geo_to_gg(radius, theta, B_radius=None, B_theta=None):
     """
-    Compute geodetic colatitude and vertical height above the ellipsoid as
-    defined by the World Geodetic System 1984 (WGS84) from geocentric radius
-    and colatitude.
+    Compute geodetic coordinates and components as
+    defined by the World Geodetic System 1984 (WGS84) from spherical geographic
+    coordinates and components.
 
     Parameters
     ----------
     radius : ndarray, shape (...)
-        Geocentric radius in kilometers.
+        Geographic radius in kilometers.
     theta : ndarray, shape (...)
-        Geocentric colatitude in degrees.
+        Geographic colatitude in degrees.
+    B_radius : ndarray, shape (...), optional
+        Radially upward vector component.
+    B_theta : ndarray, shape (...), optional
+        Spherical southward vector component.
 
     Returns
     -------
@@ -919,6 +948,12 @@ def geo_to_gg(radius, theta):
         Altitude in kilometers.
     beta : ndarray, shape (...)
         Geodetic colatitude in degrees.
+    X : ndarray, shape (...), optional
+        Geodetic northward vector component (only returned if ``B_radius`` and
+        ``B_theta`` are provided).
+    Z : ndarray, shape (...), optional
+        Geodetic downward vector component (only returned if ``B_radius`` and
+        ``B_theta`` are provided).
 
     Notes
     -----
@@ -928,11 +963,12 @@ def geo_to_gg(radius, theta):
 
     References
     ----------
-    Function uses Heikkinen's algorithm taken from:
-
-    Zhu, J., "Conversion of Earth-centered Earth-fixed coordinates to geodetic
-    coordinates", IEEE Transactions on Aerospace and Electronic Systems, 1994,
-    vol. 30, num. 3, pp. 957-961
+    The function uses Heikkinen's algorithm taken from "Conversion of
+    Earth-centered Earth-fixed coordinates to geodetic coordinates" by Zhu, J.
+    in: IEEE Transactions on Aerospace and Electronic Systems, 1994, vol. 30,
+    num. 3, pp. 957-961. The vector rotation is taken from Equation (4) in
+    "5.02 - The Present and Future Geomagnetic Field" by Hulot et al. in:
+    Treatise on Geophysics, Elsevier, 2015.
 
     """
 
@@ -977,7 +1013,46 @@ def geo_to_gg(radius, theta):
 
     beta = 90. - np.degrees(np.arctan2(z + ep2*z0, r))
 
-    return height, beta
+    # transform vector components
+    if (B_radius is not None) and (B_theta is not None):
+
+        gg_1, _, gg_3 = basevectors_gg(theta, beta)
+
+        # components of base vectors are the row of the rotation matrix
+        X = gg_1[..., 0]*B_radius + gg_1[..., 1]*B_theta
+        Z = gg_3[..., 0]*B_radius + gg_3[..., 1]*B_theta
+
+        return height, beta, X, Z
+
+    else:
+        return height, beta
+
+
+def basevectors_gg(theta, beta):
+    """
+    Compute the geodetic basevectors of the WGS84 expressed in terms of the
+    local USE components for the geographic coordinate system (GEO).
+
+    """
+    psi = np.radians(theta - beta)  # difference angle
+
+    grid_shape = np.broadcast(theta, beta).shape
+
+    # predefine output, the components of the base vectors in the last
+    # dimensions: shape (..., 3, 3)
+    gg_1 = np.zeros(grid_shape + (3,))
+    gg_2 = np.zeros(grid_shape + (3,))
+    gg_3 = np.zeros(grid_shape + (3,))
+
+    gg_1[..., 0] = -np.sin(psi)
+    gg_1[..., 1] = -np.cos(psi)
+
+    gg_2[..., 2] = 1.
+
+    gg_3[..., 0] = -np.cos(psi)
+    gg_3[..., 1] = np.sin(psi)
+
+    return gg_1, gg_2, gg_3
 
 
 def basevectors_gsm(time, dipole=None):
@@ -1124,17 +1199,17 @@ def basevectors_mag(dipole=None):
 
 def basevectors_use(theta, phi):
     """
-    Computes the unit base vectors of local orthogonal coordinate system USE
-    (Up-South-East) on the spherical surface (theta, phi) with respect to the
-    standard geographic coordinate system (GEO).
+    Computes the unit base vectors of the local USE frame for spherical
+    coordinates with respect to the standard geographic coordinate
+    system (GEO).
 
     Parameters
     ----------
     theta : ndarray, shape (...)
-        Geocentric colatitude in degrees :math:`(0^\\circ, 180^\\circ)`, i.e.
+        Geographic colatitude in degrees :math:`(0^\\circ, 180^\\circ)`, i.e.
         exclude poles.
     phi : ndarray, shape (...)
-        Geocentric longitude in degrees.
+        Geographic longitude in degrees.
 
     Returns
     -------
@@ -1151,7 +1226,7 @@ def basevectors_use(theta, phi):
     if (np.amin(theta) == 0.) or (np.amax(theta) == np.pi):
         raise ValueError("Basevectors are not defined at poles.")
 
-    grid_shape = max(theta.shape, phi.shape)
+    grid_shape = np.broadcast(theta, phi).shape
 
     # predefine output, the components of the base vectors in the last
     # dimensions: shape (..., 3, 3)
@@ -1178,15 +1253,15 @@ def basevectors_use(theta, phi):
     # third base vector (East)
     use_3[..., 0] = -sin_phi
     use_3[..., 1] = cos_phi
-    use_3[..., 2] = 0
+    use_3[..., 2] = 0.
 
     return use_1, use_2, use_3
 
 
 def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
     """
-    Transform spherical geographic coordinates into spherical coordinates of a
-    rotated geocentric coordinate system as given by three base vectors.
+    Transform spherical geographic coordinates into the spherical coordinates
+    of a rotated geocentric coordinate system as given by three base vectors.
 
     Parameters
     ----------
@@ -1241,15 +1316,15 @@ def geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
 def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
                      dipole=None):
     """
-    Transform spherical geographic coordinates (GEO) into spherical coordinates
+    Transform spherical geographic coordinates into the spherical coordinates
     of a rotated geocentric coordinate system.
 
     Parameters
     ----------
     theta : float or ndarray, shape (...)
-        Geographic colatitude in degrees (GEO).
+        Geographic colatitude in degrees.
     phi : float or ndarray, shape (...)
-        Geographic longitude in degrees (GEO).
+        Geographic longitude in degrees.
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000). Ignored for ``reference='mag'``.
@@ -1257,7 +1332,7 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
         Target coordinate system.
     inverse : bool
         Use inverse transformation instead, i.e. transform from the rotated
-        geocentric coordinates to GEO (default is False).
+        geocentric coordinates to spherical geographic (default is False).
     dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
@@ -1311,16 +1386,16 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
 
 def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
     """
-    Compute matrices to trasnform vector components from USE frame at given
-    spherical geographic coordinates into components with respect to a
-    rotated geocentric coordinate system.
+    Compute matrices to transform vector components in the local USE frame
+    for the geographic coordinate system (GEO) to the local USE frame for a
+    rotated spherical geocentric coordinate system.
 
     Parameters
     ----------
     theta : float or ndarray, shape (...)
-        Geographic colatitude in degrees (GEO).
+        Geographic colatitude in degrees.
     phi : float or ndarray, shape (...)
-        Geographic longitude in degrees (GEO).
+        Geographic longitude in degrees.
     base_1, base_2, base_3 : ndarray, shape (..., 3)
         Base vectors 1 through 3 as columns with respect to GEO.
     inverse : bool
@@ -1359,16 +1434,16 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
         theta_ref, phi_ref = geo_to_base(theta, phi, base_1, base_2, base_3)
 
     # matrix to rotate vector from USE at (theta, phi) to GEO
-    R_use_to_geo = np.stack(basevectors_use(theta, phi), axis=-1)
+    R_use_to_geo = np.column_stack(basevectors_use(theta, phi))
 
     # rotate vector according to reference system defined by base vectors
-    R_geo_to_ref = np.stack((base_1, base_2, base_3), axis=-2)
+    R_geo_to_ref = np.row_stack((base_1, base_2, base_3))
 
     # matrix to rotate vector from original USE to reference system
     R_use_to_ref = np.matmul(R_geo_to_ref, R_use_to_geo)
 
     # matrix to rotate reference to new USE using the transpose
-    R_ref_to_use = np.stack(basevectors_use(theta_ref, phi_ref), axis=-2)
+    R_ref_to_use = np.row_stack(basevectors_use(theta_ref, phi_ref))
 
     # complete rotation matrix: spherical GEO to spherical reference
     R = np.matmul(R_ref_to_use, R_use_to_ref)
@@ -1383,28 +1458,28 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
 def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
                       inverse=None, dipole=None):
     """
-    Transform vectors resolved into components in USE (Up-South-East) at given
-    spherical geographic coordinates (GEO) to components in USE into components
-    with respect to a rotated geocentric coordinate system.
+    Transform vectors in the local USE (Up-South-East) frame for the spherical
+    geographic coordinate system (GEO) to the local USE frame for a magnetic
+    coordinate system.
 
     Parameters
     ----------
     theta : float or ndarray, shape (...)
-        Geographic colatitude in degrees (GEO).
+        Geographic colatitude in degrees.
     phi : float or ndarray, shape (...)
-        Geographic longitude in degrees (GEO).
+        Geographic longitude in degrees.
     B_theta : float or ndarray, shape (...)
-        Colatitude vector components (GEO).
+        Southward vector components.
     B_phi : float or ndarray, shape (...)
-        Azimuthal vector components (GEO).
+        Azimuthal vector components.
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000). Ignored for ``reference='mag'``.
     reference : {'gsm', 'sm', 'mag'}
         Target coordinate system.
     inverse : bool
-        Use inverse transformation instead, i.e. transform from rotated
-        coordinates to geographic (default is False).
+        Use inverse transformation instead, i.e. transform from magnetic
+        coordinates and components to geographic (default is False).
     dipole : ndarray, shape (..., 3), optional
         Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
         :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
@@ -1412,17 +1487,15 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
     Returns
     -------
     theta : ndarray, shape (...)
-        Colatitude in degrees :math:`[0^\\circ, 180^\\circ]` of the rotated
+        Colatitude in degrees :math:`[0^\\circ, 180^\\circ]` of the magnetic
         geocentric coordinate system.
     phi : ndarray, shape (...)
-        Longitude in degrees :math:`(-180^\\circ, 180^\\circ]` of the rotated
-        geocentric coordinate system.
+        Longitude in degrees :math:`(-180^\\circ, 180^\\circ]` of magnetic
+        coordinate system.
     B_theta : float or ndarray, shape (...)
-        Colatitude vector components with respect to the rotated geocentric
-        coordinate system.
+        Colatitude vector components in the target frame.
     B_phi : float or ndarray, shape (...)
-        Azimuthal vector components with respect to the rotated geocentric
-        coordinate system.
+        Azimuthal vector components in the target frame.
 
     See Also
     --------
@@ -1434,6 +1507,7 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
 
     reference = str(reference).lower()
 
+    # set the geomagnetic dipole
     if dipole is None:
         dipole = config_utils.basicConfig['params.dipole']
 
@@ -1453,9 +1527,11 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
         raise ValueError('Unknown target reference system. Use one of '
                          '{"gsm", "sm", "mag"}.')
 
+    # combine basevectors
     theta_ref, phi_ref, R = matrix_geo_to_base(
         theta, phi, base_1, base_2, base_3, inverse=inverse)
 
+    # transform vector components
     B_theta_ref = R[..., 1, 1]*B_theta + R[..., 1, 2]*B_phi
     B_phi_ref = R[..., 2, 1]*B_theta + R[..., 2, 2]*B_phi
 
