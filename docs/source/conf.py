@@ -53,6 +53,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'numpydoc',
     'sphinx.ext.intersphinx',
+    'sphinx_copybutton',
     'sphinx.ext.todo',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
@@ -107,11 +108,6 @@ html_theme = 'nature'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['.static']
-
-# add button to hide prompts and outputs in code examples
-# also required "copybutton.js" and "jquery.js" in .static directory
-def setup(app):
-    app.add_js_file('copybutton.js')
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -201,7 +197,7 @@ numpydoc_class_members_toctree = False
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # -- Options for todo extension ----------------------------------------------
 
@@ -228,6 +224,10 @@ sphinx_gallery_conf = {
 
      'download_all_examples': False,
 }
+
+# -- Options for sphinx copybutton--------------------------------------------
+
+copybutton_prompt_text = ">>> "
 
 # -- Matplotlib plot_directive options ---------------------------------------
 
