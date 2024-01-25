@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Technical University of Denmark
+# Copyright (C) 2024 Clemens Kloss
 #
 # This file is part of ChaosMagPy.
 #

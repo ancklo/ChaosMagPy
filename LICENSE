@@ -1,9 +1,20 @@
+
 License
 =======
 
-MIT License
+All ChaosMagPy source code and documentation is Copyright (C) Clemens Kloss
+and, unless explicitly stated, licensed under the MIT license.
 
-Copyright (C) 2023 Technical University of Denmark.
+The exception is with regard to some of the stand-alone example scripts in the
+ChaosMagPy documentation gallery, which are licensed under the GNU Lesser
+General Public License as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version. This is
+explicitly stated in the header of these example scripts.
+
+MIT License
+-----------
+
+Copyright (C) 2024 Clemens Kloss.
 
 This version of ChaosMagPy was developed by Clemens Kloss, DTU Space.
 

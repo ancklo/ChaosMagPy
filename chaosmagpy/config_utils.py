@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Technical University of Denmark
+# Copyright (C) 2024 Clemens Kloss
 #
 # This file is part of ChaosMagPy.
 #
@@ -39,9 +39,9 @@ be accessed after importing chaosmagpy through:
 
 **Files**
 
- ==========================  ============  =====================================
+ ==========================  ============  ====================================
  Value                       Type          Description
- ==========================  ============  =====================================
+ ==========================  ============  ====================================
  'file.RC_index'             `HDF5-file`,  RC-index file (used for external
                              `TXT-file`    field computation). See also
                                            :func:`data_utils.save_RC_h5file`.
@@ -51,11 +51,11 @@ be accessed after importing chaosmagpy through:
  'file.SM_spectrum'          `NPZ-file`    SM transformation coefficients. See
                                            also :func:`coordinate_utils.\\
                                            rotate_gauss_fft`.
- 'file.Earth_conductivity'   `TXT-file`    Conductivity model of a layered Earth
-                                           (deprecated).
+ 'file.Earth_conductivity'   `TXT-file`    Conductivity model of a layered
+                                           Earth (deprecated).
  'file.shp_coastline'        `SHP-file`,   Coastline shapefile (default file
                              `ZIP-file`    provided by Natural Earth).
- ==========================  ============  =====================================
+ ==========================  ============  ====================================
 
 **Plots**
 

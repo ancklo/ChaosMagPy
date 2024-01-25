@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Technical University of Denmark
+# Copyright (C) 2024 Clemens Kloss
 #
 # This file is part of ChaosMagPy.
 #
@@ -8,7 +8,7 @@
 """
 ChaosMagPy is a simple Python package for evaluating the CHAOS geomagnetic
 field model and other models of Earth's magnetic field. The latest CHAOS model
-is available at `http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/`.
+is available at http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/.
 
 >>> import chaosmagpy as cp
 >>> chaos = cp.load_CHAOS_matfile('CHAOS-7.mat')
@@ -23,7 +23,7 @@ The following modules are available:
 * chaosmagpy.config_utils (tools for customizing ChaosMagPy parameters)
 
 More information on how to use ChaosMagPy can be found in the documentation
-available at `https://chaosmagpy.readthedocs.io/en/`.
+available at https://chaosmagpy.readthedocs.io/en/.
 
 """
 

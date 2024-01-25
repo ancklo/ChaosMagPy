@@ -30,8 +30,7 @@ import chaosmagpy
 # -- Project information -----------------------------------------------------
 
 project = 'ChaosMagPy'
-copyright = (str(datetime.date.today().year)
-             + ' Technical University of Denmark. Developed by Clemens Kloss')
+copyright = (str(datetime.date.today().year) + ' Clemens Kloss')
 author = 'Clemens Kloss'
 
 # The short X.Y version

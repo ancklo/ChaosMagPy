@@ -19,6 +19,7 @@ docs/_build/
 docs/source/classes
 docs/source/functions
 docs/source/gallery
+docs/source/sg_execution_times.rst
 
 # Jupyter Notebook
 .ipynb_checkpoints
