@@ -70,10 +70,11 @@ def example1():
     B_phi = B_phi_int + B_phi_ext
 
     # save to output file
-    data_CHAOS = np.stack([time, radius, theta, phi,
-                           B_radius, B_theta, B_phi,
-                           B_radius_int, B_theta_int, B_phi_int,
-                           B_radius_ext, B_theta_ext, B_phi_ext], axis=-1)
+    data_CHAOS = np.stack([
+        time, radius, theta, phi, B_radius, B_theta, B_phi,
+        B_radius_int, B_theta_int, B_phi_int, B_radius_ext,
+        B_theta_ext, B_phi_ext
+    ], axis=-1)
 
     header = ('  t (mjd2000)    r (km) theta (deg)   phi (deg)       B_r   '
               'B_theta     B_phi       B_r   B_theta     B_phi       B_r   '
@@ -109,10 +110,9 @@ def example2():
     time = cdf_file.varget('Timestamp')  # milli seconds since year 1
     time = time / (1e3*3600*24) - 730485  # time in modified Julian date 2000
     F_swarm = cdf_file.varget('F')
-    cdf_file.close()
 
-    theta_gsm, phi_gsm = transform_points(theta, phi,
-                                          time=time, reference='gsm')
+    theta_gsm, phi_gsm = transform_points(
+        theta, phi, time=time, reference='gsm')
     index_day = np.logical_and(phi_gsm < 90, phi_gsm > -90)
     index_night = np.logical_not(index_day)
 
