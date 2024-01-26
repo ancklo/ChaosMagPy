@@ -1710,17 +1710,22 @@ str, {'internal', 'external'}
         the RC-index. If the values of the RC-index are not supplied
         directly via the ``rc`` input argument, a built-in RC-index file is
         loaded. This file goes with a specific version of the CHAOS model,
-        which you can inspect by running
+        which can be inspected by running
         ``print(chaosmagpy.basicConfig['params.CHAOS_version'])`` in a Python
         session. It is recommended to use this version of the CHAOS model
         together with the built-in RC-index.
 
-        The latest RC-index file, which is suitable for the latest CHAOS model,
-        can be downloaded at :rc_url:`\\ `. To overwrite the usage of the
-        built-in RC-index file, replace the path in ChaosMagPy's configuration
-        dictionary ``chaosmagpy.basicParams['file.RC_index']`` with the path of
-        the downloaded file (for details, see Sect.
+        For the latest CHAOS model, download the suitable RC-index file at
+        :rc_url:`\\ `. Then overwrite the usage of the built-in RC-index file
+        by either providing interpolated values from the downloaded file via
+        the ``rc`` input argument, or by replacing the path in ChaosMagPy's
+        configuration dictionary ``chaosmagpy.basicParams['file.RC_index']``
+        with the path to the downloaded file (for details, see Sect.
         :ref:`sec-configuration-change-rc-index-file`).
+
+        See Also
+        --------
+        CHAOS.synth_values_sm
 
         Examples
         --------
@@ -1780,8 +1785,8 @@ str, {'internal', 'external'}
 
             if file == default:
                 warnings.warn(
-                    'HEALTH warning: ChaosMagPy is loading the RC-index file '
-                    'that is recommended for the CHAOS model version '
+                    'HEALTH WARNING: ChaosMagPy is loading the built-in '
+                    'RC-index file recommended for the CHAOS model version '
                     f'{config_utils.basicConfig["params.CHAOS_version"]}. If '
                     'this is not the CHAOS model version you are using, '
                     'consider changing the model and/or the built-in RC-index '
@@ -1814,7 +1819,7 @@ str, {'internal', 'external'}
                                  "file. Either supply values of the RC-index "
                                  "directly via the ``rc`` input argument or "
                                  "provide the path to an extended RC-index "
-                                 "file by changing the path in "
+                                 "file by updating the path in "
                                  "chaosmagpy.basicParams['file.RC_index'] "
                                  "(see https://chaosmagpy.readthedocs.io/en/"
                                  "master/configuration.html#change-rc-"
@@ -1929,27 +1934,33 @@ str, {'internal', 'external'}
             Internal part of the RC-index (defaults to linearly interpolating
             the hourly values given by the built-in RC-index file).
 
-        Notes
-        -----
-        The computation of the near-magnetospheric field coefficients requires
-        the RC-index. If the values of the RC-index are not supplied
-        directly via the ``rc`` input arguments, a built-in RC-index file is
-        loaded. This file goes with a specific version of the CHAOS model,
-        which you can inspect by running
-        ``print(chaosmagpy.basicConfig['params.CHAOS_version'])`` in a Python
-        session. It is recommended to use this version of the CHAOS model
-        together with the built-in RC-index.
-
-        The latest RC-index file, which is suitable for the latest CHAOS model,
-        is available at :rc_url:`\\ `. To overwrite the usage of the built-in
-        RC-file, provide the path of the downloaded file to ChaosMagPy by
-        changing the path in ``chaosmagpy.basicParams['file.RC_index']`` (see
-        Sect. :ref:`sec-configuration-change-rc-index-file` for details).
-
         Returns
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
+
+        Notes
+        -----
+        The computation of the near-magnetospheric field coefficients requires
+        the RC-index. If the values of the RC-index are not supplied
+        directly via the ``rc`` input argument, a built-in RC-index file is
+        loaded. This file goes with a specific version of the CHAOS model,
+        which can be inspected by running
+        ``print(chaosmagpy.basicConfig['params.CHAOS_version'])`` in a Python
+        session. It is recommended to use this version of the CHAOS model
+        together with the built-in RC-index.
+
+        For the latest CHAOS model, download the suitable RC-index file at
+        :rc_url:`\\ `. Then overwrite the usage of the built-in RC-index file
+        by either providing interpolated values from the downloaded file via
+        the ``rc`` input argument, or by replacing the path in ChaosMagPy's
+        configuration dictionary ``chaosmagpy.basicParams['file.RC_index']``
+        with the path to the downloaded file (for details, see Sect.
+        :ref:`sec-configuration-change-rc-index-file`).
+
+        See Also
+        --------
+        CHAOS.synth_values_sm
 
         Examples
         --------

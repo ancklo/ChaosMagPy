@@ -27,6 +27,11 @@ magnetic potential field. For a complete list, see
 Change RC index file
 --------------------
 
+.. note::
+
+   Find more information on why this may be necessary in the documentation of
+   :meth:`~.chaos.CHAOS.synth_coeffs_sm`.
+
 Download a new RC-index file either directly as TXT-file (``*.dat``) from
 :rc_url:`spacecenter.dk <>` or by using the function
 :func:`~.data_utils.save_RC_h5file` (saves the RC-index as HDF5-file):
