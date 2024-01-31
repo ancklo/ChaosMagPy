@@ -1715,12 +1715,13 @@ str, {'internal', 'external'}
         session. It is recommended to use this version of the CHAOS model
         together with the built-in RC-index.
 
-        For the latest CHAOS model, download the suitable RC-index file at
-        :rc_url:`\\ `. Then overwrite the usage of the built-in RC-index file
-        by either providing interpolated values from the downloaded file via
-        the ``rc`` input argument, or by replacing the path in ChaosMagPy's
-        configuration dictionary ``chaosmagpy.basicParams['file.RC_index']``
-        with the path to the downloaded file (for details, see Sect.
+        For the latest CHAOS model, if necessary, a suitable RC-index file can
+        be downloaded at :rc_url:`\\ `. Overwrite the use of the built-in
+        RC-index file by either providing interpolated values from the
+        downloaded file via the ``rc`` input argument, or by replacing
+        the path in ChaosMagPy's configuration dictionary
+        ``chaosmagpy.basicParams['file.RC_index']`` with the path to the
+        downloaded file (for more details, see Sect.
         :ref:`sec-configuration-change-rc-index-file`).
 
         See Also
@@ -1950,12 +1951,13 @@ str, {'internal', 'external'}
         session. It is recommended to use this version of the CHAOS model
         together with the built-in RC-index.
 
-        For the latest CHAOS model, download the suitable RC-index file at
-        :rc_url:`\\ `. Then overwrite the usage of the built-in RC-index file
-        by either providing interpolated values from the downloaded file via
-        the ``rc`` input argument, or by replacing the path in ChaosMagPy's
-        configuration dictionary ``chaosmagpy.basicParams['file.RC_index']``
-        with the path to the downloaded file (for details, see Sect.
+        For the latest CHAOS model, if necessary, a suitable RC-index file can
+        be downloaded at :rc_url:`\\ `. Overwrite the use of the built-in
+        RC-index file by either providing interpolated values from the
+        downloaded file via the ``rc`` input argument, or by replacing
+        the path in ChaosMagPy's configuration dictionary
+        ``chaosmagpy.basicParams['file.RC_index']`` with the path to the
+        downloaded file (for more details, see Sect.
         :ref:`sec-configuration-change-rc-index-file`).
 
         See Also

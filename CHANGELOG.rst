@@ -3,19 +3,19 @@ Changelog
 
 Version 0.13
 ------------
-| **Date:** January 16, 2023
+| **Date:** January 31, 2023
 | **Release:** v0.13
 
 Features
 ^^^^^^^^
+* Updated RC-index file to RC_1997-2023_Dec23_v5.dat (used during the
+  construction of CHAOS-7.17).
 * Extended :func:`chaosmagpy.coordinate_utils.geo_to_gg` and
   :func:`chaosmagpy.coordinate_utils.gg_to_geo` to also allow for the
   rotation of vector components.
 * Removed Cartopy from the dependencies (basic map projections are done with
   Matplotlib and coastlines are loaded from Natural Earth). New dependency for
   reading the coastline shapefile is PyShp (>=2.3.1).
-* Updated RC-index file to RC_1997-2023_Sept23_v6.dat (used during the
-  construction of CHAOS-7.16).
 * Added function :func:`chaosmagpy.chaos.load_IGRF_txtfile` to load the IGRF
   model from the coefficient TXT-file.
 
