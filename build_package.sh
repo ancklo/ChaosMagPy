@@ -143,6 +143,6 @@ Check the readme file in the root of the repository.
 -------------------------------------------------------------
 EOF
 
-# upload to PyPI
+# upload to PyPI (requires access token in .pypirc)
 # twine check dist/chaosmagpy-$version*
-# twine upload dist/chaosmagpy-$version*
+# twine upload --repository chaosmagpy dist/chaosmagpy-$version*
