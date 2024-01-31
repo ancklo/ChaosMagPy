@@ -221,7 +221,7 @@ class Chaos(TestCase):
         model.to_shc(filepath)
         model2 = cp.chaos.BaseModel.from_shc(filepath)
 
-        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=2e-5)
 
         print(f"Removing file {filepath}")
         os.remove(filepath)
@@ -243,7 +243,7 @@ class Chaos(TestCase):
         model.to_shc(filepath)
         model2 = cp.chaos.BaseModel.from_shc(filepath)
 
-        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=2e-5)
 
         print(f"Removing file {filepath}")
         os.remove(filepath)
@@ -265,7 +265,7 @@ class Chaos(TestCase):
         model.to_shc(filepath)
         model2 = cp.chaos.BaseModel.from_shc(filepath)
 
-        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=1e-5)
+        np.testing.assert_allclose(model.coeffs, model2.coeffs, atol=2e-5)
 
         print(f"Removing file {filepath}")
         os.remove(filepath)

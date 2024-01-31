@@ -1787,9 +1787,9 @@ str, {'internal', 'external'}
             if file == default:
                 warnings.warn(
                     'HEALTH WARNING: ChaosMagPy is loading the built-in '
-                    'RC-index file recommended for the CHAOS model version '
-                    f'{config_utils.basicConfig["params.CHAOS_version"]}. If '
-                    'this is not the CHAOS model version you are using, '
+                    'RC-index file recommended for '
+                    f'CHAOS-{config_utils.basicConfig["params.CHAOS_version"]}'
+                    '. If this is not the CHAOS model version used here, '
                     'consider changing the model and/or the built-in RC-index '
                     'file (see https://chaosmagpy.readthedocs.io/en/'
                     'master/configuration.html#change-rc-index-file '

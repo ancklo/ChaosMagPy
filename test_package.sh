@@ -18,7 +18,7 @@ env_name=Test_$version
 printf "\n%s %s %s %s\n\n" -------Test ChaosMagPy Version $version-------
 
 # echo Setting up fresh conda environment.
-# conda env create --name $env_name -f environment.yml
+conda env create --name $env_name -f environment.yml
 
 conda activate $env_name
 

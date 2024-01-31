@@ -1434,16 +1434,16 @@ def matrix_geo_to_base(theta, phi, base_1, base_2, base_3, inverse=None):
         theta_ref, phi_ref = geo_to_base(theta, phi, base_1, base_2, base_3)
 
     # matrix to rotate vector from USE at (theta, phi) to GEO
-    R_use_to_geo = np.column_stack(basevectors_use(theta, phi))
+    R_use_to_geo = np.stack(basevectors_use(theta, phi), axis=-1)
 
     # rotate vector according to reference system defined by base vectors
-    R_geo_to_ref = np.row_stack((base_1, base_2, base_3))
+    R_geo_to_ref = np.stack((base_1, base_2, base_3), axis=-2)
 
     # matrix to rotate vector from original USE to reference system
     R_use_to_ref = np.matmul(R_geo_to_ref, R_use_to_geo)
 
     # matrix to rotate reference to new USE using the transpose
-    R_ref_to_use2 = np.row_stack(basevectors_use(theta_ref, phi_ref))
+    R_ref_to_use2 = np.stack(basevectors_use(theta_ref, phi_ref), axis=-2)
 
     # complete rotation matrix: spherical GEO to spherical reference
     R = np.matmul(R_ref_to_use2, R_use_to_ref)  # == R_use_to_use2
