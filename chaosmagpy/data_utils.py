@@ -154,7 +154,7 @@ def load_RC_datfile(filepath=None, parse_dates=None):
     column_types = {'time': 'float64', 'RC': 'float64', 'RC_e': 'float64',
                     'RC_i': 'float64', 'flag': 'category'}
 
-    df = pd.read_csv(filepath,  delim_whitespace=True, comment='#',
+    df = pd.read_csv(filepath, sep=r'\s+', comment='#',
                      dtype=column_types, names=column_names)
 
     parse_dates = False if parse_dates is None else parse_dates
