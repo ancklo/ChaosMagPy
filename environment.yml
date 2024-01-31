@@ -9,6 +9,7 @@ dependencies:
 - pyshp >= 2.3.1
 - lxml
 - matplotlib >= 3
+- cartopy
 - sphinx
 - sphinx-copybutton
 - build
