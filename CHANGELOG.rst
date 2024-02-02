@@ -3,7 +3,7 @@ Changelog
 
 Version 0.13
 ------------
-| **Date:** January 31, 2023
+| **Date:** January 31, 2024
 | **Release:** v0.13
 
 Features
