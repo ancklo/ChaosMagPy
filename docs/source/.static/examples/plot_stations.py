@@ -53,8 +53,8 @@ axes[1].plot(cp.timestamp(data['Time']), dBt)
 axes[2].plot(cp.timestamp(data['Time']), dBp)
 
 axes[0].set_title('d$B_r$/d$t$')
-axes[1].set_title('d$B_t$/d$t$')
-axes[2].set_title('d$B_p$/d$t$')
+axes[1].set_title('d$B_{\\theta}$/d$t$')
+axes[2].set_title('d$B_{\\phi}$/d$t$')
 
 for ax in axes:
     ax.grid()
