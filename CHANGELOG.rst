@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.14-dev
+----------------
+| **Date:** January 31, 2024
+| **Release:** v0.14-dev
+
+Features
+^^^^^^^^
+*
+
 Version 0.13.1
 --------------
 | **Date:** June 4, 2024
