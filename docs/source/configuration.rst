@@ -29,18 +29,20 @@ Change RC index file
 
 .. note::
 
-   Find more information on why this may be necessary in the documentation of
-   :meth:`~.chaos.CHAOS.synth_coeffs_sm`.
+   Find more information about why this may be necessary in the documentation
+   of :meth:`~.chaos.CHAOS.synth_coeffs_sm`.
 
-Download a new RC-index file either directly as TXT-file (``*.dat``) from
-:rc_url:`spacecenter.dk <>` or by using the function
-:func:`~.data_utils.save_RC_h5file` (saves the RC-index as HDF5-file):
+With the latest version of the CHAOS model, it is recommended to use the latest
+version of the RC-index that can be downloaded as TXT-file (``*.dat``) from the
+RC website at :rc_url:`spacecenter.dk <>`, or by using the function
+:func:`~.data_utils.save_RC_h5file` (locally saves the RC-index TXT-file as
+HDF5-file):
 
 .. code-block:: python
 
-   from chaosmagpy.data_utils import save_RC_h5file
+   import chaosmagpy as cp
 
-   save_RC_h5file('my_RC_file.h5')
+   cp.data_utils.save_RC_h5file('my_RC_file.h5')
 
 There is no significant difference in speed when using TXT-file or HDF5-file
 formats in this case. After importing ChaosMagPy, provide the path to the new
@@ -48,12 +50,15 @@ RC-index file:
 
 .. code-block:: python
 
-   import chaosmagpy as cp
-
    cp.basicConfig['file.RC_index'] = './my_RC_file.h5'
 
 This should be done at the top of the script after the import statements,
 otherwise ChaosMagPy uses the builtin RC-index file.
+
+If you use are using an older version of CHAOS-7, and are interested in the
+external field part of that model, it is recommended to use the RC file from
+the archive at the bottom of the :chaos_url:`CHAOS-7 website <>` associated
+with the specific version of CHAOS-7 that you are using.
 
 Save and load custom configuration
 ----------------------------------
