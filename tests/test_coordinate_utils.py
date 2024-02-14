@@ -609,6 +609,29 @@ class CoordinateUtils(TestCase):
         self.assertAlmostEqual(cpc.center_azimuth(-1.25*angle), 0.75*angle)
         self.assertAlmostEqual(cpc.center_azimuth(-1.75*angle), 0.25*angle)
 
+    def test_dipole_input(self):
+        """
+        Ensure that dipole keyword for basevectors accepts various input types.
+        """
+
+        dipole = [-29442.0, -1501.0, 4797.1]
+        desired = cpc.basevectors_mag(dipole=dipole)
+
+        dipole = np.array([-29442.0, -1501.0, 4797.1])
+        result = cpc.basevectors_mag(dipole=dipole)
+        np.testing.assert_allclose(result, desired)
+
+        dipole = (9.688340430, 287.374764610)
+        result = cpc.basevectors_mag(dipole=dipole)
+        np.testing.assert_allclose(result, desired)
+
+        dipole = ([-29442.0], [-1501.0], [4797.1])
+        result = cpc.basevectors_mag(dipole=dipole)
+        np.testing.assert_allclose(
+            np.stack(result, axis=-1)[0, ...],  # unpack shape (1, 3, 3)
+            np.stack(desired, axis=-1)  # shape (3, 3)
+        )
+
 
 if __name__ == '__main__':
     main()

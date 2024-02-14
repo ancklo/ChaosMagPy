@@ -747,11 +747,11 @@ def sun_position(time):
     #  sun's declination in radians
     declination = np.arctan(sind/cosd)
 
-    # sun's right right ascension in radians (0, 2*pi)
+    # sun's right ascension in radians (0, 2*pi)
     right_ascension = np.pi - np.arctan2(sind/(cosd * np.tan(obliq*rad)),
                                          -np.cos(slp*rad)/cosd)
 
-    # Greenwich mean siderial time in radians (0, 2*pi)
+    # Greenwich mean sidereal time in radians (0, 2*pi)
     gmst = np.remainder(279.690983 + 0.9856473354*julian_date
                         + 360.*frac_day + 180., 360.) * rad
 
@@ -1079,9 +1079,14 @@ def basevectors_gsm(time, dipole=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    dipole : ndarray, shape (..., 3), optional
-        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with
+        :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the trailing
+        dimension; a tuple with two arrays, where the first array is the
+        co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -1091,9 +1096,15 @@ def basevectors_gsm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = config_utils.basicConfig['params.dipole']
-
-    vec = _dipole_to_unit(dipole)
+        # take [g10, g11, h11]-format in the config dictionary
+        vec = _dipole_to_unit(config_utils.basicConfig['params.dipole'])
+    elif isinstance(dipole, (tuple, list)):
+        # unpack: accepts either two arrays (theta_np and phi_np), or
+        # three arrays (one for each coefficient: g10, g11, h11)
+        vec = _dipole_to_unit(*dipole)
+    else:
+        # single array with [g10, g11, h11] in the trailing dimension
+        vec = _dipole_to_unit(dipole)
 
     # get sun's position at specified times
     theta_sun, phi_sun = sun_position(time)
@@ -1130,9 +1141,14 @@ def basevectors_sm(time, dipole=None):
     time : float or ndarray, shape (...)
         Time given as modified Julian date, i.e. with respect to the date 0h00
         January 1, 2000 (mjd2000).
-    dipole : ndarray, shape (..., 3), optional
-        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with
+        :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the trailing
+        dimension; a tuple with two arrays, where the first array is the
+        co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -1142,9 +1158,15 @@ def basevectors_sm(time, dipole=None):
     """
 
     if dipole is None:
-        dipole = config_utils.basicConfig['params.dipole']
-
-    vec = _dipole_to_unit(dipole)
+        # take [g10, g11, h11]-format in the config dictionary
+        vec = _dipole_to_unit(config_utils.basicConfig['params.dipole'])
+    elif isinstance(dipole, (tuple, list)):
+        # unpack: accepts either two arrays (theta_np and phi_np), or
+        # three arrays (one for each coefficient: g10, g11, h11)
+        vec = _dipole_to_unit(*dipole)
+    else:
+        # single array with [g10, g11, h11] in the trailing dimension
+        vec = _dipole_to_unit(dipole)
 
     # get sun's position at specified times and convert to cartesian
     theta_sun, phi_sun = sun_position(time)
@@ -1182,9 +1204,14 @@ def basevectors_mag(dipole=None):
 
     Parameters
     ----------
-    dipole : ndarray, shape (..., 3), optional
-        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with
+        :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the trailing
+        dimension; a tuple with two arrays, where the first array is the
+        co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -1194,9 +1221,15 @@ def basevectors_mag(dipole=None):
     """
 
     if dipole is None:
-        dipole = config_utils.basicConfig['params.dipole']
-
-    mag_3 = _dipole_to_unit(dipole)
+        # take [g10, g11, h11]-format in the config dictionary
+        mag_3 = _dipole_to_unit(config_utils.basicConfig['params.dipole'])
+    elif isinstance(dipole, (tuple, list)):
+        # unpack: accepts either two arrays (theta_np and phi_np), or
+        # three arrays (one for each coefficient: g10, g11, h11)
+        mag_3 = _dipole_to_unit(*dipole)
+    else:
+        # single array with [g10, g11, h11] in the trailing dimension
+        mag_3 = _dipole_to_unit(dipole)
 
     mag_2 = np.cross(np.array([0., 0., 1.]), mag_3)
     mag_2 = mag_2 / np.linalg.norm(mag_2, axis=-1, keepdims=True)
@@ -1338,9 +1371,14 @@ def transform_points(theta, phi, time=None, *, reference=None, inverse=None,
     inverse : bool
         Use inverse transformation instead, i.e. transform from rotated
         to spherical geographic coordinates (default is False).
-    dipole : ndarray, shape (..., 3), optional
-        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with
+        :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the trailing
+        dimension; a tuple with two arrays, where the first array is the
+        co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -1484,9 +1522,14 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
         Use inverse transformation instead, i.e. transform coordinates and
         spherical components from the magnetic to the geographic frame (default
         is False).
-    dipole : ndarray, shape (..., 3), optional
-        Dipole spherical harmonics :math:`g_1^0`, :math:`g_1^1` and
-        :math:`h_1^1`. Defaults to ``basicConfig['params.dipole']``.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with
+        :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the trailing
+        dimension; a tuple with two arrays, where the first array is the
+        co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
