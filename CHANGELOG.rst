@@ -3,12 +3,13 @@ Changelog
 
 Version 0.14-dev
 ----------------
-| **Date:** January 31, 2024
+| **Date:** February 22, 2024
 | **Release:** v0.14-dev
 
 Features
 ^^^^^^^^
-*
+* Added function to compute the unit base vector in the direction of the
+  geomagetic north pole: :func:`chaosmagpy.coordinate_utils.dipole_to_vec`.
 
 Version 0.13.1
 --------------
