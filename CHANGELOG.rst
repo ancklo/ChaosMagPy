@@ -3,11 +3,13 @@ Changelog
 
 Version 0.14-dev
 ----------------
-| **Date:** February 22, 2024
+| **Date:** March 11, 2024
 | **Release:** v0.14-dev
 
 Features
 ^^^^^^^^
+* Increased precision of :func:`chaosmagpy.data_utils.timestamp` and
+  :func:`chaosmagpy.data_utils.mjd2000` to nanosecond.
 * Added function to compute the unit base vector in the direction of the
   geomagetic north pole: :func:`chaosmagpy.coordinate_utils.dipole_to_vec`.
 

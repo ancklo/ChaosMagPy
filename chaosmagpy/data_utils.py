@@ -381,7 +381,8 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         os.path.join(os.getcwd(), filepath)))
 
 
-def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
+def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0,
+            nanosecond=0):
     """
     Computes the modified Julian date as floating point number (epoch 2000).
 
@@ -404,6 +405,8 @@ def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0):
         Seconds (default is 0).
     microsecond : int, ndarray, shape (...), optional
         Microseconds (default is 0).
+    nanosecond : int, ndarray, shape (...), optional
+        Nanoseconds (default is 0).
 
     Returns
     -------
@@ -435,7 +438,7 @@ datetime.datetime(2002, 3, 4)])
 
     if (np.issubdtype(year.dtype, np.dtype(dt.datetime).type) or
             np.issubdtype(year.dtype, np.datetime64)):
-        datetime = year.astype('datetime64[us]')
+        datetime = year.astype('datetime64[ns]')
 
     else:
         # build iso datetime string with unicode
@@ -446,17 +449,18 @@ datetime.datetime(2002, 3, 4)])
         year_month = np.char.add(np.char.add(year, '-'), month)
         datetime = np.char.add(np.char.add(year_month, '-'), day)
 
-        datetime = datetime.astype('datetime64[us]')
+        datetime = datetime.astype('datetime64[ns]')
 
         # not use inplace add here because it doesn't broadcast arrays
-        datetime = datetime + np.asarray(hour, dtype='timedelta64[h]')
-        datetime = datetime + np.asarray(minute, dtype='timedelta64[m]')
-        datetime = datetime + np.asarray(second, dtype='timedelta64[s]')
-        datetime = datetime + np.asarray(microsecond, dtype='timedelta64[us]')
+        datetime = (np.asarray(hour, dtype='timedelta64[h]')
+                    + np.asarray(minute, dtype='timedelta64[m]')
+                    + np.asarray(second, dtype='timedelta64[s]')
+                    + np.asarray(microsecond, dtype='timedelta64[us]')
+                    + np.asarray(nanosecond, dtype='timedelta64[ns]'))
 
-    microseconds = datetime - np.datetime64('2000-01-01', 'us')
+    nanoseconds = datetime - np.datetime64('2000-01-01', 'ns')
 
-    return microseconds / np.timedelta64(1, 'D')  # fraction of days
+    return nanoseconds / np.timedelta64(1, 'D')  # fraction of days
 
 
 def timestamp(time):
@@ -471,24 +475,24 @@ def timestamp(time):
     Returns
     -------
     time : ndarray, shape (...)
-        Array of ``numpy.datetime64[us]``.
+        Array of ``numpy.datetime64[ns]``.
 
     Examples
     --------
     >>> timestamp(0.53245)
-        numpy.datetime64('2000-01-01T12:46:43.680000')
+        numpy.datetime64('2000-01-01T12:46:43.680000000')
 
     >>> timestamp(np.linspace(0., 1.5, 2))
-        array(['2000-01-01T00:00:00.000000', '2000-01-02T12:00:00.000000'], \
-dtype='datetime64[us]')
+        array(['2000-01-01T00:00:00.000000000', \
+'2000-01-02T12:00:00.000000000'], dtype='datetime64[ns]')
 
     """
 
-    # convert mjd2000 to timedelta64[us]
-    us = np.asarray(time) * 86400e6 * np.timedelta64(1, 'us')
+    # convert mjd2000 to timedelta64[ns]
+    ns = np.asarray(time) * 86400e9 * np.timedelta64(1, 'ns')
 
-    # add datetime offset
-    return us + np.datetime64('2000-01-01', 'us')
+    # add datetime offset with ns precision
+    return ns + np.datetime64('2000-01-01', 'ns')
 
 
 def is_leap_year(year):
