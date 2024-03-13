@@ -412,7 +412,7 @@ def synth_values(coeffs, radius, theta, phi, *, nmax=None, nmin=None,
             \\cos\\phi\\mathbf{e}_y
 
     Hence, at the geographic north pole as given by ``theta = 0.`` and
-    ``phi = 0.`` (chosen by the user), the returned component ``B_theta``
+    ``phi = 0.`` (user input), the returned component ``B_theta``
     will be along the direction :math:`\\mathbf{e}_\\theta = \\mathbf{e}_x` and
     ``B_phi`` along :math:`\\mathbf{e}_\\phi = \\mathbf{e}_y`. However,
     if ``phi = 180.`` is chosen, ``B_theta``
@@ -700,7 +700,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
             \\cos\\phi\\mathbf{e}_y
 
     Hence, at the geographic north pole as given by ``theta = 0.`` and
-    ``phi = 0.`` (chosen by the user), the returned design matrix ``A_theta``
+    ``phi = 0.`` (user input), the returned design matrix ``A_theta``
     will be for components along the direction
     :math:`\\mathbf{e}_\\theta = \\mathbf{e}_x` and ``A_phi`` for components
     along :math:`\\mathbf{e}_\\phi = \\mathbf{e}_y`. However,

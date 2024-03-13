@@ -358,11 +358,13 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
 
     if N is None:
         N = int(8*365.25*24)  # number of samples
-    N = int(N)
+    else:
+        N = int(N)
 
     if filter is None:  # number of significant Fourier components to be saved
         filter = int(N/2 + 1)
-    filter = int(filter)
+    else:
+        filter = int(filter)
 
     if save_to is None:
         save_to = False  # do not write output file
@@ -383,19 +385,11 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     else:
         raise ValueError('Reference system must be either "GSM" or "SM".')
 
-    # predefine output matrices, last dimension runs through time
-    matrix_time = np.empty((N, nmax*(nmax+2), kmax*(kmax+2)))
-
     print("Calculating Gauss rotation matrices for {:}".format(
         reference.upper()))
 
-    for k in range(N):
-        # compute transformation matrix: reference to geographic system
-        matrix_time[k] = rotate_gauss(
-            nmax, kmax, base_1[k], base_2[k], base_3[k])
-        print("Finished {:.1f}%".format((k+1)/N*100), end='\r')
-
-    print("")
+    # compute transformation matrix: reference to geographic system
+    matrix_time = rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
     # DFT and proper scaling
     spectrum_full = np.fft.fft(matrix_time, axis=0) / N
@@ -415,11 +409,11 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
             return q[n]
 
     # predefine output arrays
-    frequency = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)))
-    frequency_ind = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)))
-    spectrum = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)),
+    frequency = np.zeros((filter, nmax*(nmax+2), kmax*(kmax+2)))
+    frequency_ind = np.zeros((filter, nmax*(nmax+2), kmax*(kmax+2)))
+    spectrum = np.zeros((filter, nmax*(nmax+2), kmax*(kmax+2)),
                         dtype=complex)
-    spectrum_ind = np.empty((filter, nmax*(nmax+2), kmax*(kmax+2)),
+    spectrum_ind = np.zeros((filter, nmax*(nmax+2), kmax*(kmax+2)),
                             dtype=complex)
 
     for k in range(nmax*(nmax+2)):
@@ -638,8 +632,8 @@ def sh_analysis(func, nmax, kmax=None):
         Maximum spherical harmonic degree of the expansion.
     kmax: int, optional, greater than or equal to nmax
         Maximum spherical harmonic degree needed to resolve the output of
-        ``func``. This basically increases the number of points in colatitude,
-        which improves the accuracy of the numerical integration
+        ``func``. This basically increases the number of grid points, which
+        improves the accuracy of the numerical integration
         (defaults to ``nmax``). Ignored if ``kmax < nmax``.
 
     Returns
@@ -666,8 +660,8 @@ def sh_analysis(func, nmax, kmax=None):
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.0000000e+00, 1.0000000e+00, 1.2246468e-16])
 
-    Now, an example where the numerical integration is not sufficiently
-    accurate:
+    Next, an example with an insufficient number of grid points, which leads to
+    inaccurate numerical integration:
 
     >>> def func(theta, phi):
     >>>     n, m = 7, 0  # increased degree to n=7
@@ -677,8 +671,7 @@ def sh_analysis(func, nmax, kmax=None):
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1)
         array([0.55555556, 0.00000000e+00, 0.00000000e+00])  # g10 is wrong
 
-    But, by setting ``kmax=7`` and, thus, increasing the number of integration
-    points:
+    But, by setting ``kmax=7`` and, thus, increasing the number of grid points:
 
     >>> cp.coordinate_utils.sh_analysis(func, nmax=1, kmax=7)
         array([-1.14491749e-16, 0.00000000e+00, -0.00000000e+00])
