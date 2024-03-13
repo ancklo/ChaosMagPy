@@ -938,12 +938,18 @@ class CHAOS(object):
 
         self.timestamp = str(datetime.datetime.now(datetime.timezone.utc))
 
+        # give the model a name: CHAOS or user input
+        if name is None:
+            name = "CHAOS"
+
+        self.name = str(name)
+
         # internal field
         if coeffs_tdep is None:
             self.model_tdep = None
         else:
             self.model_tdep = BaseModel(
-                name='model_tdep',
+                name=name + '_tdep',
                 breaks=breaks,
                 order=order,
                 coeffs=coeffs_tdep,
@@ -954,7 +960,7 @@ class CHAOS(object):
             self.model_static = None
         else:
             self.model_static = BaseModel(
-                name='model_static',
+                name=name + '_static',
                 breaks=breaks[[0, -1]],
                 order=1,
                 coeffs=coeffs_static,
@@ -1021,12 +1027,6 @@ class CHAOS(object):
                     coeffs=coeffs_cal[satellite],
                 )
                 self.model_cal[satellite] = model
-
-        # give the model a name: CHAOS or user input
-        if name is None:
-            self.name = "CHAOS"
-        else:
-            self.name = name
 
         self.meta = meta
 
