@@ -451,8 +451,8 @@ datetime.datetime(2002, 3, 4)])
 
         datetime = datetime.astype('datetime64[ns]')
 
-        # not use inplace add here because it doesn't broadcast arrays
-        datetime = (np.asarray(hour, dtype='timedelta64[h]')
+        # not use iadd here because it doesn't broadcast arrays
+        datetime = (datetime + np.asarray(hour, dtype='timedelta64[h]')
                     + np.asarray(minute, dtype='timedelta64[m]')
                     + np.asarray(second, dtype='timedelta64[s]')
                     + np.asarray(microsecond, dtype='timedelta64[us]')
