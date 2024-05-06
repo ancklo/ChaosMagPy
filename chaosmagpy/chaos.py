@@ -1789,11 +1789,12 @@ str, {'internal', 'external'}
                     'HEALTH WARNING: ChaosMagPy is loading the built-in '
                     'RC-index file recommended for '
                     f'CHAOS-{config_utils.basicConfig["params.CHAOS_version"]}'
-                    '. If this is not the CHAOS model version used here, '
-                    'consider changing the model and/or the built-in RC-index '
-                    'file (see https://chaosmagpy.readthedocs.io/en/'
+                    '. If this is not the CHAOS model version that is being '
+                    'used here, consider changing the model and/or the '
+                    'built-in RC-index file '
+                    '(see https://chaosmagpy.readthedocs.io/en/'
                     'master/configuration.html#change-rc-index-file '
-                    'on how to change this file).'
+                    'on how to change the built-in file).'
                 )
 
             # load RC-index file: first hdf5 then dat-file format
