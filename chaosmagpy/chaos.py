@@ -154,36 +154,48 @@ class Base(object):
 
         if (np.amin(time) < start) or (np.amax(time) > end):
 
-            if isinstance(extrapolate, (str, bool)):  # convert to integer
-                dkey = {
-                    'linear': 2,
-                    'quadratic': 3,
-                    'cubic': 4,
-                    'constant': 1,
-                    'spline': self.order,
-                    'off': 0,
-                    True: 2,
-                    False: 0
-                }
+            dkey = {
+                'linear': 2,
+                'quadratic': 3,
+                'cubic': 4,
+                'constant': 1,
+                'spline': self.order,
+                'off': 0
+            }
+
+            # convert extrapolation input to integer
+            if isinstance(extrapolate, bool):
+                key = 2 if extrapolate else 0
+
+            elif isinstance(extrapolate, str):
                 try:
-                    key = min(dkey[extrapolate], self.order)
+                    key = dkey[extrapolate]
                 except KeyError:
                     string = '", "'.join([str(key) for key in dkey.keys()])
                     raise ValueError(
                         f'Unknown extrapolation method "{extrapolate}". Use '
                         f'one of {{"{string}"}}.')
+
             else:
-                key = min(extrapolate, self.order)
+                key = int(extrapolate)  # ensure integer (if float, etc)
+
+            key = min(key, self.order)  # extrapolation at most equal to spline
 
             if key == 0:
                 message = 'no'
+
             else:
-                message = f'degree-{key - 1}'
+                rev_dkey = {v: k for k, v in dkey.items()}
+                try:
+                    message = rev_dkey[key]
+                except KeyError:
+                    message = 'order-{key} spline'
 
             warnings.warn("Requested coefficients are "
                           "outside of the model time period from "
                           f"{start} to {end} Modified Julian Date 2000. "
-                          f"Doing {message} extrapolation.")
+                          f"Doing {message} extrapolation of the "
+                          "coefficient time series.")
 
             if key > 0:
                 for x in [start, end]:  # left and right
