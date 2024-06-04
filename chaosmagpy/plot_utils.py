@@ -19,13 +19,19 @@
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import matplotlib.dates as mdates
+import warnings
 import shapefile
-from matplotlib.colors import LinearSegmentedColormap
 from . import data_utils
 from . import config_utils
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as ticker
+    import matplotlib.dates as mdates
+    from matplotlib.colors import LinearSegmentedColormap
+except ImportError:
+    warnings.warn('Could not import Matplotlib. Plotting methods and '
+                  'functions will raise a NameError.')
 
 
 def plot_timeseries(time, *args, **kwargs):
@@ -356,7 +362,10 @@ def nio_colormap():
 
 
 # register cmap name for convenient use
-plt.colormaps.register(cmap=nio_colormap())
+try:
+    plt.colormaps.register(cmap=nio_colormap())
+except NameError:
+    pass
 
 
 if __name__ == '__main__':

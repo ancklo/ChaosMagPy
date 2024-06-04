@@ -10,20 +10,19 @@ ChaosMagPy relies on the following (some are optional):
 * cython
 * h5py
 * hdf5storage>0.1.17
-* matplotlib>=3.6
 * pyshp>=2.3.1
-* cdflib (optional)
-* lxml (optional)
+* matplotlib>=3.6 (optional, used for plotting)
+* lxml (optional, used for downloading latest RC-index file)
 
 Specific installation steps using the conda/pip package managers are as follows:
 
 1. Install packages with conda:
 
-   >>> conda install python numpy scipy pandas cython pyshp matplotlib h5py lxml
+   >>> conda install python numpy scipy pandas cython pyshp h5py matplotlib lxml
 
 2. Install remaining packages with pip:
 
-   >>> pip install cdflib hdf5storage
+   >>> pip install hdf5storage
 
 3. Finally install ChaosMagPy either with pip from PyPI:
 

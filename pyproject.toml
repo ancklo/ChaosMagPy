@@ -11,7 +11,6 @@ dependencies = [
   "pandas",
   "Cython",
   "h5py",
-  "matplotlib>=3.6",
   "pyshp>=2.3.1",
   "hdf5storage>=0.1.17"
 ]
@@ -45,6 +44,12 @@ classifiers = [
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Topic :: Scientific/Engineering :: Physics"
+]
+
+[project.optional-dependencies]
+full = [
+  "matplotlib>=3.6",
+  "lxml>=4.3.4"
 ]
 
 [project.urls]

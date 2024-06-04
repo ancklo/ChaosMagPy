@@ -6,6 +6,11 @@ Version 0.13.1
 | **Date:** June 4, 2024
 | **Release:** v0.13.1
 
+Features
+^^^^^^^^
+* Made Matplotlib an optional dependency of ChaosMagPy.
+* Added optional dependencies to ``pyproject.toml``.
+
 Bugfixes
 ^^^^^^^^
 * Removed deprecated matplotlib call to register a colormap. The previous
