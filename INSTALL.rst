@@ -10,7 +10,7 @@ ChaosMagPy relies on the following (some are optional):
 * cython
 * h5py
 * hdf5storage>0.1.17
-* matplotlib>=3
+* matplotlib>=3.6
 * pyshp>=2.3.1
 * cdflib (optional)
 * lxml (optional)

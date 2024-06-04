@@ -356,7 +356,7 @@ def nio_colormap():
 
 
 # register cmap name for convenient use
-plt.register_cmap(cmap=nio_colormap())
+plt.colormaps.register(cmap=nio_colormap())
 
 
 if __name__ == '__main__':

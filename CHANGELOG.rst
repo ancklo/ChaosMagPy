@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 0.13.1
+--------------
+| **Date:** June 4, 2024
+| **Release:** v0.13.1
+
+Bugfixes
+^^^^^^^^
+* Removed deprecated matplotlib call to register a colormap. The previous
+  version caused an ImportError with matplotlib >=3.9.
+
 Version 0.13
 ------------
 | **Date:** January 31, 2024

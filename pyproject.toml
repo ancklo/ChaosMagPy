@@ -11,7 +11,7 @@ dependencies = [
   "pandas",
   "Cython",
   "h5py",
-  "matplotlib>=3",
+  "matplotlib>=3.6",
   "pyshp>=2.3.1",
   "hdf5storage>=0.1.17"
 ]
