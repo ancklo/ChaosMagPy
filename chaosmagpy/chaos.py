@@ -1798,7 +1798,7 @@ str, {'internal', 'external'}
 
             if file == default:
                 warnings.warn(
-                    'HEALTH WARNING: ChaosMagPy is loading the built-in '
+                    'ChaosMagPy is loading the built-in '
                     'RC-index file recommended for '
                     f'CHAOS-{config_utils.basicConfig["params.CHAOS_version"]}'
                     '. If this is not the CHAOS model version that is being '
