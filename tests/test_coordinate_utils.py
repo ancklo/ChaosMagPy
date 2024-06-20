@@ -442,7 +442,7 @@ class CoordinateUtils(TestCase):
 
         time = np.linspace(1, 100, 10)
         theta_geo = np.linspace(1, 179, 10)
-        phi_geo = np.linspace(-180, 179, 10)
+        phi_geo = np.linspace(-179, 179, 10)
 
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_geo_to_sm')
@@ -452,7 +452,7 @@ class CoordinateUtils(TestCase):
         phi_sm_mat = np.ravel(test['phi_sm'])
 
         theta_sm, phi_sm = cpc.transform_points(theta_geo, phi_geo,
-                                              time=time, reference='sm')
+                                                time=time, reference='sm')
 
         self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm_mat))
         self.assertIsNone(np.testing.assert_allclose(phi_sm, phi_sm_mat))
@@ -461,7 +461,7 @@ class CoordinateUtils(TestCase):
 
         time = np.linspace(1, 100, 10)
         theta_geo = np.linspace(1, 179, 10)
-        phi_geo = np.linspace(-180, 179, 10)
+        phi_geo = np.linspace(-179, 179, 10)
 
         # load matfile
         test = load_matfile(MATFILE_PATH, 'test_geo_to_gsm')
@@ -480,9 +480,10 @@ class CoordinateUtils(TestCase):
 
         time = np.linspace(1, 100, 10)
         theta_geo = np.linspace(1, 179, 10)
-        phi_geo = np.linspace(-180, 179, 10)
+        phi_geo = np.linspace(-179, 179, 10)
 
         # TEST GSM COORDINATES
+
         # GSM test: load matfile
         test = load_matfile(MATFILE_PATH, 'test_geo_to_gsm')
 
@@ -495,26 +496,25 @@ class CoordinateUtils(TestCase):
         theta_gsm, phi_gsm = cpc.geo_to_base(
             theta_geo, phi_geo, gsm_1, gsm_2, gsm_3)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_gsm, theta_gsm_mat))
-        self.assertIsNone(np.testing.assert_allclose(phi_gsm, phi_gsm_mat))
+        np.testing.assert_allclose(theta_gsm, theta_gsm_mat)
+        np.testing.assert_allclose(phi_gsm, phi_gsm_mat)
 
         # test the inverse option: GEO -> GSM -> GEO
         theta_geo2, phi_geo2 = cpc.geo_to_base(
             theta_gsm, phi_gsm, gsm_1, gsm_2, gsm_3, inverse=True)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_geo, theta_geo2))
-        self.assertIsNone(np.testing.assert_allclose(
-            phi_geo, cpc.center_azimuth(phi_geo2)))
+        np.testing.assert_allclose(theta_geo, theta_geo2)
+        np.testing.assert_allclose(phi_geo, phi_geo2)
 
         # test the inverse option: GSM -> GEO -> GSM
         theta_gsm2, phi_gsm2 = cpc.geo_to_base(
             theta_geo2, phi_geo2, gsm_1, gsm_2, gsm_3)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_gsm, theta_gsm2))
-        self.assertIsNone(np.testing.assert_allclose(
-            cpc.center_azimuth(phi_gsm), cpc.center_azimuth(phi_gsm2)))
+        np.testing.assert_allclose(theta_gsm, theta_gsm2)
+        np.testing.assert_allclose(phi_gsm, phi_gsm2)
 
         # TEST SM COORDINATES
+
         # SM test: load matfile
         test = load_matfile(MATFILE_PATH, 'test_geo_to_sm')
 
@@ -527,22 +527,22 @@ class CoordinateUtils(TestCase):
         theta_sm, phi_sm = cpc.geo_to_base(
             theta_geo, phi_geo, sm_1, sm_2, sm_3)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm_mat))
-        self.assertIsNone(np.testing.assert_allclose(phi_sm, phi_sm_mat))
+        np.testing.assert_allclose(theta_sm, theta_sm_mat)
+        np.testing.assert_allclose(phi_sm, phi_sm_mat)
 
         # test the inverse option: GEO -> SM -> GEO
         theta_geo2, phi_geo2 = cpc.geo_to_base(
             theta_sm, phi_sm, sm_1, sm_2, sm_3, inverse=True)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_geo, theta_geo2))
-        self.assertIsNone(np.testing.assert_allclose(phi_geo, phi_geo2))
+        np.testing.assert_allclose(theta_geo, theta_geo2)
+        np.testing.assert_allclose(phi_geo, phi_geo2)
 
         # test the inverse option: SM -> GEO -> SM
         theta_sm2, phi_sm2 = cpc.geo_to_base(
             theta_geo2, phi_geo2, sm_1, sm_2, sm_3)
 
-        self.assertIsNone(np.testing.assert_allclose(theta_sm, theta_sm2))
-        self.assertIsNone(np.testing.assert_allclose(phi_sm, phi_sm2))
+        np.testing.assert_allclose(theta_sm, theta_sm2)
+        np.testing.assert_allclose(phi_sm, phi_sm2)
 
     def test_basevectors_use(self):
 

@@ -20,8 +20,8 @@ except ImportError:
 R_REF = 6371.2  # reference radius in km
 ROOT = os.path.abspath(os.path.dirname(__file__))
 MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
-CHAOS_PATH = os.path.join(ROOT, 'data/CHAOS-6-x7.mat')
-CHAOS_PATH_SHC = os.path.join(ROOT, 'data/CHAOS-6-x7_tdep.shc')
+CHAOS_PATH = os.path.join(ROOT, 'data/CHAOS-7.18.mat')
+CHAOS_PATH_SHC = os.path.join(ROOT, 'data/CHAOS-7.18_core.shc')
 
 # check if mat-file exists in tests directory
 if os.path.isfile(MATFILE_PATH) is False:
