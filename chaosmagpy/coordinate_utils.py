@@ -1213,7 +1213,7 @@ def basevectors_sm(time, dipole=None):
 def basevectors_mag(dipole=None):
     """
     Compute the unit base vectors of the centered dipole coordinate system
-    (sometimes referred to as MAG).
+    (also referred to as MAG).
 
     Parameters
     ----------
