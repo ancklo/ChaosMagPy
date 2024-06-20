@@ -346,10 +346,45 @@ class Chaos(TestCase):
         self.assertIsNone(np.testing.assert_allclose(
             B_phi, B_phi_mat))
 
+    def test_mf_timeseries(self):
+
+        # some observatory location
+        radius = R_REF*0.35
+        theta = 90-14.308
+        phi = -16.950
+
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
+
+        time = np.linspace(model.model_tdep.breaks[0],
+                           model.model_tdep.breaks[-1], num=1000)
+
+        B_radius, B_theta, B_phi = model.synth_values_tdep(
+            time, radius, theta, phi, nmax=14, deriv=0)
+
+        # load matfile
+        test = load_matfile(MATFILE_PATH, 'test_mf_timeseries')
+
+        B_radius_mat = np.ravel(test['B_radius'])
+        B_theta_mat = np.ravel(test['B_theta'])
+        B_phi_mat = np.ravel(test['B_phi'])
+
+        for component in ['B_radius', 'B_theta', 'B_phi']:
+            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            print('  -------------------')
+            print(f'  {component}:')
+            print('  MAE =', np.mean(res), 'nT')
+            print('  RMSE =', np.sqrt(np.mean(res**2)), 'nT')
+            print('  Max Error =', np.amax(res), 'nT')
+            print('  Min Error =', np.amin(res), 'nT')
+
+        np.testing.assert_allclose(B_radius, B_radius_mat)
+        np.testing.assert_allclose(B_theta, B_theta_mat)
+        np.testing.assert_allclose(B_phi, B_phi_mat)
+
     def test_sv_timeseries(self):
 
         # some observatory location
-        radius = R_REF
+        radius = R_REF*0.35
         theta = 90-14.308
         phi = -16.950
 
@@ -377,12 +412,44 @@ class Chaos(TestCase):
             print('  Max Error =', np.amax(res), 'nT')
             print('  Min Error =', np.amin(res), 'nT')
 
-        self.assertIsNone(np.testing.assert_allclose(
-            B_radius, B_radius_mat))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_theta, B_theta_mat))
-        self.assertIsNone(np.testing.assert_allclose(
-            B_phi, B_phi_mat))
+        np.testing.assert_allclose(B_radius, B_radius_mat)
+        np.testing.assert_allclose(B_theta, B_theta_mat)
+        np.testing.assert_allclose(B_phi, B_phi_mat)
+
+    def test_sa_timeseries(self):
+
+        # some observatory location
+        radius = R_REF*0.35
+        theta = 90-14.308
+        phi = -16.950
+
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
+
+        time = np.linspace(model.model_tdep.breaks[0],
+                           model.model_tdep.breaks[-1], num=1000)
+
+        B_radius, B_theta, B_phi = model.synth_values_tdep(
+            time, radius, theta, phi, nmax=10, deriv=2)
+
+        # load matfile
+        test = load_matfile(MATFILE_PATH, 'test_sa_timeseries')
+
+        B_radius_mat = np.ravel(test['B_radius'])
+        B_theta_mat = np.ravel(test['B_theta'])
+        B_phi_mat = np.ravel(test['B_phi'])
+
+        for component in ['B_radius', 'B_theta', 'B_phi']:
+            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            print('  -------------------')
+            print(f'  {component}:')
+            print('  MAE =', np.mean(res), 'nT')
+            print('  RMSE =', np.sqrt(np.mean(res**2)), 'nT')
+            print('  Max Error =', np.amax(res), 'nT')
+            print('  Min Error =', np.amin(res), 'nT')
+
+        np.testing.assert_allclose(B_radius, B_radius_mat)
+        np.testing.assert_allclose(B_theta, B_theta_mat)
+        np.testing.assert_allclose(B_phi, B_phi_mat)
 
     def test_synth_sm_field(self):
 
