@@ -6,6 +6,11 @@ Version 0.14
 | **Date:** June 21, 2024
 | **Release:** v0.14
 
+News
+^^^^
+At the moment, only Numpy <= 1.26 is supported due to a deprecation affecting
+a ChaosMagPy dependency. This will hopefully be fixed in the near future.
+
 Features
 ^^^^^^^^
 * Updated RC-index file to RC_1997-2024_June24_v5.dat (used during the

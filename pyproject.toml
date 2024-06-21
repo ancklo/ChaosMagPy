@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "chaosmagpy"
 dynamic = ["version", "readme"]
 dependencies = [
-  "numpy",
+  "numpy<=1.26",
   "scipy",
   "pandas",
   "Cython",
@@ -43,6 +43,7 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Topic :: Scientific/Engineering :: Physics"
 ]
 
