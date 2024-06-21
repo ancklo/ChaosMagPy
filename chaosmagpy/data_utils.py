@@ -441,10 +441,10 @@ datetime.datetime(2002, 3, 4)])
         datetime = year.astype('datetime64[ns]')
 
     else:
-        # build iso datetime string with unicode
-        year = np.asarray(year, dtype=np.unicode_)
-        month = np.char.zfill(np.asarray(month, dtype=np.unicode_), 2)
-        day = np.char.zfill(np.asarray(day, dtype=np.unicode_), 2)
+        # build iso datetime string with str_ (supported in NumPy >= 2.0)
+        year = np.asarray(year, dtype=np.str_)
+        month = np.char.zfill(np.asarray(month, dtype=np.str_), 2)
+        day = np.char.zfill(np.asarray(day, dtype=np.str_), 2)
 
         year_month = np.char.add(np.char.add(year, '-'), month)
         datetime = np.char.add(np.char.add(year_month, '-'), day)
