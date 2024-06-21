@@ -34,7 +34,7 @@ __all__ = [
     "timestamp", "dyear_to_mjd", "mjd_to_dyear"
 ]
 
-__version__ = "0.14"
+__version__ = "0.15-dev"
 
 from .chaos import (
     CHAOS,
