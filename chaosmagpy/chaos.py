@@ -3183,7 +3183,7 @@ def load_BIGMUDI_txtfile(filepath, name=None):
         import matplotlib.pyplot as plt
         import numpy as np
 
-        model = cp.load_BIGMUDIh_txtfile('Mbm.dat')  # load mean model DAT-file
+        model = cp.load_BIGMUDI_txtfile('Mbm.dat')  # load mean model DAT-file
 
         fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
