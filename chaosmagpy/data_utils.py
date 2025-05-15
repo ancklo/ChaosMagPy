@@ -14,6 +14,7 @@ conversions.
     :toctree: functions
 
     load_matfile
+    load_matfile_h5py
     load_RC_datfile
     save_RC_h5file
     load_shcfile
@@ -108,6 +109,108 @@ def load_matfile(filepath, variable_names=None, **kwargs):
             output[key] = traverse_struct(value)
 
     return output
+
+def load_matfile_h5py(filepath, **kwargs):
+    """
+    Load CHAOS MAT-file and return dictionary. Builds on load_matfile but uses h5py instead of HDF5.
+
+    Function to load in a CHAOS model MAT-file and store the output in a nested dictionary of numpy arrays. Traverses opened file, then
+    manually overrides objects previously saved as MATLAB "cell" objects. Arrays are squeezed if possible.
+    Note that in this form, this function works for CHAOS files only and not for any general MAT file. 
+    Relies on the :mod:`h5py` package.
+
+    Parameters
+    ----------
+    filepath : str
+        Filepath and name of MAT-file.
+    **kwargs : keywords
+        Additional keyword arguments are passed to :func:`hfpy.File`.
+
+    Returns
+    -------
+    data : dict
+        Dictionary containing the data as dictionaries or numpy arrays.
+  
+    """
+    # define a recursively called function to traverse structure
+    def traverse_struct(struct):
+    
+            # for h5py group objects, iterate through keys
+            if isinstance(struct, h5py.Group):
+                out = dict()
+                for key, value in struct.items():
+                    out[key] = traverse_struct(value)
+                return out
+    
+            # for h5py dataset objects, iterate through dtype names
+            elif isinstance(struct, h5py.Dataset):
+    
+                # collect dtype names if available
+                names = struct.dtype.names
+    
+                # if no fields in array
+                if names is None:
+                    if struct.dtype == np.dtype('O') and struct.shape == (1, 1):
+                        return traverse_struct(struct[0, 0])
+                    else:
+                        # Added if statement to reverse automatic conversion from strings to int using ASCII conversion. Problematic if other 'uint16' type objects appear but works fine for this file.
+                        if struct.dtype == 'uint16':
+                            return(''.join(chr(np.squeeze(char)) for char in struct))
+                        else:
+                            # Undo h5py transposing of 2D arrays when opening the file
+                            if len(struct.shape) >=2 and struct.shape[0] >=2 and struct.shape[1] >= 2:
+                                return np.squeeze(struct).T
+                            else:
+                                return np.squeeze(struct)
+    
+                else:  # if there are fields, iterate through fields
+                    out = dict()
+                    for name in names:
+                        out[name] = traverse_struct(struct[name])
+                    return out
+    
+            else:
+                return struct
+
+    # Ope file with h5py    
+    f = h5py.File(filepath, **kwargs)
+
+    # Initialise empty output dictionary
+    output2 = dict()
+    
+    # loadmat returns dictionary, go through keys and call traverse_struct
+    for key, value in f.items():
+        if key.startswith('__') and key.endswith('__'):
+            pass
+        # Skip reference key
+        elif key == "#refs#":
+            pass
+        else:
+            output2[key] = traverse_struct(value)
+    
+    # Manually override "cell" objects
+    # Begin with "model_Euler"
+    for key in output2["model_Euler"].keys():
+        val = []
+        for i in range(len(f["model_Euler"][key])):
+        # Read array from reference 
+            val.append(f[output2["model_Euler"][key][i]][()].T)
+    
+        # Convert the resultant list to np.array with data type "object", and reshape to match expected output
+        output2["model_Euler"][key] = np.array(val, dtype=object) 
+    
+    # Decode satellite names in "params" (from unsigned integer to character)
+    val=[]
+    for i in range(len(f["params"]["satellites"])):
+        val.append(''.join(chr(np.squeeze(char)) for char in f[output2["params"]["satellites"][i]]))
+    
+    # Convert the result to a tuple
+    output2["params"]["satellites"] = tuple(val)
+    
+    # Unpack referenced "cell" object in pp_CAL
+    output2["pp_CAL"] = traverse_struct(f[output2["pp_CAL"]])
+
+    return output2
 
 
 def load_RC_datfile(filepath=None, parse_dates=None):
