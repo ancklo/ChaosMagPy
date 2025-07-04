@@ -26,6 +26,7 @@ other geomagnetic field models.
     load_gufm1_txtfile
     load_CALS7K_txtfile
     load_IGRF_txtfile
+    load_BIGMUDI_txtfile
 
 """
 
@@ -3134,4 +3135,112 @@ def load_IGRF_txtfile(filepath, name=None):
     model = BaseModel.from_bspline(name, knots, coeffs, order,
                                    source='internal')
 
+    return model
+
+def load_BIGMUDI_txtfile(filepath, name=None):
+    """
+    Load model parameter file of the BIGMUDIh.1 or BIGMUDI4k.1 models.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to TXT-file (provided by the modellers).
+    name : str, optional
+        User defined name of the model. Defaults to the filename without the
+        file extension.
+
+    Returns
+    -------
+    model : :class:`BaseModel`
+        Class :class:`BaseModel` instance.
+
+    References
+    ----------
+    For details on the BIGMUDIh.1 model, see the original publication:
+
+    Arneitz, P., Leonhardt, R., Egli, R. and Fabian, K. (2021),
+    "Dipole and Nondipole Evolution of the Historical Geomagnetic Field 
+    From Instrumental, Archeomagnetic, and Volcanic Data",
+    J. Geophys. Res. Solid Earth 126, e2021JB022565 https://doi.org/10.1029/2021JB022565
+
+    For details on the BIGMUDI4k.1 model, see the original publication:
+
+    Arneitz, P., Egli, R., Leonhardt, R. & Fabian, K. (2019)
+    "A Bayesian iterative geomagnetic model with universal data input: 
+    Self-consistent spherical harmonic evolution for the 
+    geomagnetic field over the last 4000 years",
+    Phys. Earth Planet. Inter. 290, 57–75 https://doi.org/10.1016/j.pepi.2019.03.008
+
+
+    Examples
+    --------
+    Load the model and plot the degree-1 secular variation. Here, the BIGMUDIh.1
+    model parameter file, e.g. "Mbm.dat", is in the current working directory.
+
+    .. code-block:: python
+
+        import chaosmagpy as cp
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        model = cp.load_BIGMUDI_txtfile('Mbm.dat')  # load mean model DAT-file
+
+        fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+        # sample model timespan 10 years away from endpoints
+        time = np.linspace(1390., 1910., 1000)  # decimal years
+        mjd = cp.data_utils.dyear_to_mjd(time, leap_year=False)
+
+        coeffs = model.synth_coeffs(mjd, nmax=1, deriv=1)
+
+        ax.plot(time, coeffs)
+        ax.set_title(model.name)
+        ax.set_xlabel('Time (years)')
+        ax.set_ylabel('nT/yr')
+
+        ax.legend(['$g_1^0$', '$g_1^1$', '$h_1^1$'])
+
+        plt.tight_layout()
+        plt.show()
+
+    """
+
+    if name is None:
+        # get name without extension
+        name = os.path.splitext(os.path.basename(filepath))[0]
+
+    data = np.loadtxt(filepath)
+    nmax = np.int64(-1 + np.sqrt(4 + data.shape[1]-1)) #(nmax^2 + 2nmax - (data.shape[1]-1) = 0)
+    order = 2 # hard-coded since not really provided in file
+    degree = order - 1  # polynomial degree
+    
+    # convert decimal year to modified Julian date (using 365.25 days/year)
+    breaks = du.dyear_to_mjd(data[:,0], leap_year=False)
+    # add endpoint multiplicity to "trick" scipy's BSpline routine
+    knots = mu.augment_breaks(breaks, order)
+
+    coeffs = np.zeros((knots.size-order, nmax * (nmax + 2)))
+
+    # insert actual coefficients (saved as g_1^0, g_1^1, h_1^0 (=0), h_1^1, g_2^0, g_2^1, g_2^2, h_2^0 (=0), ..., h_nmax^nmax)
+    i = 1
+    j = 0
+    j0 = j
+    for l in np.arange(1,nmax+1):
+        j0 = j
+        for m in np.arange(0,l+1):
+            coeffs[:,j] = data[:,i]
+            i+=1
+            j+=1
+            if m!=0:
+                j+=1
+        j = j0
+        for m in np.arange(0,l+1):
+            if m!=0:
+                coeffs[:,j] = data[:,i]
+            i+=1
+            j+=2
+        j-=1
+        
+    model = BaseModel.from_bspline(name, knots, coeffs, order,
+                                  source='internal')
     return model
