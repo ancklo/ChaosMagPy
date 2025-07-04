@@ -4,12 +4,12 @@ Installation
 ChaosMagPy relies on the following (some are optional):
 
 * python>=3.6
-* numpy<=1.26 (loading MAT-files fails in v2.0, waiting for fix in hdf5storage)
+* numpy>=2 
 * scipy
 * pandas
 * cython
 * h5py
-* hdf5storage>0.1.17
+* hdf5storage>=0.2 (for compatibility with numpy v2.0)
 * pyshp>=2.3.1
 * matplotlib>=3.6 (optional, used for plotting)
 * lxml (optional, used for downloading latest RC-index file)
@@ -18,11 +18,11 @@ Specific installation steps using the conda/pip package managers are as follows:
 
 1. Install packages with conda:
 
-   >>> conda install python "numpy<2" scipy pandas cython pyshp h5py matplotlib lxml
+   >>> conda install python "numpy>=2" scipy pandas cython pyshp h5py matplotlib lxml
 
 2. Install remaining packages with pip:
 
-   >>> pip install hdf5storage
+   >>> pip install "hdf5storage>=0.2"
 
 3. Finally install ChaosMagPy either with pip from PyPI:
 
