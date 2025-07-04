@@ -31,3 +31,7 @@ jobs:
 
     - name: Install package
       run: python -m pip install .[full]
+
+    # Tests are not ready to run in CI yet, so just do a basic import test
+    - name: Test import
+      run: python -c "import chaosmagpy"
