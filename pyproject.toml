@@ -51,7 +51,8 @@ classifiers = [
 
 [project.optional-dependencies]
 full = [
-  "matplotlib>=3.6",
+  "matplotlib; python_version <= '3.7'",
+  "matplotlib>=3.6; python_version >= '3.8'",
   "lxml>=4.3.4"
 ]
 
