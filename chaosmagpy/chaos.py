@@ -2349,7 +2349,7 @@ str, {'internal', 'external'}
             os.path.join(os.getcwd(), filepath)))
 
     @classmethod
-    def from_mat(self, filepath, name=None, satellites=None):
+    def from_mat(self, filepath, name=None, satellites=None, loader=None):
         """
         Alternative constructor for creating a :class:`CHAOS` class instance.
 
@@ -2366,6 +2366,8 @@ str, {'internal', 'external'}
             information is not given in the standard CHAOS MAT-file format
             (defaults to ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
             'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
+        loader : string, optional
+            Name of loader to use for loading in the MAT-file. Defaults to "hdf5", to use h5py, set as "h5py".
 
         Returns
         -------
@@ -2387,7 +2389,7 @@ str, {'internal', 'external'}
 
         """
 
-        return load_CHAOS_matfile(filepath, name=name, satellites=satellites)
+        return load_CHAOS_matfile(filepath, name=name, satellites=satellites, loader=loader)
 
     @classmethod
     def from_shc(self, filepath, *, name=None, leap_year=None):
@@ -2434,7 +2436,7 @@ str, {'internal', 'external'}
         return load_CHAOS_shcfile(filepath, name=name, leap_year=leap_year)
 
 
-def load_CHAOS_matfile(filepath, name=None, satellites=None):
+def load_CHAOS_matfile(filepath, name=None, satellites=None, loader = None):
     """
     Load CHAOS model from MAT-file.
 
@@ -2451,6 +2453,8 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         given in the standard CHAOS MAT-file format (defaults to
         ``['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b', 'swarm_c',
         'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']``.)
+    loader : string, optional
+            Name of loader to use for loading in the MAT-file. Defaults to "hdf5", to use h5py, set as "h5py".
 
     Returns
     -------
@@ -2520,7 +2524,11 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         satellites = ['oersted', 'champ', 'sac_c', 'swarm_a', 'swarm_b',
                       'swarm_c', 'cryosat-2_1', 'cryosat-2_2', 'cryosat-2_3']
 
-    mat_contents = du.load_matfile(filepath)
+    if loader == None or loader == "hdf5":
+        mat_contents = du.load_matfile(filepath)
+    elif loader == "h5py":
+        # Use h5py matfile loader to load in the data
+        mat_contents  = du.load_matfile_h5py(filepath)
 
     pp = mat_contents['pp']
 
