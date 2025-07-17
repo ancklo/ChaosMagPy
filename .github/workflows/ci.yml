@@ -33,7 +33,13 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install package
-      run: python -m pip install .[full]
+      run: |
+        if [[ "${{ runner.os }}" == "Linux" && "${{ matrix.python-version }}" =~ ^3\.[9-9]|1[0-9] ]]; then
+          python -m pip install .[full]
+        else
+          python -m pip install .
+        fi
+      shell: bash
 
     # Tests are not ready to run in CI yet, so just do a basic import test
     - name: Test import
