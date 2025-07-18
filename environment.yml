@@ -1,6 +1,6 @@
 dependencies:
 - python >= 3.6
-- numpy >= 1.26
+- numpy
 - numpydoc
 - scipy
 - pandas
@@ -12,11 +12,11 @@ dependencies:
 - cartopy
 - sphinx
 - sphinx-copybutton
-- build
+- conda-build
 - flake8
 - pip
 - pip:
     - cdflib
-    - hdf5storage >= 0.2
+    - hdf5storage >= 0.1.17
     - sphinx-gallery
-    - apexpy
+    - apexpy >= 2.1.0
