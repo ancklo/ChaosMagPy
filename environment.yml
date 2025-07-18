@@ -12,7 +12,7 @@ dependencies:
 - cartopy
 - sphinx
 - sphinx-copybutton
-- conda-build
+- python-build
 - flake8
 - pip
 - pip:
