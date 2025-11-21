@@ -3,12 +3,13 @@ Changelog
 
 Version 0.16-dev
 ----------------
-| **Date:** July 15, 2025
+| **Date:** November 8, 2025
 | **Release:** v0.16-dev
 
 Features
 ^^^^^^^^
-
+* Added ``dipole`` keyword argument to
+  :func:`chaosmagpy.coordinate_utils.dipole_tilt`.
 
 Version 0.15
 ------------

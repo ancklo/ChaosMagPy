@@ -220,7 +220,7 @@ def dipole_to_vec(dipole=None):
     return vec
 
 
-def dipole_tilt(time):
+def dipole_tilt(time, dipole=None):
     """
     Compute the dipole tilt angle in degrees.
 
@@ -228,6 +228,14 @@ def dipole_tilt(time):
     ----------
     time : ndarray, shape (...)
         Time in modified Julian date.
+    dipole : ndarray, shape (..., 3), or tuple of ndarrays, optional
+        Dipole coefficients. Accepted input is a single array with the dipole
+        coefficients :math:`g_1^0`, :math:`g_1^1` and :math:`h_1^1` in the
+        trailing dimension; or a tuple of two arrays, where the first array is
+        the co-latitude of the geomagentic north pole and the second is its
+        longitude; or a tuple of three arrays, one array for each dipole
+        coefficient in the natural order. Defaults to the SH coefficients in
+        ``basicConfig['params.dipole']``.
 
     Returns
     -------
@@ -239,9 +247,9 @@ def dipole_tilt(time):
     s = sun_position(time)  # theta and phi position
     s = np.stack(spherical_to_cartesian(1., s[0], s[1]), axis=-1)
 
-    m = igrf_dipole()
+    m = dipole_to_vec(dipole)
 
-    return np.degrees(np.arcsin(np.matmul(s, m)))
+    return np.degrees(np.arcsin(np.einsum('...i,...i->...', s, m)))
 
 
 def clock_angle(By, Bz):
@@ -1698,21 +1706,25 @@ def transform_vectors(theta, phi, B_theta, B_phi, time=None, reference=None,
 
 
 def _qdipole_nonvectorized(year, glat, glon, height, apex):
-    """Helper that calls fortranapex to compute quasi-dipole coordinates."""
+    """
+    Helper that calls fortranapex to compute quasi-dipole coordinates
+    and the dipole orientation.
+    """
 
     apex.set_epoch(year)
     qdlat, qdlon = apexpy.fortranapex.apxg2q(
         glat, (glon + 180) % 360 - 180, height, 0)[:2]
     f1, f2 = apexpy.fortranapex.apxg2q(
         glat, (glon + 180) % 360 - 180, height, 1)[2:4]
+    dtheta, dphi = apexpy.fortranapex.dypol()[:2]  # colat, phi, dummy
 
-    return qdlat, qdlon, f1, f2
+    return qdlat, qdlon, f1, f2, dtheta, dphi
 
 
 # create numpy vectorized function
 _qdipole = np.vectorize(
     _qdipole_nonvectorized,
-    signature='(),(),(),()->(),(),(n),(n)',
+    signature='(),(),(),()->(),(),(n),(n),(),()',
     excluded={4, 'apex'}
 )
 
@@ -1786,13 +1798,15 @@ def qdipole(time, radius, theta, phi, datafile=None, fortranlib=None):
     year = data_utils.mjd_to_dyear(time)
 
     # compute apex coordinates and base vectors
-    qdlat, qdlon, f1, f2 = _qdipole(year, glat, phi,
-                                    height, apex=apex)
+    qdlat, qdlon, f1, f2, _, _ = _qdipole(year, glat, phi, height, apex=apex)
 
     # compute qdlon of the subsolar point
     ssgcth, ssglon = sun_position(time)
-    _, ssalon, _, _ = _qdipole(year, 90. - ssgcth, ssglon,
-                               height=50*6371, apex=apex)
+    _, ssalon, _, _, _, _ = _qdipole(year, 90. - ssgcth, ssglon,
+                                     height=50*6371, apex=apex)
+
+    # _, ssalon = transform_points(ssgcth, ssglon, reference='MAG',
+    #                              dipole=(dtheta, dphi))
 
     # compute magnetic local time
     mlt = (180. + qdlon - ssalon)/15. % 24.
@@ -1800,7 +1814,7 @@ def qdipole(time, radius, theta, phi, datafile=None, fortranlib=None):
     # reset epoch to initial
     apex.set_epoch(date)
 
-    return qdlat, qdlon, mlt, f1.T, f2.T
+    return qdlat, qdlon, mlt, np.moveaxis(f1, -1, 0), np.moveaxis(f2, -1, 0)
 
 
 def center_azimuth(phi):
