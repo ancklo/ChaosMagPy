@@ -593,9 +593,9 @@ class Chaos(TestCase):
             test['imf_y'], test['imf_z'], test['v'], test['f107'],
             nmax=int(test['nmax'].item()))  # at satellite altitude
 
-        np.testing.assert_allclose(Br, test['B_radius'], atol=1e-2)
-        np.testing.assert_allclose(Bt, test['B_theta'], atol=1e-2)
-        np.testing.assert_allclose(Bp, test['B_phi'], atol=1e-2)
+        np.testing.assert_allclose(Br, test['B_ion'][:, [0]], atol=1e-2)
+        np.testing.assert_allclose(Bt, test['B_ion'][:, [1]], atol=1e-2)
+        np.testing.assert_allclose(Bp, test['B_ion'][:, [2]], atol=1e-2)
 
 
 def profiler_complete_forward(n_data=300):
