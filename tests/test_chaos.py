@@ -21,6 +21,7 @@ R_REF = 6371.2  # reference radius in km
 ROOT = os.path.abspath(os.path.dirname(__file__))
 MATFILE_PATH = os.path.join(ROOT, 'data/CHAOS_test.mat')
 CHAOS_PATH = os.path.join(ROOT, 'data/CHAOS-7.18.mat')
+CHAOS_8_PATH = os.path.join(ROOT, 'data/CHAOS-8.3.mat')
 CHAOS_PATH_SHC = os.path.join(ROOT, 'data/CHAOS-7.18_core.shc')
 
 # check if mat-file exists in tests directory
@@ -580,6 +581,21 @@ class Chaos(TestCase):
 
         model.plot_maps_static(6371.2, nmax=min(50, model.model_static.nmax))
         plt.close('all')
+
+    def test_synth_values_ion(self):
+
+        test = load_matfile(MATFILE_PATH, 'test_synth_values_ion')
+
+        model = cp.CHAOS.from_mat(CHAOS_8_PATH)
+
+        Br, Bt, Bp = model.synth_values_ion(
+            test['time'], test['radius'], test['theta'], test['phi'],
+            test['imf_y'], test['imf_z'], test['v'], test['f107'],
+            nmax=int(test['nmax'].item()))  # at satellite altitude
+
+        np.testing.assert_allclose(Br, test['B_radius'], atol=1e-2)
+        np.testing.assert_allclose(Bt, test['B_theta'], atol=1e-2)
+        np.testing.assert_allclose(Bp, test['B_phi'], atol=1e-2)
 
 
 def profiler_complete_forward(n_data=300):
