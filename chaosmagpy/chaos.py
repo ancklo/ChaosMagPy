@@ -195,7 +195,7 @@ class Base(object):
                           "outside of the model time period from "
                           f"{start} to {end} Modified Julian Date 2000. "
                           f"Doing {message} extrapolation of the "
-                          "coefficient time series.", stacklevel=2)
+                          "coefficient time series.")
 
             if key > 0:
                 for x in [start, end]:  # left and right
@@ -2287,6 +2287,24 @@ str, {'internal', 'external'}
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
 
+        Warnings
+        --------
+        Predictions of the ionospheric magnetic field below the reference
+        height (110 km), including at the Earth's surface, are only approximate
+        because contributions from the associated Earth-induced magnetic field
+        are not taken into account.
+
+        The CHAOS-8 ionospheric field is estimated from data at satellite
+        altitude and represents the combined fields from the E-layer currents
+        and associated Earth-induced currents. Because these two contributions
+        are not separated in the model, the total ionospheric field cannot be
+        directly downward-continued to the Earth's surface. However, since the
+        induced counterpart is expected to be small at satellite altitude, the
+        dominant E-layer field can be approximated at ground level, assuming
+        the E-layer currents flow in a horizontal sheet at the reference
+        height. This function implements the above approximation to estimate
+        the dominant E-layer field below the reference height.
+
         Notes
         -----
         Interplanetary magnetic field and solar wind speed data are available
@@ -2410,6 +2428,13 @@ str, {'internal', 'external'}
             B_qphi[index] += B_int[2]
 
         if np.any(~index):
+
+            warnings.warn('Ionospheric field estimates for sites below the '
+                          f'reference height ({refh} km) are approximations '
+                          'because contributions from the associated '
+                          'Earth-induced field are not taken into account '
+                          '(for details, see the warnings section in the '
+                          'documentation.)')
 
             # radial component is continuous: qnm proportional to gnm with a
             # degree-dependent factor of proportionality
