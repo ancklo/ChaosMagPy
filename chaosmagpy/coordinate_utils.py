@@ -1761,9 +1761,9 @@ def qdipole(time, radius, theta, phi, datafile=None, fortranlib=None):
     mlt : ndarray, shape (...)
         Magnetic local time in hours.
     f1 : ndarray, shape (2, ...)
-        East and north components of the first QD basevector.
+        Geodetic east and north components of the first QD basevector.
     f2 : ndarray, shape (2, ...)
-        East and north components of the second QD basevector.
+        Geodetic east and north components of the second QD basevector.
 
     References
     ----------
