@@ -3,8 +3,8 @@ Overview
 ========
 
 ChaosMagPy is a simple Python package for evaluating the CHAOS geomagnetic
-field model and other models of Earth's magnetic field. The latest CHAOS model
-is available at http://www.spacecenter.dk/files/magnetic-models/CHAOS-8/.
+field model, as well as other models of Earth's magnetic field. The latest
+CHAOS model is available at http://www.spacecenter.dk/files/magnetic-models/CHAOS-8/.
 
 Documentation
 -------------
