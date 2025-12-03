@@ -6,7 +6,7 @@ Usage
 Here are some simple examples on how to use the package. This only requires a
 CHAOS model MAT-file, e.g. "CHAOS-6-x7.mat" in the current working directory.
 The model coefficients of the latest CHAOS model can be
-downloaded :chaos_url:`here <>`.
+downloaded :latest_chaos_url:`here <>`.
 
 Computing the field components on a grid
 ----------------------------------------

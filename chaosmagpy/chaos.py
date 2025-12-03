@@ -1094,20 +1094,21 @@ class CHAOS(object):
             Internal part of the RC-index (defaults to linearly interpolating
             the hourly values given by the built-in RC-index file).
         imf_y : ndarray, shape (...),
-            Y-component of the IMF in GSM coordinates (nT). This becomes a
-            required input if computing the ionospheric E-layer field, i.e.
-            if ``'ion'`` is in ``source_list``.
+            Y-component of the IMF in the GSM frame (nT). This is a required
+            input when computing the ionospheric E-layer field, i.e. if
+            ``'ion'`` is in ``source_list``.
         imf_z : ndarray, shape (...)
-            Z-component of the IMF in GSM coordinates (nT). This is only needed
-            for computing the ionospheric E-layer field, i.e. if ``'ion'`` is
-            in ``source_list``.
+            Z-component of the IMF in the GSM frame (nT). This is a required
+            input when computing the ionospheric E-layer field, i.e. if
+            ``'ion'`` is in ``source_list``.
         v : ndarray, shape (...)
-            X-component of the solar wind in GSM/GSE coordinates (km/s). This
-            is only needed for computing the ionospheric E-layer field,
+            X-component of the solar wind in the GSM/GSE frame (km/s). This
+            is a required input when computing the ionospheric E-layer field,
             i.e. if ``'ion'`` is in ``source_list``.
         f107 : ndarray, shape(...)
-            Solar radio flux (sfu). This is only needed for computing the
-            ionospheric E-layer field, i.e. if ``'ion'`` is in ``source_list``.
+            Solar radio flux (sfu). This is a
+            required input when computing the ionospheric E-layer field, i.e.
+            if ``'ion'`` is in ``source_list``.
         source_list : list, ['tdep', 'static', 'gsm', 'sm', 'ion'] or \
 str, {'internal', 'external'}
             Specify sources in any order. Default is all sources. Instead of a
@@ -1126,6 +1127,13 @@ str, {'internal', 'external'}
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
+
+        Notes
+        -----
+        Please find more details on computing the ionospheric E-layer field
+        using the interplanetary magnetic field, the solar wind speed and the
+        solar radio flux in the notes for
+        :meth:`chaosmagpy.chaos.CHAOS.synth_values_ion`.
 
         Examples
         --------
@@ -2265,11 +2273,13 @@ str, {'internal', 'external'}
         phi : float or ndarray, shape (...)
             Array containing the longitude in degrees.
         imf_y : ndarray, shape (...)
-            Y-component of the IMF in GSM coordinates (nT).
+            Y-component of the interplanetary magnetic field in the GSM
+            frame (nT).
         imf_z : ndarray, shape (...)
-            Z-component of the IMF in GSM coordinates (nT).
+            Z-component of the interplanetary magnetic field in the GSM
+            frame (nT).
         v : ndarray, shape (...)
-            X-component of the solar wind in GSM/GSE coordinates (km/s).
+            X-component of the solar wind velocity in the GSM/GSE frame (km/s).
         f107 : ndarray, shape(...)
             Solar radio flux (sfu).
         nmax : int, positive, optional
@@ -2286,6 +2296,12 @@ str, {'internal', 'external'}
         -------
         B_radius, B_theta, B_phi : ndarray, shape (...)
             Radial, colatitude and azimuthal field components.
+
+        See Also
+        --------
+        chaosmagpy.coordinate_utils.clock_angle,
+        chaosmagpy.coordinate_utils.coupling_Newell
+        chaosmagpy.coordinate_utils.dipole_tilt
 
         Warnings
         --------
@@ -2307,24 +2323,50 @@ str, {'internal', 'external'}
 
         Notes
         -----
-        Interplanetary magnetic field and solar wind speed data are available
-        at 1-minute resolution at
-        `OMNIWeb <https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/monthly_1min/>`_.
-        It is recommended to smooth the time series using a 2-hour
-        rolling mean.
+        Time series of the interplanetary magnetic field (``imf_y``,
+        ``imf_z``), solar wind speed (``v``) and the observed solar radio
+        flux (``f107``) are available for download as CDF-files on the
+        :chaos8_url:`CHAOS-8 website <>` (reading these files requires a reader
+        such as `cdflib <https://pypi.org/project/cdflib/>`_). The time series
+        can then be linearly interpolated at the desired time points using:
 
-        The observed solar radio flux f10.7 can be downloaded at daily
-        resolution from
-        `here <http://lasp.colorado.edu/lisird/data/penticton_radio_flux/>`_
+        >>> import numpy
+        >>> import cdflib
+
+        >>> time = numpy.array([0., 10.])  # desired time series in MJD2000
+        >>> file = cdflib.CDF('F107_1day_19960101T120000_20250609T120000.cdf')
+        >>> f107 = numpy.interp(time, file.varget('Time'), file.varget('F107'))
+
+        for ``f107`` and, similarly, for ``imf_y``, ``imf_z``, and ``v``:
+
+        >>> file = cdflib.CDF('IMFV_1min_199701_202508.cdf')
+        >>> imf_y = numpy.interp(time, file.varget('Time'), file.varget('IMF_Y'))
+        >>> imf_z = numpy.interp(time, file.varget('Time'), file.varget('IMF_Z'))
+        >>> v = numpy.interp(time, file.varget('Time'), file.varget('V_X'))
+
+        Alternatively, interplanetary magnetic field (``By`` and ``Bz`` in GSM)
+        and solar wind speed (``v``) data at 1-minute resolution can be
+        downloaded at
+        `OMNIWeb <https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/monthly_1min/>`_.
+        The time series should be smoothed using a backward-looking 20-minute
+        rolling mean before they are linearly interpolated.
+
+        The observed solar radio flux ``f107`` is available at daily
+        resolution from the
+        `LASP Interactive Solar Irradiance Datacenter <http://lasp.colorado.edu/lisird/data/penticton_radio_flux/>`_,
+        which can be linearly interpolated at the desired time points. Here,
+        no smoothing is needed.
 
         Examples
         --------
         >>> import chaosmagpy as cp
         >>> import numpy as np
+
         >>> model = cp.CHAOS.from_mat('CHAOS-8.3.mat')
-        >>> time = np.array([0., 10.])
+
+        >>> time, r, theta, phi = np.array([0., 10.]), 6800., 45., 0.  # at satellite altitude
         >>> imf_y, imf_z, v, f107 = (2., -4., 350., 100.)
-        >>> Br, Bt, Bp = model.synth_values_ion(time, 6800., 45., 0., imf_y, imf_z, v, f107)  # at satellite altitude
+        >>> Br, Bt, Bp = model.synth_values_ion(time, r, theta, phi, imf_y, imf_z, v, f107)
         >>> Br
         array([0.92402341, 0.85912358])
 

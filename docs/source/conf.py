@@ -205,11 +205,11 @@ todo_include_todos = True
 
 # -- Options for extlinks extension ------------------------------------------
 # Note the "%s" in the base url. You can display the link itself with
-# :chaos_url:`\\ `, or insert a clickable caption with
-# :chaos_url:`click here <>`
+# :latest_chaos_url:`\\ `, or insert a clickable caption with
+# :latest_chaos_url:`click here <>`
 
 extlinks = {
-    'chaos_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-8/%s', None),
+    'latest_chaos_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-8/%s', None),
     'chaos8_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-8/%s', None),
     'chaos7_url': ('http://www.spacecenter.dk/files/magnetic-models/CHAOS-7/%s', None),
     'docs_url': ('https://chaosmagpy.readthedocs.io/en/%s', None),
