@@ -3,11 +3,14 @@ Changelog
 
 Version 0.16-dev
 ----------------
-| **Date:** November 8, 2025
+| **Date:** January 29, 2026
 | **Release:** v0.16-dev
 
 Features
 ^^^^^^^^
+* Changed MAT-file loading and saving to ensure correct satellite names and
+  Euler pre-rotations (:meth:`chaosmagpy.chaos.CHAOS.save_matfile`,
+  :func:`chaosmagpy.chaos.load_CHAOS_matfile`).
 * Added ``dipole`` keyword argument to
   :func:`chaosmagpy.coordinate_utils.dipole_tilt`.
 

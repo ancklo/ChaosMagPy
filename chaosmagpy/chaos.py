@@ -1013,6 +1013,8 @@ class CHAOS(object):
         self.breaks_delta = breaks_delta
         self.coeffs_delta = coeffs_delta
 
+        dict_params = dict()  # collects satellite names and pre-rotations
+
         # Euler angles
         if breaks_euler is None:
             self.model_euler = None
@@ -1020,12 +1022,17 @@ class CHAOS(object):
             satellites = tuple(breaks_euler.keys())
             self.model_euler = dict()
 
+            try:
+                Euler_prerotation = meta['params']['Euler_prerotation']
+            except KeyError:
+                Euler_prerotation = None
+
             for k, satellite in enumerate(satellites):
 
-                try:
-                    Euler_prerotation = meta['params']['Euler_prerotation'][k]
-                except KeyError:
-                    Euler_prerotation = None
+                if Euler_prerotation is None:
+                    prerotation = None
+                else:
+                    prerotation = Euler_prerotation[k]
 
                 model = Base(
                     satellite,
@@ -1033,10 +1040,15 @@ class CHAOS(object):
                     breaks=breaks_euler[satellite],
                     coeffs=coeffs_euler[satellite],
                     meta={
-                        'Euler_prerotation': Euler_prerotation
+                        'Euler_prerotation': prerotation
                     }
                 )
                 self.model_euler[satellite] = model
+
+            dict_params.update({
+                'Euler_prerotation': Euler_prerotation,
+                'satellites': satellites
+            })
 
         # calibration parameters
         if breaks_cal is None:
@@ -1055,6 +1067,10 @@ class CHAOS(object):
                 )
                 self.model_cal[satellite] = model
 
+            dict_params.update({
+                'satellites_cal': satellites
+            })
+
         # ionospheric field (CHAOS version >=8.3)
         if coeffs_ion is None:
             self.coeffs_ion = None
@@ -1064,6 +1080,11 @@ class CHAOS(object):
             self.coeffs_ion = np.asarray(coeffs_ion, dtype=float)
             self.n_ion = dimension(coeffs_ion)
             self.refh_ion = float(refh_ion)
+
+        if bool(dict_params):
+            meta = {'params': dict_params}  # if dict_params is not empty
+        else:
+            meta = None
 
         self.meta = meta
 
@@ -2349,7 +2370,7 @@ str, {'internal', 'external'}
         downloaded at
         `OMNIWeb <https://spdf.gsfc.nasa.gov/pub/data/omni/high_res_omni/monthly_1min/>`_.
         The time series should be smoothed using a backward-looking 20-minute
-        rolling mean before they are linearly interpolated.
+        rolling mean before linear interpolation.
 
         The observed solar radio flux ``f107`` is available at daily
         resolution from the
@@ -2945,16 +2966,20 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         coeffs_ion = model_ion['coeffs']  # (nbases, n_coeffs)
         refh_ion = model_ion['refh']  # reference height of the sheet current
 
-    # load additional parameters and resolve satellite names
-    default_satellites = ['oersted', 'champ', 'sac_c', 'swarm_a',
-                          'swarm_b', 'swarm_c', 'cryosat-2_1',
-                          'cryosat-2_2', 'cryosat-2_3']
+    # load additional parameters and resolve satellite names for euler angles
+    # use CHAOS-7 series as default
+    default_satellites_euler = ['oersted', 'champ', 'sac_c', 'swarm_a',
+                                'swarm_b', 'swarm_c', 'cryosat-2_1',
+                                'cryosat-2_2', 'cryosat-2_3']
+
+    default_satellites_cal = ['cryosat-2_1']
 
     try:
         params = mat_contents['params']
 
     except KeyError as err:
-        warnings.warn(f'Missing params dictionary of Euler prerotation: {err}')
+        warnings.warn('Missing params dictionary with Euler prerotations '
+                      f'and satellite names: {err}')
 
         dict_params = {
             'Euler_prerotation': None
@@ -2962,7 +2987,9 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
         # define satellite names according to CHAOS-7 series
         if satellites is None:
-            satellites = default_satellites
+            satellites_euler = default_satellites_euler
+
+        satellites_cal = default_satellites_cal
 
     else:
         dict_params = {
@@ -2970,9 +2997,13 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         }
 
         if satellites is None:
-            satellites = params.get('satellites', default_satellites)
+            satellites = params.get('satellites',
+                                    default_satellites_euler)
+
+        satellites_cal = params.get('satellites_cal', default_satellites_cal)
 
     satellites = tuple(satellites)
+    satellites_cal = tuple(satellites_cal)
 
     # load euler angles
     try:
@@ -3021,11 +3052,10 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
     else:
         # only support of single satellite
-        breaks_cal = {'cryosat-2_1': model_cal['breaks']}
-        coeffs_cal = {'cryosat-2_1': model_cal['coefs'].reshape((1, -1, 9))}
+        satellite = satellites_cal[0]
 
-    # collect additional parameters and satellite names
-    dict_params['satellites'] = satellites
+        breaks_cal = {satellite: model_cal['breaks']}
+        coeffs_cal = {satellite: model_cal['coefs'].reshape((1, -1, 9))}
 
     meta = {
         'params': dict_params

@@ -38,6 +38,34 @@ class Chaos(TestCase):
             Running {self._testMethodName}:
             """))
 
+    def test_io_matfile(self):
+
+        # CHAOS-7
+        model = cp.load_CHAOS_matfile(CHAOS_PATH)
+
+        seq = np.random.randint(0, 10, size=(5,))
+        filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.mat'
+        filepath = os.path.join('./', filename)
+
+        model.save_matfile(filepath)  # save
+        cp.load_CHAOS_matfile(filepath)  # load
+
+        print(f"  Removing file {filepath}")
+        os.remove(filepath)
+
+        # CHAOS-8
+        model = cp.load_CHAOS_matfile(CHAOS_8_PATH)
+
+        seq = np.random.randint(0, 10, size=(5,))
+        filename = 'CHAOS-tmp_' + ''.join([str(a) for a in seq]) + '.mat'
+        filepath = os.path.join('./', filename)
+
+        model.save_matfile(filepath)  # save
+        cp.load_CHAOS_matfile(filepath)  # load
+
+        print(f"  Removing file {filepath}")
+        os.remove(filepath)
+
     def test_synth_euler_angles(self):
 
         model = cp.load_CHAOS_matfile(CHAOS_PATH)
