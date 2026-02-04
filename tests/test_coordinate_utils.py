@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Clemens Kloss
+# Copyright (C) 2026 Clemens Kloss
 #
 # This file is part of ChaosMagPy.
 #
