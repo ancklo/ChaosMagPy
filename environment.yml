@@ -4,7 +4,6 @@ dependencies:
 - numpydoc
 - scipy
 - pandas
-- cython
 - h5py
 - pyshp >= 2.3.1
 - lxml

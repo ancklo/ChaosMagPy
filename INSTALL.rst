@@ -7,7 +7,6 @@ ChaosMagPy relies on the following (some are optional):
 * numpy (>=2 if python>=3.12)
 * scipy
 * pandas
-* cython
 * h5py
 * hdf5storage (>=0.2 if python>=3.12)
 * pyshp>=2.3.1
@@ -20,7 +19,7 @@ using the conda/pip package managers are as follows:
 
 1. Install packages with conda:
 
-   >>> conda install python numpy scipy pandas cython pyshp h5py matplotlib lxml
+   >>> conda install python numpy scipy pandas pyshp h5py matplotlib lxml
 
 2. Install remaining packages with pip:
 

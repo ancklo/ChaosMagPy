@@ -1,7 +1,6 @@
 numpy>=1.26
 scipy>=1.1
 pandas>=0.23
-Cython>=0.28
 h5py>=2.8.0
 pyshp>=2.3.1
 matplotlib>=3.6
