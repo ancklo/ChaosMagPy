@@ -1136,8 +1136,8 @@ str, {'internal', 'external'}
             list, pass ``source_list='internal'`` which is equivalent to
             ``source_list=['tdep', 'static']`` (internal sources) or
             ``source_list='external'`` which is the same as
-            ``source_list=['gsm', 'sm', 'ion']`` (external sources including
-            Earth-induced parts).
+            ``source_list=['gsm', 'sm', 'ion']`` (external sources
+            including Earth-induced counterparts).
         nmax_static : int, optional
             Maximum spherical harmonic degree of the static internal magnetic
             field (defaults to 85).
@@ -1185,18 +1185,23 @@ str, {'internal', 'external'}
         else:
             source_list = set(source_list)
 
+        # evaluate special keywords
         if 'internal' in source_list:
             source_list.update({'tdep', 'static'})
 
         if 'external' in source_list:
-             source_list.update({'gsm', 'sm', 'ion'})
+            source_list.update({'gsm', 'sm'})
+
+            # add ion if it is part of the model
+            if self.coeffs_ion is not None:
+                source_list.add('ion')
 
         verbose = bool(verbose)
 
         # check that all inputs for ionospheric field have been specified
         missing = any([imf_y is None, imf_z is None, v is None, f107 is None])
         if ('ion' in source_list) and missing:
-            raise ValueError('Missing at least one of the ionospheric '
+            raise ValueError('Missing one or more of the ionospheric '
                              'field inputs: imf_y, imf_z, v, f107')
 
         # get shape of broadcasted result

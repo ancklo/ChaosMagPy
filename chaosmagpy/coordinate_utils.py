@@ -809,7 +809,7 @@ def sh_analysis(func, nmax, kmax=None):
 
     x, weights = np.polynomial.legendre.leggauss(n_theta)
     theta = np.degrees(np.arccos(x))
-    phi = np.arange(n_phi) * np.degrees(2*np.pi)/n_phi
+    phi = np.arange(n_phi) * 360./n_phi
 
     # compute Schmidt quasi-normalized associated Legendre functions
     Pnm = model_utils.legendre_poly(nmax, theta)
@@ -1926,14 +1926,14 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         | ``radius[k-1]`` >= `r` > 0 : ``sigma[k-1]`` = ``np.inf`` \
             (:math:`\\sigma` = `\\inf`)
 
-        There are ``k`` sphercial shells of uniform conductivity with
+        There are ``k`` spherical shells of uniform conductivity with
         radius in (km) and conductivity :math:`\\sigma` in (S/m).
 
-        The last shell corresponds to the sphercial core whose conductivity is
+        The last shell corresponds to the spherical core whose conductivity is
         set to infinity regardless of the provided ``sigma[-1]``.
 
         The program should work also for very small periods, where it
-        models the response of a layered plane conductor
+        models the response of a layered plane conductor.
 
         | Python version: August 2018, Clemens Kloss
         | Matlab version: November 2000, Nils Olsen
@@ -2061,7 +2061,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         print('')
 
         # if nargout > 1
-        rho_a = 1e-7*8*np.pi**2 / periods * np.abs(C*1000)**2
+        rho_a = 8e-7*np.pi**2 / periods * np.abs(C*1000)**2
         phi = 90 + 57.3*np.angle(C)
         Q = n/(n+1) * (1 - (n+1)*C/radius[0]) / (1 + n*C/radius[0])
 
@@ -2170,7 +2170,7 @@ def q_response(frequency, nmax):
     for n in range(nmax):
         print('Calculating Q-response for degree {:}'.format(n+1))
         # compute Q-response for conductivity model and given degree n
-        C_n, rho_n, phi_n, Q_n = q_response_1D(
+        _, _, _, Q_n = q_response_1D(
             periods, sigma, sigma_radius, n+1, kind='quadratic')
         q_response[n, index] = Q_n  # index 0: degree 1, index 1: degree 2, ...
 
