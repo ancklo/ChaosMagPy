@@ -62,7 +62,7 @@ class Chaos(TestCase):
         filepath = os.path.join(ROOT, filename)
 
         model = cp.load_CHAOS_matfile(CHAOS_PATH)
-        print('  ', end='')  # indent line by two withespaces
+        print('  ', end='')  # indent line by two whitespaces
         model.save_matfile(filepath)
 
         def test(x, y):

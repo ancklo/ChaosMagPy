@@ -2566,7 +2566,7 @@ str, {'internal', 'external'}
             nmax = self.model_static.nmax
             order = 1
 
-            # create additonal header lines
+            # create additional header lines
             header = textwrap.dedent(f"""\
                 # {self.name}
                 # Spherical harmonic coefficients (units of nT) of the static

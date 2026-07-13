@@ -837,7 +837,7 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     else:
         dim = int((nmax-nmin+1)*(2*mmax+1))
 
-    # allocate A_radius, A_theta, A_phi in memeory
+    # allocate A_radius, A_theta, A_phi in memory
     A_radius = np.zeros(shape + (dim,))
     A_theta = np.zeros(shape + (dim,))
     A_phi = np.zeros(shape + (dim,))
@@ -930,7 +930,7 @@ def legendre_poly(nmax, theta):
 
     Pnm = np.zeros((nmax+1, nmax+2) + costh.shape)
     Pnm[0, 0] = 1.  # is copied into trailing dimensions
-    Pnm[1, 1] = sinth  # write theta into trailing dimenions via broadcasting
+    Pnm[1, 1] = sinth  # write theta into trailing dimensions via broadcasting
 
     rootn = np.sqrt(np.arange(2 * nmax**2 + 1))
 
