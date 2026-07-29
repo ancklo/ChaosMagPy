@@ -3,11 +3,13 @@ Changelog
 
 Version 0.16-dev
 ----------------
-| **Date:** January 29, 2026
+| **Date:** July 13, 2026
 | **Release:** v0.16-dev
 
 Features
 ^^^^^^^^
+* Added :func:`chaosmagpy.data_utils.augment_breaks_shc` to generate the time
+  vector suitable for saving Gauss coefficients to an SHC file.
 * Changed MAT-file loading and saving to ensure correct satellite names and
   Euler pre-rotations (:meth:`chaosmagpy.chaos.CHAOS.save_matfile`,
   :func:`chaosmagpy.chaos.load_CHAOS_matfile`).
@@ -51,7 +53,7 @@ Features
 * Increased precision of :func:`chaosmagpy.data_utils.timestamp` and
   :func:`chaosmagpy.data_utils.mjd2000` to nanosecond.
 * Added function to compute the unit base vector in the direction of the
-  geomagetic north pole: :func:`chaosmagpy.coordinate_utils.dipole_to_vec`.
+  geomagnetic north pole: :func:`chaosmagpy.coordinate_utils.dipole_to_vec`.
 
 Version 0.13.1
 --------------

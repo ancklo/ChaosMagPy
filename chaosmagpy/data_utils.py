@@ -18,6 +18,7 @@ conversions.
     save_RC_h5file
     load_shcfile
     save_shcfile
+    augment_breaks_shc
     mjd2000
     timestamp
     is_leap_year
@@ -298,7 +299,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     Parameters
     ----------
     time : float, list, ndarray, shape (n,)
-        Time of model coeffcients in modified Julian date.
+        Time of model coefficients in modified Julian date.
     coeffs : ndarray, shape (N,) or (n, N)
         Gauss coefficients as vector or array. The first dimension of the array
         must be equal to the length `n` of the given ``time``.
@@ -313,7 +314,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         first values from coeffs if greater than 1.
     nmax : int, optional
         Maximum spherical harmonic degree (defaults to degree compatible with
-        number of coeffcients, otherwise coeffcients are truncated).
+        number of coefficients, otherwise coefficients are truncated).
     leap_year : {True, False}, optional
         Take leap years for decimal year conversion into account
         (defaults to ``True``).
@@ -377,7 +378,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
             f.write(' {:16.8f}'.format(mjd_to_dyear(t, leap_year=leap_year)))
         f.write('\n')
 
-        # write coefficient table to 8 significants
+        # write coefficient table to 8 significant digits
         for row, (n, m) in enumerate(zip(deg, ord)):
 
             f.write('{:4d} {:4d}'.format(n, m))
@@ -389,6 +390,39 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
 
     print('Created SHC-file {}.'.format(
         os.path.join(os.getcwd(), filepath)))
+
+
+def augment_breaks_shc(breaks, order):
+    """
+    Augment a vector of break points and return a vector of timepoints suitable
+    for saving a B-spline representation of order `k` as an SHC-file.
+
+    Parameters
+    ----------
+    breaks: ndarray, shape (n,)
+        1-D array, containing `n` break points (without endpoint repeats).
+    order: int, positive
+        Order `k` of B-spline (4 = cubic).
+
+    Returns
+    -------
+    times: ndarray, shape ((n-1)*max(k-1, 1) + 1,)
+        1-D array with `k-2` equally-spaced timepoints inserted between the
+        points in `breaks`. The last break point is omitted if ``order==1``.
+
+    """
+
+    step = max(order-1, 1)
+
+    times = np.array([], dtype=float)
+    for start, end in zip(breaks[:-1], breaks[1:]):
+        delta = (end - start) / step
+        times = np.append(times, start + delta*np.arange(step))
+
+    if order > 1:
+        times = np.append(times, breaks[-1])  # close right end
+
+    return times
 
 
 def mjd2000(year, month=1, day=1, hour=0, minute=0, second=0, microsecond=0,
@@ -554,7 +588,7 @@ def dyear_to_mjd(time, leap_year=None):
         Time in decimal years.
     leap_year : {True, False}, optional
         Take leap years into account by using a conversion factor of 365 or 366
-        days in a year (leap year, used by default). If ``False`` a conversion
+        days in a year (defaults to ``True``). If ``False`` a conversion
         factor of 365.25 days in a year is used.
 
     Returns
@@ -608,7 +642,7 @@ def mjd_to_dyear(time, leap_year=None):
         Time in modified Julian date 2000.
     leap_year : {True, False}, optional
         Take leap years into account by using a conversion factor of 365 or 366
-        days in a year (leap year, used by default). If ``False`` a conversion
+        days in a year (defaults to ``True``). If ``False`` a conversion
         factor of 365.25 days in a year is used.
 
     Returns

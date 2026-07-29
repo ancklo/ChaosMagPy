@@ -726,22 +726,9 @@ class BaseModel(Base):
         if self.coeffs is None:
             raise ValueError("Spline coefficients are missing.")
 
-        step = max(self.order - 1, 1)
-
-        # compute times in mjd2000
-        if (self.order == 1):
-            # piecewise constant, drop coefficients at last break point
-            times = self.breaks[:-1]
-
-        else:
-            # insert extra samples in between break points
-            times = np.array([], dtype=float)
-
-            for start, end in zip(self.breaks[:-1], self.breaks[1:]):
-                delta = (end - start) / step
-                times = np.append(times, np.arange(start, end, delta))
-
-            times = np.append(times, self.breaks[-1])
+        # Insert extra samples in between break points. The last break point
+        # is omitted for a piece-wise constant (order=1)
+        times = du.augment_breaks_shc(self.breaks, self.order)
 
         gauss_coeffs = self.synth_coeffs(times, nmax=self.nmax)
 
@@ -2599,7 +2586,7 @@ str, {'internal', 'external'}
             nmax = self.model_static.nmax
             order = 1
 
-            # create additonal header lines
+            # create additional header lines
             header = textwrap.dedent(f"""\
                 # {self.name}
                 # Spherical harmonic coefficients (units of nT) of the static
@@ -2992,7 +2979,7 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
 
         # define satellite names according to CHAOS-7 series
         if satellites is None:
-            satellites_euler = default_satellites_euler
+            satellites = default_satellites_euler
 
         satellites_cal = default_satellites_cal
 
