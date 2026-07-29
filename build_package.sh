@@ -38,11 +38,11 @@ mkdir $tempdir/data $tempdir/html
 cp dist/chaosmagpy-$version.tar.gz $tempdir/.
 cp chaos_examples.py $tempdir/.
 
-echo "Copying CHAOS MAT-file: '$modeldir/CHAOS-$release/CHAOS-$release.mat'"
-cp $modeldir/CHAOS-$release/CHAOS-$release.mat $tempdir/data/.
+echo "Copying CHAOS MAT-file:"
+cp -v $modeldir/CHAOS-$release/CHAOS-$release.mat $tempdir/data/.
 
-echo "Copying RC-index file: '$modeldir/CHAOS-$release/RC*.dat'"
-cp $modeldir/CHAOS-$release/RC*.dat $tempdir/data/.
+echo "Copying RC-index file:"
+cp -v $modeldir/CHAOS-$release/RC*.dat $tempdir/data/.
 
 # run example
 cd $tempdir/
