@@ -288,7 +288,7 @@ def coupling_Newell(By, Bz, Vx):
     Notes
     -----
     Newell's coupling function is proportional to the rate at which magnetic
-    flux is openend on the dayside of the magnetopause through reconnection.
+    flux is opened on the dayside of the magnetopause through reconnection.
 
     The original definition of the coupling function only differs in the
     factor :math:`10^{-3}`, which is included in the definition used here:
@@ -531,7 +531,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
 
     for k in range(nmax*(nmax+2)):
 
-        # compute Q-response for freqencies and given Gauss coefficient
+        # compute Q-response for frequencies and given Gauss coefficient
         response = qfunc(frequency_full, k)
 
         for ll in range(kmax*(kmax+2)):
@@ -1948,7 +1948,7 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
         fac1 = factorial(n)
         fac2 = (-1)**n * fac1/(2*n+1)
 
-        # initialze helpers variables and output
+        # initialize helpers variables and output
         C = np.empty(periods.shape, dtype=complex)
         z = np.empty((2,), dtype=complex)
         p = np.empty((2,), dtype=complex)

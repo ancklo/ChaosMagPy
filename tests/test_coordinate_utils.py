@@ -200,7 +200,7 @@ class CoordinateUtils(TestCase):
 
     def test_synth_rotate_gauss(self):
         """
-        Tests the accuracy of the Fourier representation of tranformation
+        Tests the accuracy of the Fourier representation of transformation
         matrices by comparing them with directly computed matrices (they are
         considered correct).
 

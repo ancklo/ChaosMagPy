@@ -298,7 +298,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
     Parameters
     ----------
     time : float, list, ndarray, shape (n,)
-        Time of model coeffcients in modified Julian date.
+        Time of model coefficients in modified Julian date.
     coeffs : ndarray, shape (N,) or (n, N)
         Gauss coefficients as vector or array. The first dimension of the array
         must be equal to the length `n` of the given ``time``.
@@ -313,7 +313,7 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         first values from coeffs if greater than 1.
     nmax : int, optional
         Maximum spherical harmonic degree (defaults to degree compatible with
-        number of coeffcients, otherwise coeffcients are truncated).
+        number of coefficients, otherwise coefficients are truncated).
     leap_year : {True, False}, optional
         Take leap years for decimal year conversion into account
         (defaults to ``True``).
