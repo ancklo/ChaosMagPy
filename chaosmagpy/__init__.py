@@ -44,7 +44,7 @@ __all__ = [
     "timestamp"
 ]
 
-__version__ = "0.16-dev"
+__version__ = "0.16"
 
 from .chaos import (
     CHAOS,

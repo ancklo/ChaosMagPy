@@ -2,10 +2,10 @@ Changelog
 =========
 
 
-Version 0.16-dev
-----------------
+Version 0.16
+------------
 | **Date:** August 3, 2026
-| **Release:** v0.16-dev
+| **Release:** v0.16
 
 Features
 ^^^^^^^^
