@@ -142,7 +142,6 @@ cat << EOF
 Check that the correct RC-index file has been included.
 Check that the CHAOS version in basicConfig was built with the included RC-index file.
 Check that example_script.py output agrees with MATLAB example output.
-Check the copyright notices in every source field and update the year if needed.
 Check changelog dates and entries.
 Check urls in the config file of the documentation.
 Check the readme file in the root of the repository.
