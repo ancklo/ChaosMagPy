@@ -15,7 +15,7 @@ dependencies = [
   "hdf5storage; python_version <= '3.11'",
   "hdf5storage>=0.2; python_version >= '3.12'",
 ]
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 authors = [
   {name = "Clemens Kloss", email = "ancklo@space.dtu.dk"}
 ]
@@ -38,7 +38,6 @@ classifiers = [
   "Operating System :: Unix",
   "Operating System :: POSIX",
   "Operating System :: Microsoft :: Windows",
-  "Programming Language :: Python :: 3.6",
   "Programming Language :: Python :: 3.7",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",

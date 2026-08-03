@@ -33,7 +33,6 @@ conversions.
 import datetime as dt
 import os
 import textwrap
-from itertools import pairwise
 
 import h5py
 import hdf5storage as hdf
@@ -417,7 +416,7 @@ def augment_breaks_shc(breaks, order):
     step = max(order-1, 1)
 
     times = np.array([], dtype=float)
-    for start, end in pairwise(breaks):
+    for start, end in zip(breaks[:-1], breaks[1:]):  # use zip for python<3.10
         delta = (end - start) / step
         times = np.append(times, start + delta*np.arange(step))
 

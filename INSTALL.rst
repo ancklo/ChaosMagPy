@@ -3,7 +3,7 @@ Installation
 
 ChaosMagPy relies on the following (some are optional):
 
-* python>=3.6
+* python>=3.7
 * numpy (>=2 if python>=3.12)
 * scipy
 * pandas
