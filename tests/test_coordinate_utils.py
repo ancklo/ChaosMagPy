@@ -227,7 +227,7 @@ class CoordinateUtils(TestCase):
             frequency = data['frequency']  # oscillations per day
             spectrum = data['spectrum']
 
-            current_year = datetime.datetime.now().year
+            current_year = datetime.datetime.now().year  # noqa: DTZ005
 
             ts = cp.mjd2000(1996, 1, 1)
             te = cp.mjd2000(current_year + 1, 1, 1)

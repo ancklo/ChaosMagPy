@@ -9,6 +9,7 @@ import os
 import textwrap
 from datetime import datetime, timedelta, UTC
 from unittest import TestCase, main
+from functools import partial
 
 import numpy as np
 
@@ -43,6 +44,8 @@ class DataUtils(TestCase):
         minutes = [25, 32, 9, 11, 58, 58, 31, 28, 25, 17]
         seconds = [ 2, 35, 33, 16, 41, 3, 5, 33, 52, 27]
 
+        test_func = lambda x, y: np.testing.assert_allclose(x, y, atol=1e-8)
+
         for day, hour, minute, second in zip(days, hours, minutes, seconds):
             date = (timedelta(days=int(day)) +
                     datetime(1990, 1, 1, hour, minute, second, tzinfo=UTC))
@@ -53,6 +56,7 @@ class DataUtils(TestCase):
             # test datetime conversion
             np.testing.assert_equal(mjd, cpd.mjd2000(date))
 
+
             dyear = cpd.mjd_to_dyear(mjd, leap_year=True)
             mjd2 = cpd.dyear_to_mjd(dyear, leap_year=True)
             np.testing.assert_allclose(mjd2, mjd, atol=1e-8)
@@ -63,21 +67,15 @@ class DataUtils(TestCase):
 
             dyear = cpd.mjd_to_dyear(mjd, leap_year=True)
             mjd2 = cpd.dyear_to_mjd(dyear, leap_year=False)
-            self.assertRaises(
-                AssertionError, lambda: np.testing.assert_allclose(
-                    mjd2, mjd, atol=1e-8))
+            self.assertRaises(AssertionError, test_func, mjd2, mjd)
 
             dyear = cpd.mjd_to_dyear(mjd, leap_year=False)
             mjd2 = cpd.dyear_to_mjd(dyear, leap_year=True)
-            self.assertRaises(
-                AssertionError, lambda: np.testing.assert_allclose(
-                    mjd2, mjd, atol=1e-8))
+            self.assertRaises(AssertionError, test_func, mjd2, mjd)
 
             dyear = cpd.mjd_to_dyear(mjd, leap_year=False)
             mjd2 = cpd.dyear_to_mjd(dyear, leap_year=None)
-            self.assertRaises(
-                AssertionError, lambda: np.testing.assert_allclose(
-                    mjd2, mjd, atol=1e-8))
+            self.assertRaises(AssertionError, test_func, mjd2, mjd)
 
     def test_mjd2000_broadcasting(self):
         """
