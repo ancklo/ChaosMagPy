@@ -29,23 +29,25 @@ other geomagnetic field models.
 
 """
 
-import numpy as np
-import os
-import warnings
-import scipy.interpolate as sip
-import hdf5storage as hdf
-import h5py
-import textwrap
 import datetime
+import os
+import textwrap
+import warnings
 from timeit import default_timer as timer
-from . import coordinate_utils as cu
-from . import model_utils as mu
-from . import data_utils as du
-from . import plot_utils as pu
+
+import h5py
+import hdf5storage as hdf
+import numpy as np
+import scipy.interpolate as sip
+
 from . import config_utils
+from . import coordinate_utils as cu
+from . import data_utils as du
+from . import model_utils as mu
+from . import plot_utils as pu
 
 
-class Base(object):
+class Base:
     """
     Piecewise polynomial base class.
 
@@ -133,9 +135,8 @@ class Base(object):
             dim = self.dim
         elif dim > self.dim:
             warnings.warn(
-                'Supplied dim = {0} is incompatible with number of '
-                'coefficients. Using dim = {1} instead.'.format(
-                    dim, self.dim))
+                f'Supplied dim = {dim} is incompatible with number of '
+                f'coefficients. Using dim = {self.dim} instead.')
             dim = self.dim
 
         if deriv is None:
@@ -171,7 +172,7 @@ class Base(object):
                 try:
                     key = dkey[extrapolate]
                 except KeyError:
-                    string = '", "'.join([str(key) for key in dkey.keys()])
+                    string = '", "'.join([str(key) for key in dkey])
                     raise ValueError(
                         f'Unknown extrapolation method "{extrapolate}". Use '
                         f'one of {{"{string}"}}.')
@@ -229,14 +230,14 @@ class Base(object):
 
         """
 
-        pp = dict(
-            form='pp',
-            order=np.array(self.order, float),
-            pieces=np.array(self.pieces, float),
-            dim=np.array(self.dim, float),
-            breaks=self.breaks.copy().reshape((1, -1)),  # ensure 2d
-            coefs=np.reshape(self.coeffs.copy(), (self.order, -1)).transpose()
-        )
+        pp = {
+            'form': 'pp',
+            'order': np.array(self.order, float),
+            'pieces': np.array(self.pieces, float),
+            'dim': np.array(self.dim, float),
+            'breaks': self.breaks.copy().reshape((1, -1)),  # ensure 2d
+            'coefs': np.reshape(self.coeffs.copy(), (self.order, -1)).T
+        }
 
         return pp
 
@@ -508,10 +509,12 @@ class BaseModel(Base):
 
         """
 
-        defaults = dict(radius=None,
-                        deriv=0,
-                        nmax=self.nmax,
-                        titles='spatial power spectrum')
+        defaults = {
+            'radius': None,
+            'deriv': 0,
+            'nmax': self.nmax,
+            'titles': 'spatial power spectrum'
+        }
 
         kwargs = pu.defaultkeys(defaults, kwargs)
 
@@ -562,7 +565,7 @@ class BaseModel(Base):
 
         """
 
-        defaults = dict(deriv=0, nmax=self.nmax)
+        defaults = {'deriv': 0, 'nmax': self.nmax}
 
         kwargs = pu.defaultkeys(defaults, kwargs)
 
@@ -580,9 +583,8 @@ class BaseModel(Base):
         # handle optional argument: nmax > coefficient nmax
         if nmax > self.nmax:
             warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.nmax))
+                f'Supplied nmax = {nmax} is incompatible with number of model '
+                f'coefficients. Using nmax = {self.nmax} instead.')
             nmax = self.nmax
 
         time = np.array(time, dtype=float)
@@ -637,10 +639,12 @@ class BaseModel(Base):
 
         """
 
-        defaults = dict(deriv=0,
-                        nmax=self.nmax,
-                        titles=['$B_r$', '$B_\\theta$', '$B_\\phi$'],
-                        extrapolate=None)
+        defaults = {
+            'deriv': 0,
+            'nmax': self.nmax,
+            'titles': ['$B_r$', '$B_\\theta$', '$B_\\phi$'],
+            'extrapolate': None
+        }
 
         kwargs = pu.defaultkeys(defaults, kwargs)
 
@@ -818,7 +822,7 @@ class BaseModel(Base):
                                     order=order, source=source, meta=meta)
 
 
-class CHAOS(object):
+class CHAOS:
     """
     Class for the time-dependent geomagnetic field model CHAOS.
 
@@ -1000,14 +1004,14 @@ class CHAOS(object):
         self.breaks_delta = breaks_delta
         self.coeffs_delta = coeffs_delta
 
-        dict_params = dict()  # collects satellite names and pre-rotations
+        dict_params = {}  # collects satellite names and pre-rotations
 
         # Euler angles
         if breaks_euler is None:
             self.model_euler = None
         else:
             satellites = tuple(breaks_euler.keys())
-            self.model_euler = dict()
+            self.model_euler = {}
 
             try:
                 Euler_prerotation = meta['params']['Euler_prerotation']
@@ -1042,7 +1046,7 @@ class CHAOS(object):
             self.model_cal = None
         else:
             satellites = tuple(breaks_cal.keys())
-            self.model_cal = dict()
+            self.model_cal = {}
 
             for k, satellite in enumerate(satellites):
 
@@ -1224,7 +1228,7 @@ str, {'internal', 'external'}
             e = timer()
 
             if verbose:
-                print('Finished in {:.6} seconds.'.format(e-s))
+                print(f'Finished in {e-s:.6} seconds.')
 
         if 'static' in source_list:
 
@@ -1244,7 +1248,7 @@ str, {'internal', 'external'}
             e = timer()
 
             if verbose:
-                print('Finished in {:.6} seconds.'.format(e-s))
+                print(f'Finished in {e-s:.6} seconds.')
 
         if 'gsm' in source_list:
 
@@ -1261,7 +1265,7 @@ str, {'internal', 'external'}
             e = timer()
 
             if verbose:
-                print('Finished in {:.6} seconds.'.format(e-s))
+                print(f'Finished in {e-s:.6} seconds.')
 
         if 'sm' in source_list:
 
@@ -1278,7 +1282,7 @@ str, {'internal', 'external'}
             e = timer()
 
             if verbose:
-                print('Finished in {:.6} seconds.'.format(e-s))
+                print(f'Finished in {e-s:.6} seconds.')
 
         if 'ion' in source_list:
 
@@ -1296,7 +1300,7 @@ str, {'internal', 'external'}
             e = timer()
 
             if verbose:
-                print('Finished in {:.6} seconds.'.format(e-s))
+                print(f'Finished in {e-s:.6} seconds.')
 
         return B_radius, B_theta, B_phi
 
@@ -1601,10 +1605,12 @@ str, {'internal', 'external'}
         if self.model_static is None:
             raise ValueError("Static internal field coefficients are missing.")
 
-        defaults = dict(cmap='nio',
-                        deriv=0,
-                        vmax=200,
-                        vmin=-200)
+        defaults = {
+            'cmap': 'nio',
+            'deriv': 0,
+            'vmax': 200,
+            'vmin': -200
+        }
 
         kwargs = pu.defaultkeys(defaults, kwargs)
 
@@ -1651,9 +1657,8 @@ str, {'internal', 'external'}
             nmax = self.n_gsm
         elif nmax > self.n_gsm:
             warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_gsm))
+                f'Supplied nmax = {nmax} is incompatible with number of model '
+                f'coefficients. Using nmax = {self.n_gsm} instead.')
             nmax = self.n_gsm
 
         if source is None:
@@ -1855,9 +1860,8 @@ str, {'internal', 'external'}
             nmax = self.n_sm
         elif nmax > self.n_sm:
             warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_sm))
+                f'Supplied nmax = {nmax} is incompatible with number of model '
+                f'coefficients. Using nmax = {self.n_sm} instead.')
             nmax = self.n_sm
 
         if source is None:
@@ -2393,9 +2397,8 @@ str, {'internal', 'external'}
             nmax = self.n_ion
         elif nmax > self.n_ion:
             warnings.warn(
-                'Supplied nmax = {0} is incompatible with number of model '
-                'coefficients. Using nmax = {1} instead.'.format(
-                    nmax, self.n_ion))
+                f'Supplied nmax = {nmax} is incompatible with number of model '
+                f'coefficients. Using nmax = {self.n_ion} instead.')
             nmax = self.n_ion
 
         # coerce numpy float arrays
@@ -2513,7 +2516,7 @@ str, {'internal', 'external'}
             B_qphi[~index] += B_ext[2]
 
         # qd basevector scaling
-        scaling = np.cross(f1, f2, axisa=0, axisb=0)
+        scaling = f1[0]*f2[1] - f1[1]*f2[0]
 
         # geodetic up-south-east
         B_u = np.sqrt(scaling)*B_h
@@ -2639,15 +2642,15 @@ str, {'internal', 'external'}
             # process gsm coefficients
             m_gsm = self.coeffs_gsm[[0, 3]].reshape((2, 1))
 
-            model_ext = dict(
-                t_break_q10=t_break_q10,
-                q10=q10,
-                t_break_qs11=t_break_q11,
-                qs11=qs11,
-                m_sm=m_sm,
-                m_gsm=m_gsm,
-                m_Dst=m_Dst
-            )
+            model_ext = {
+                't_break_q10': t_break_q10,
+                'q10': q10,
+                't_break_qs11': t_break_q11,
+                'qs11': qs11,
+                'm_sm': m_sm,
+                'm_gsm': m_gsm,
+                'm_Dst': m_Dst
+            }
 
             hdf.write(model_ext, path='/model_ext', filename=filepath,
                       matlab_compatible=True)
@@ -2705,12 +2708,12 @@ str, {'internal', 'external'}
         if self.coeffs_ion is not None:  # truth value otherwise ambiguous
             # write ionospheric field coefficients to matfile
 
-            model_ion = dict(
-                coeffs=self.coeffs_ion,
-                nmax=self.n_ion,
-                nbases=self.coeffs_ion.shape[0],
-                refh=self.refh_ion
-            )
+            model_ion = {
+                'coeffs': self.coeffs_ion,
+                'nmax': self.n_ion,
+                'nbases': self.coeffs_ion.shape[0],
+                'refh': self.refh_ion
+            }
 
             hdf.write(model_ion, path='/model_ion', filename=filepath,
                       matlab_compatible=True)
@@ -2719,8 +2722,7 @@ str, {'internal', 'external'}
             hdf.write(self.meta['params'], path='/params', filename=filepath,
                       matlab_compatible=True)
 
-        print('CHAOS saved to {}.'.format(
-            os.path.join(os.getcwd(), filepath)))
+        print(f'CHAOS saved to {os.path.join(os.getcwd(), filepath)}.')
 
     @classmethod
     def from_mat(self, filepath, name=None, satellites=None):
@@ -2927,23 +2929,25 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
         coeffs_sm[:3] = model_ext['m_Dst']  # replace with m_Dst
 
         # external field (GSM): n=1, 2
-        n_gsm = int(2)
+        n_gsm = 2
         coeffs_gsm = np.zeros((n_gsm*(n_gsm+2),))  # correct number of coeffs
         # only m=0 are non-zero
         coeffs_gsm[[0, 3]] = model_ext['m_gsm']
 
         # coefficients and breaks of external SM offsets for q10, q11, s11
-        breaks_delta = dict()
-        breaks_delta['q10'] = model_ext['t_break_q10']
-        breaks_delta['q11'] = model_ext['t_break_qs11']
-        breaks_delta['s11'] = model_ext['t_break_qs11']
+        breaks_delta = {
+            'q10': model_ext['t_break_q10'],
+            'q11': model_ext['t_break_qs11'],
+            's11': model_ext['t_break_qs11']
+        }
 
         # reshape to comply with scipy PPoly coefficients
-        coeffs_delta = dict()
-        coeffs_delta['q10'] = model_ext['q10'].reshape((1, -1))
         qs11 = model_ext['qs11']
-        coeffs_delta['q11'] = qs11[:, 0].reshape((1, -1))
-        coeffs_delta['s11'] = qs11[:, 1].reshape((1, -1))
+        coeffs_delta = {
+            'q10': model_ext['q10'].reshape((1, -1)),
+            'q11': qs11[:, 0].reshape((1, -1)),
+            's11': qs11[:, 1].reshape((1, -1))
+        }
 
     # load ionospheric field coefficients
     try:
@@ -3019,11 +3023,11 @@ def load_CHAOS_matfile(filepath, name=None, satellites=None):
                 satellites.append(f'satellite_{counter}')
 
         # coefficients and breaks of euler angles
-        breaks_euler = dict()
+        breaks_euler = {}
         for num, satellite in enumerate(satellites):
             breaks_euler[satellite] = t_break_Euler[num].squeeze()
 
-        coeffs_euler = dict()
+        coeffs_euler = {}
         for num, satellite in enumerate(satellites):
 
             angles = [model_euler[angle][num] for angle in [
@@ -3497,8 +3501,8 @@ def load_IGRF_txtfile(filepath, name=None):
     first_line = True
     data = np.array([])
 
-    with open(filepath, 'r') as f:
-        for line in f.readlines():
+    with open(filepath, 'r') as file:
+        for line in file:
 
             if line.lstrip().startswith(('#', 'c/s')):
                 continue

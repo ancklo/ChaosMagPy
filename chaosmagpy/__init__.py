@@ -28,24 +28,33 @@ available at https://chaosmagpy.readthedocs.io/en/.
 """
 
 __all__ = [
-    "CHAOS", "load_CHAOS_matfile", "load_CHAOS_shcfile",
-    "load_CovObs_txtfile", "load_gufm1_txtfile", "load_CALS7K_txtfile",
-    "load_IGRF_txtfile", "basicConfig", "synth_values", "design_gauss",
-    "mjd2000", "timestamp", "dyear_to_mjd", "mjd_to_dyear"
+    "CHAOS",
+    "basicConfig",
+    "design_gauss",
+    "dyear_to_mjd",
+    "load_CALS7K_txtfile",
+    "load_CHAOS_matfile",
+    "load_CHAOS_shcfile",
+    "load_CovObs_txtfile",
+    "load_IGRF_txtfile",
+    "load_gufm1_txtfile",
+    "mjd2000",
+    "mjd_to_dyear",
+    "synth_values",
+    "timestamp"
 ]
 
 __version__ = "0.16-dev"
 
 from .chaos import (
     CHAOS,
+    load_CALS7K_txtfile,
     load_CHAOS_matfile,
     load_CHAOS_shcfile,
     load_CovObs_txtfile,
     load_gufm1_txtfile,
-    load_CALS7K_txtfile,
-    load_IGRF_txtfile
+    load_IGRF_txtfile,
 )
-
 from .config_utils import basicConfig
-from .model_utils import synth_values, design_gauss
-from .data_utils import mjd2000, timestamp, dyear_to_mjd, mjd_to_dyear
+from .data_utils import dyear_to_mjd, mjd2000, mjd_to_dyear, timestamp
+from .model_utils import design_gauss, synth_values

@@ -5,14 +5,17 @@
 # ChaosMagPy is released under the MIT license. See LICENSE in the root of the
 # repository for full licensing details.
 
-import numpy as np
+import datetime
 import os
 import textwrap
-import chaosmagpy as cp
-from chaosmagpy import coordinate_utils as cpc
-from unittest import TestCase, main
 from math import pi
 from timeit import default_timer as timer
+from unittest import TestCase, main
+
+import numpy as np
+
+import chaosmagpy as cp
+from chaosmagpy import coordinate_utils as cpc
 
 try:
     from tests.helpers import load_matfile
@@ -217,15 +220,21 @@ class CoordinateUtils(TestCase):
                 data = np.load(filepath)
             except FileNotFoundError as e:
                 raise ValueError(
-                    'Reference file "frequency_spectrum_{reference}.npz"'
+                    f'Reference file "frequency_spectrum_{reference}.npz"'
                     ' not found in "chaosmagpy/lib/".'
                     ' Correct reference?') from e
 
             frequency = data['frequency']  # oscillations per day
             spectrum = data['spectrum']
 
-            print("  Testing 50 times within 1996 and 2024.")
-            for time in np.linspace(-4*365.25, 24*365.25, 50):
+            current_year = datetime.datetime.now().year
+
+            ts = cp.mjd2000(1996, 1, 1)
+            te = cp.mjd2000(current_year + 1, 1, 1)
+            num = 2*int(current_year-1996 + 1) + 1  # two per year, small shift
+
+            print(f"  Testing {num} times within 1996 and {current_year}.")
+            for time in np.linspace(ts, te, num=num):
 
                 matrix_time = cpc.synth_rotate_gauss(
                     time, frequency, spectrum, scaled=data['scaled'])
@@ -241,13 +250,12 @@ class CoordinateUtils(TestCase):
                 matrix = cpc.rotate_gauss(nmax, kmax, base_1, base_2, base_3)
 
                 stat = np.amax(np.abs(matrix-np.squeeze(matrix_time)))
-                print('  Computed year {:4.2f}, '
-                      'max. abs. error = {:.3e}'.format(
-                          time/365.25 + 2000, stat), end='')
+                print(f'  Computed year {cp.mjd_to_dyear(time):4.2f}, '
+                      f'max. abs. error = {stat:.3e}', end='')
                 if stat > 0.001:
                     print(' ' + min(int(stat/0.001), 10) * '*')
                 else:
-                    print('')
+                    print()
 
                 self.assertIsNone(np.testing.assert_allclose(
                     matrix, np.squeeze(matrix_time), rtol=1e-1, atol=1e-1))
@@ -263,16 +271,16 @@ class CoordinateUtils(TestCase):
         for reference in ['gsm', 'sm']:
 
             frequency, amplitude, _, _ = cpc.rotate_gauss_fft(
-                nmax, kmax, step=1., N=int(365*24), filter=20,
+                nmax, kmax, step=1., N=365*24, filter=20,
                 save_to=False, reference=reference, scaled=False)
 
             omega = 2*pi*frequency / (24*3600)
 
             # transpose and take complex conjugate (to match original output)
             omega_mat = \
-                test['omega_{:}'.format(reference)].transpose((2, 1, 0))
+                test[f'omega_{reference}'].transpose((2, 1, 0))
             amplitude_mat = \
-                test['amplitude_{:}'.format(reference)].transpose((2, 1, 0))
+                test[f'amplitude_{reference}'].transpose((2, 1, 0))
             amplitude_mat = amplitude_mat.conj()
 
             # absolute tolerance to account for close-to-zero matrix entries
@@ -301,9 +309,8 @@ class CoordinateUtils(TestCase):
         matrix_mat = test['m_all'].transpose()  # transposed in Matlab code
         runtime = test['runtime']
 
-        print("  Time for matrix computation (Python): ", e - s)
-        print("  Time for matrix computation (Matlab):  {:}".format(
-            runtime[0, 0]))
+        print(f"  Time for matrix computation (Python): {e - s}")
+        print(f"  Time for matrix computation (Matlab): {runtime[0, 0]}")
 
         # absolute tolerance to account for close-to-zero matrix entries
         self.assertIsNone(np.testing.assert_allclose(

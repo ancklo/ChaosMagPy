@@ -73,12 +73,12 @@ MAG : Magnetic coordinate system (centered dipole, orthogonal)
 
 """
 
-import numpy as np
 import os
 from math import factorial
-from . import model_utils
-from . import config_utils
-from . import data_utils
+
+import numpy as np
+
+from . import config_utils, data_utils, model_utils
 
 try:
     import apexpy
@@ -367,7 +367,6 @@ def synth_rotate_gauss(time, frequency, spectrum, scaled=None):
     freq_t = frequency*time
 
     # compute complex exponentials
-    harmonics = np.empty(freq_t.shape, dtype=complex)
     harmonics = np.cos(freq_t) + 1j*np.sin(freq_t)
 
     if scaled is False:
@@ -506,8 +505,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
     else:
         raise ValueError('Reference system must be either "GSM" or "SM".')
 
-    print("Calculating Gauss rotation matrices for {:}".format(
-        reference.upper()))
+    print(f"Calculating Gauss rotation matrices for {reference.upper()}")
 
     # compute transformation matrix: reference to geographic system
     matrix_time = rotate_gauss(nmax, kmax, base_1, base_2, base_3)
@@ -578,7 +576,7 @@ shape (``filter``, ``nmax`` (``nmax`` + 2), ``kmax`` (``kmax`` + 2))
                  scaled=scaled,
                  dipole=config_utils.basicConfig['params.dipole'],
                  start_date=start_date)
-        print("Output saved to {:}".format(save_to))
+        print(f"Output saved to {save_to}")
 
     return frequency, spectrum, frequency_ind, spectrum_ind
 
@@ -2055,10 +2053,9 @@ def q_response_1D(periods, sigma, radius, n, kind=None):
                          ((1 - v4*v1)*b + k*(v4*v3 - v6)))
 
             C[counter] = radius[0] / (1+1000*radius[0]*b)  # C in km
-            print("Finished {:.1f}%".format(
-                (counter+1)/periods.size*100), end='\r')
+            print(f"Finished {(counter+1)/periods.size*100:.1f}%", end='\r')
 
-        print('')
+        print()
 
         # if nargout > 1
         rho_a = 8e-7*np.pi**2 / periods * np.abs(C*1000)**2
@@ -2168,7 +2165,7 @@ def q_response(frequency, nmax):
 
     q_response = np.zeros((nmax, frequency.size), dtype=complex)
     for n in range(nmax):
-        print('Calculating Q-response for degree {:}'.format(n+1))
+        print(f'Calculating Q-response for degree {n+1}')
         # compute Q-response for conductivity model and given degree n
         _, _, _, Q_n = q_response_1D(
             periods, sigma, sigma_radius, n+1, kind='quadratic')

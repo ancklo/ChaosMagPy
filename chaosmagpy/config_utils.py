@@ -74,12 +74,13 @@ be accessed after importing chaosmagpy through:
 
 """
 
+import json
 import os
 import re
-import json
-import numpy as np
 import warnings
 from contextlib import contextmanager
+
+import numpy as np
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 LIB = os.path.join(ROOT, 'lib')
@@ -125,11 +126,10 @@ def check_vector(s, len=None):
     try:
         s = np.array(s)
         assert s.ndim == 1
-        if len is not None:
-            if s.size != len:
-                raise ValueError(f'Wrong length: {s.size} != {len}.')
+        if (len is not None) and s.size != len:
+            raise ValueError(f'Wrong length: {s.size} != {len}.')
         return s
-    except Exception as err:
+    except AssertionError as err:
         raise ValueError(f'Not a valid vector. {err}')
 
 

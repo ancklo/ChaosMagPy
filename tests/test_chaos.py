@@ -6,11 +6,13 @@
 # repository for full licensing details.
 
 import os
-import numpy as np
 import textwrap
-import chaosmagpy as cp
-import matplotlib.pyplot as plt
 from unittest import TestCase, main
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+import chaosmagpy as cp
 
 try:
     from tests.helpers import load_matfile
@@ -301,7 +303,7 @@ class Chaos(TestCase):
 
     def test_complete_forward(self):
 
-        n_data = int(300)
+        n_data = 300
         t_start = -200.0
         t_end = 6000.0
         time = np.linspace(t_start, t_end, num=n_data)
@@ -321,7 +323,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -360,7 +362,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -398,7 +400,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -433,7 +435,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -468,7 +470,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -487,7 +489,7 @@ class Chaos(TestCase):
 
         model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
-        N = int(1000)
+        N = 1000
 
         time = np.linspace(-200, 6000, num=N)
         radius = R_REF
@@ -511,7 +513,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -531,7 +533,7 @@ class Chaos(TestCase):
 
         model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
-        N = int(1000)
+        N = 1000
 
         time = np.linspace(-1000, 6000, num=N)
         radius = R_REF
@@ -555,7 +557,7 @@ class Chaos(TestCase):
         B_phi_mat = np.ravel(test['B_phi'])
 
         for component in ['B_radius', 'B_theta', 'B_phi']:
-            res = np.abs(eval(component) - eval('_'.join((component, 'mat'))))
+            res = np.abs(eval(component) - eval(f'{component}_mat'))
             print('  -------------------')
             print(f'  {component}:')
             print('  MAE =', np.mean(res), 'nT')
@@ -621,9 +623,9 @@ class Chaos(TestCase):
             test['imf_y'], test['imf_z'], test['v'], test['f107'],
             nmax=int(test['nmax'].item()))  # at satellite altitude
 
-        np.testing.assert_allclose(Br, test['B_ion'][:, [0]], atol=1e-2)
-        np.testing.assert_allclose(Bt, test['B_ion'][:, [1]], atol=1e-2)
-        np.testing.assert_allclose(Bp, test['B_ion'][:, [2]], atol=1e-2)
+        np.testing.assert_allclose(Br, test['B_ion'][:, [0]], rtol=1e-2)
+        np.testing.assert_allclose(Bt, test['B_ion'][:, [1]], rtol=1e-2)
+        np.testing.assert_allclose(Bp, test['B_ion'][:, [2]], rtol=1e-2)
 
 
 def profiler_complete_forward(n_data=300):
@@ -652,8 +654,7 @@ def profiler_complete_forward(n_data=300):
 
     model = cp.load_CHAOS_matfile(CHAOS_PATH)
 
-    # B_radius, B_theta, B_phi = model(time, radius, theta, phi)
-    B_radius, B_theta, B_phi = model(time, radius, theta, phi)
+    model(time, radius, theta, phi)
     print('Ran "profiler_complete_forward"')
 
 

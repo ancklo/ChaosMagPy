@@ -14,20 +14,23 @@
     plot_timeseries
     plot_maps
     plot_power_spectrum
+    plot_coastlines
+    defaultkeys
     nio_colormap
 
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 import shapefile
-from . import data_utils
-from . import config_utils
+
+from . import config_utils, data_utils
 
 try:
-    import matplotlib.pyplot as plt
-    import matplotlib.ticker as ticker
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
+    from matplotlib import ticker
     from matplotlib.colors import LinearSegmentedColormap
 except ImportError:
     warnings.warn('Could not import Matplotlib. Plotting methods and '
@@ -182,7 +185,7 @@ def plot_maps(theta_grid, phi_grid, *args, **kwargs):
 
     # create axis handle
     fig, axes = plt.subplots(layout[0], layout[1], figsize=figsize,
-                             subplot_kw=dict(projection=projection),
+                             subplot_kw={'projection': projection},
                              squeeze=False)
 
     # make subplots
@@ -292,17 +295,6 @@ def plot_coastlines(ax, **kwargs):
             lat = np.radians([point[1] for point in rec.shape.points[:]])
 
             ax.plot(lon, lat, **kwargs)
-
-
-def fmt(x, pos):
-    # format=ticker.FuncFormatter(fmt)
-    a, b = '{:.1e}'.format(x).split('e')
-    b = int(b)
-
-    if a == '0.0':
-        return r'${}$'.format(a)
-    else:
-        return r'${}$e${}$'.format(a, b)
 
 
 def defaultkeys(defaults, keywords):

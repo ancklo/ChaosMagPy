@@ -5,13 +5,15 @@
 # ChaosMagPy is released under the MIT license. See LICENSE in the root of the
 # repository for full licensing details.
 
-import numpy as np
 import os
 import textwrap
-from unittest import TestCase, main
-from chaosmagpy import model_utils as m
-from timeit import default_timer as timer
 from math import pi
+from timeit import default_timer as timer
+from unittest import TestCase, main
+
+import numpy as np
+
+from chaosmagpy import model_utils as m
 
 try:
     from tests.helpers import load_matfile
@@ -297,7 +299,7 @@ class ModelUtils(TestCase):
 
         """
 
-        n_data = int(300)
+        n_data = 300
         t_start = 1997.1
         t_end = 2018.1
         n_breaks = int((t_end - t_start) / 0.5 + 1)
@@ -305,9 +307,9 @@ class ModelUtils(TestCase):
         radius = R_REF * np.ones(time.shape)
         theta = np.linspace(1, 179, num=n_data)
         phi = np.linspace(-180, 179, num=n_data)
-        n_static = int(80)
-        n_tdep = int(20)
-        order = int(6)  # order of spline basis functions (4 = cubic)
+        n_static = 80
+        n_tdep = 20
+        order = 6  # order of spline basis functions (4 = cubic)
 
         # create a knot vector without endpoint repeats and # add endpoint
         # repeats as appropriate for spline degree p
@@ -328,9 +330,8 @@ class ModelUtils(TestCase):
         G_phi_mat = test['G_phi']
         runtime = test['runtime']
 
-        print("  Time for design_matrix computation (Python): ", e - s)
-        print("  Time for design_matrix computation (Matlab):  {:}".format(
-            runtime[0, 0]))
+        print(f"  Time for design_matrix computation (Python): {e - s}")
+        print(f"  Time for design_matrix computation (Matlab): {runtime[0, 0]}")
 
         self.assertIsNone(
             np.testing.assert_allclose(G_radius, G_radius_mat, atol=1e-5))

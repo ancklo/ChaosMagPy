@@ -27,9 +27,11 @@ particular.
 
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 from scipy.interpolate import BSpline, PPoly
+
 from . import config_utils
 
 
@@ -319,9 +321,9 @@ def synth_from_pp(breaks, order, coeffs, time, radius, theta, phi, *,
     if nmax is None:
         nmax = nmax_coeffs
     elif nmax > nmax_coeffs:
-        warnings.warn('Input nmax = {0} is incompatible with the number of '
-                      'model coefficients. Using nmax = {1} instead.'.format(
-                        nmax, nmax_coeffs))
+        warnings.warn(f'Input nmax = {nmax} is incompatible with the number '
+                      f'of model coefficients. Using nmax = {nmax_coeffs} '
+                      'instead.')
         nmax = nmax_coeffs
 
     # handle optional argument: source
@@ -661,9 +663,9 @@ def design_gauss(radius, theta, phi, nmax, *, nmin=None, mmax=None,
     phi : ndarray, shape (...)
         Array containing the longitude in degrees.
     nmax : int, positive
-        Maximum degree of the sphercial harmonic expansion.
+        Maximum degree of the spherical harmonic expansion.
     nmin : int, positive, optional
-        Minimum degree of the sphercial harmonic expansion (defaults to 1).
+        Minimum degree of the spherical harmonic expansion (defaults to 1).
     mmax : int, positive, optional
         Maximum order of the spherical harmonic expansion (defaults to
         ``nmax``). For ``mmax = 0``, for example, only the zonal terms are
@@ -1098,7 +1100,7 @@ def degree_correlation(coeffs_1, coeffs_2):
     if coeffs_1.size != coeffs_2.size:
         raise ValueError(
             'Number of coefficients must be the same '
-            '({0} != {1}).'.format(coeffs_1.size, coeffs_2.size))
+            f'({coeffs_1.size} != {coeffs_2.size}).')
 
     nmax = int(np.sqrt(coeffs_1.size + 1) - 1)
 
@@ -1154,7 +1156,7 @@ def sensitivity(coeffs, coeffs_true):
     if coeffs.size != coeffs_true.size:
         raise ValueError(
             'Number of coefficients must be the same '
-            '({0} != {1}).'.format(coeffs.size, coeffs_true.size))
+            f'({coeffs.size} != {coeffs_true.size}).')
 
     nmax = int(np.sqrt(coeffs.size + 1) - 1)
 
