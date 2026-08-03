@@ -33,9 +33,13 @@ while true; do
     esac
 done
 
+echo Installing Apexpy package
+python -m pip install ninja meson-python
+python -m pip install apexpy --no-build-isolation
+
 echo Installing requested version of ChaosMagPy v$version.
-pip install dist/chaosmagpy-$version.tar.gz --dry-run
-pip install dist/chaosmagpy-$version-py3-none-any.whl
+python -m pip install dist/chaosmagpy-$version.tar.gz --dry-run
+python -m pip install dist/chaosmagpy-$version-py3-none-any.whl
 
 echo Entering test directory.
 cd tests
