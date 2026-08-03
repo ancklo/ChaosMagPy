@@ -9,6 +9,8 @@ Version 0.16-dev
 
 Features
 ^^^^^^^^
+* Updated built-in RC-index file to RC_1997-2026_May26_v4_allLT.dat (used
+  during the construction of CHAOS-8.6).
 * Added :func:`chaosmagpy.data_utils.augment_breaks_shc` to generate the time
   vector suitable for saving Gauss coefficients to an SHC file.
 * Changed MAT-file loading and saving to ensure correct satellite names and
