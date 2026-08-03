@@ -7,9 +7,8 @@
 
 import os
 import textwrap
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from unittest import TestCase, main
-from functools import partial
 
 import numpy as np
 
