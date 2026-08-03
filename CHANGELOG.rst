@@ -1,9 +1,10 @@
 Changelog
 =========
 
+
 Version 0.16-dev
 ----------------
-| **Date:** July 13, 2026
+| **Date:** August 3, 2026
 | **Release:** v0.16-dev
 
 Features
@@ -15,6 +16,16 @@ Features
   :func:`chaosmagpy.chaos.load_CHAOS_matfile`).
 * Added ``dipole`` keyword argument to
   :func:`chaosmagpy.coordinate_utils.dipole_tilt`.
+
+Bugfixes
+^^^^^^^^
+* Changed handling of day conversion in :func:`chaosmagpy.data_utils.mjd2000`.
+  The previous implementation converted the input date into Numpy's timedelta64
+  in nanoseconds, which caused an overflow for calendar years outside the
+  range [1708, 2289]. To avoid a similar issue,
+  :func:`chaosmagpy.data_utils.timestamp` now returns Numpy datetime64 objects
+  with microsecond resolution instead of nanosecond resolution.
+
 
 Version 0.15
 ------------
@@ -36,6 +47,7 @@ Features
 * Added method to evaluate the ionospheric E-layer field
   :meth:`chaosmagpy.chaos.CHAOS.synth_values_ion`.
 
+
 Version 0.14
 ------------
 | **Date:** June 21, 2024
@@ -55,6 +67,7 @@ Features
 * Added function to compute the unit base vector in the direction of the
   geomagnetic north pole: :func:`chaosmagpy.coordinate_utils.dipole_to_vec`.
 
+
 Version 0.13.1
 --------------
 | **Date:** June 4, 2024
@@ -69,6 +82,7 @@ Bugfixes
 ^^^^^^^^
 * Removed deprecated matplotlib call to register a colormap. The previous
   version caused an ImportError with matplotlib >=3.9.
+
 
 Version 0.13
 ------------
@@ -87,6 +101,7 @@ Features
   reading the coastline shapefile is PyShp (>=2.3.1).
 * Added function :func:`chaosmagpy.chaos.load_IGRF_txtfile` to load the IGRF
   model from the coefficient TXT-file.
+
 
 Version 0.12
 ------------
@@ -113,6 +128,7 @@ Bugfixes
   :class:`chaosmagpy.chaos.CHAOS` constructor. This only affected direct calls
   to the constructor due to an outdated config keyword.
 
+
 Version 0.11
 ------------
 | **Date:** September 29, 2022
@@ -135,6 +151,7 @@ Features
   coefficients outside the domain covered by the RC-index file.
 * Added input parameters ``rc_e`` and ``rc_i`` to the model call method.
 
+
 Version 0.10
 ------------
 | **Date:** July 1, 2022
@@ -144,6 +161,7 @@ Version 0.10
 Features
 ^^^^^^^^
 * Updated RC-index file to RC_1997-2022_June_v3.
+
 
 Version 0.9
 -----------
@@ -172,6 +190,7 @@ Bugfixes
   negative decimal years and negative modified Julian dates (erroneous offset
   of 1 day due to rounding to integer values).
 
+
 Version 0.8
 -----------
 | **Date:** December 9, 2021
@@ -193,6 +212,7 @@ Bugfixes
 * Fixed shc-file loader to correctly exclude extrapolation sites.
 * Fixed numpy broadcasting error in :func:`chaosmagpy.data_utils.mjd2000`.
 
+
 Version 0.7.1
 -------------
 | **Date:** August 05, 2021
@@ -202,6 +222,7 @@ Version 0.7.1
 Bugfixes
 ^^^^^^^^
 * Fixed CHAOS shc-file loader.
+
 
 Version 0.7
 -----------
@@ -225,6 +246,7 @@ Features
 * Added keyword arguments to :meth:`chaosmagpy.chaos.CHAOS.synth_coeffs_sm`
   and :meth:`chaosmagpy.chaos.CHAOS.synth_values_sm` to provide the RC-index
   values directly instead of using the built-in RC-index file.
+
 
 Version 0.6
 -----------
@@ -254,6 +276,7 @@ Bugfixes
   (needed for webpage requests, optional).
 * Require hdf5storage version 0.1.17 (fixed read/write intent)
 
+
 Version 0.5
 -----------
 | **Date:** December 23, 2020
@@ -265,6 +288,7 @@ Features
 * Modified "nio" colormap to be white-centered.
 * Added spatial power spectrum of toroidal sources
   (:func:`chaosmagpy.model_utils.power_spectrum`)
+
 
 Version 0.4
 -----------
@@ -282,6 +306,7 @@ Features
   (:func:`chaosmagpy.chaos.load_gufm1_txtfile`) from a text file.
 * Added class method to initialize :class:`chaosmagpy.chaos.BaseModel` from a
   B-spline representation.
+
 
 Version 0.3
 -----------
@@ -317,6 +342,7 @@ Features
 * Added ``satellite`` keyword to change default satellite names when loading
   CHAOS mat-file.
 
+
 Version 0.2.1
 -------------
 | **Date:** November 20, 2019
@@ -329,6 +355,7 @@ Bugfixes
   computing the solar zenith angle from ``phi`` defined as the hour angle and
   NOT the geographic longitude. The hour angle is measure positive towards West
   and negative towards East.
+
 
 Version 0.2
 -----------
@@ -370,6 +397,7 @@ Bugfixes
 * Fixed collocation matrix for unordered collocation sites. Endpoint now
   correctly taken into account.
 
+
 Version 0.1
 -----------
 | **Date:** May 10, 2019
@@ -401,6 +429,7 @@ Bugfixes
 * Changed the date conversion to include hours and seconds not just the day
   when plotting the timeseries.
 
+
 Version 0.1a3
 -------------
 | **Date:** February 19, 2019
@@ -418,6 +447,7 @@ Bugfixes
 ^^^^^^^^
 * Fixed problem of the setup configuration for ``pip`` which caused importing
   the package to fail although installation was indicated as successful.
+
 
 Version 0.1a2
 -------------
@@ -437,6 +467,7 @@ Bugfixes
   ChaosMagPy v0.1a1 to fail with ``pip``. If installation of v0.1a1 is needed,
   use ``pip install --no-deps chaosmagpy==0.1a1`` to ignore faulty
   requirements.
+
 
 Version 0.1a1
 -------------
@@ -467,6 +498,7 @@ Deprecations
 * ``synth_static_field`` has been renamed to ``synth_coeffs_static``
 * ``plot_tdep_maps`` has been renamed to ``plot_maps_tdep``
 * ``synth_tdep_field`` has been renamed to ``synth_coeffs_tdep``
+
 
 Version 0.1a0
 -------------

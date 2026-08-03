@@ -30,14 +30,15 @@ conversions.
 """
 
 
-import pandas as pd
-import numpy as np
-import hdf5storage as hdf
-import warnings
-import h5py
-import os
 import datetime as dt
+import os
 import textwrap
+from itertools import pairwise
+
+import h5py
+import hdf5storage as hdf
+import numpy as np
+import pandas as pd
 
 
 def load_matfile(filepath, variable_names=None, **kwargs):
@@ -72,7 +73,7 @@ def load_matfile(filepath, variable_names=None, **kwargs):
 
         # for dictionaries, iterate through keys
         if isinstance(struct, dict):
-            out = dict()
+            out = {}
             for key, value in struct.items():
                 out[key] = traverse_struct(value)
             return out
@@ -91,7 +92,7 @@ def load_matfile(filepath, variable_names=None, **kwargs):
                     return struct.squeeze()
 
             else:  # if there are fields, iterate through fields
-                out = dict()
+                out = {}
                 for name in names:
                     out[name] = traverse_struct(struct[name])
                 return out
@@ -133,9 +134,10 @@ def load_RC_datfile(filepath=None, parse_dates=None):
     """
 
     if filepath is None:
-        from lxml import html
-        import requests
         import urllib
+
+        import requests
+        from lxml import html
 
         link = "http://www.spacecenter.dk/files/magnetic-models/RC/"
 
@@ -201,24 +203,20 @@ def save_RC_h5file(filepath, read_from=None):
 
     """
 
-    try:
-        df_rc = load_RC_datfile(read_from, parse_dates=False)
+    df_rc = load_RC_datfile(read_from, parse_dates=False)
 
-        with h5py.File(filepath, 'w') as f:
+    with h5py.File(filepath, 'w') as f:
 
-            for column in df_rc.columns:
-                variable = df_rc[column].values
-                if column == 'flag':
-                    dset = f.create_dataset(column, variable.shape, dtype="S1")
-                    dset[:] = variable.astype('bytes')
+        for column in df_rc.columns:
+            variable = df_rc[column].values
+            if column == 'flag':
+                dset = f.create_dataset(column, variable.shape, dtype="S1")
+                dset[:] = variable.astype('bytes')
 
-                else:
-                    f.create_dataset(column, data=variable)  # just save floats
+            else:
+                f.create_dataset(column, data=variable)  # just save floats
 
-            print(f'Successfully saved to {f.filename}.')
-
-    except Exception as err:
-        warnings.warn(f"Can't save new RC index. Raised exception: '{err}'.")
+        print(f'Successfully saved to {f.filename}.')
 
 
 def load_shcfile(filepath, leap_year=None, comment=None):
@@ -259,10 +257,10 @@ def load_shcfile(filepath, leap_year=None, comment=None):
 
     first_line = True
 
-    with open(filepath, 'r') as f:
+    with open(filepath, 'r') as file:
 
         data = np.array([])
-        for line in f.readlines():
+        for line in file:
 
             if line.strip().startswith(comment):
                 continue
@@ -374,22 +372,21 @@ def save_shcfile(time, coeffs, order=None, filepath=None, nmin=None, nmax=None,
         f.write(parameter_line)
 
         f.write(f'{"":4s} {"":4s}')  # to represent the two columns for n and m
-        for t in time:
-            f.write(' {:16.8f}'.format(mjd_to_dyear(t, leap_year=leap_year)))
+        for t in time:  # noqa: FURB122
+            f.write(f' {mjd_to_dyear(t, leap_year=leap_year):16.8f}')
         f.write('\n')
 
         # write coefficient table to 8 significant digits
         for row, (n, m) in enumerate(zip(deg, ord)):
 
-            f.write('{:4d} {:4d}'.format(n, m))
+            f.write(f'{n:4d} {m:4d}')
 
-            for value in coeffs[:, row]:
-                f.write(' {:16.8f}'.format(value))
+            for value in coeffs[:, row]:  # noqa: FURB122
+                f.write(f' {value:16.8f}')
 
             f.write('\n')
 
-    print('Created SHC-file {}.'.format(
-        os.path.join(os.getcwd(), filepath)))
+    print(f'Created SHC-file {os.path.join(os.getcwd(), filepath)}.')
 
 
 def augment_breaks_shc(breaks, order):
@@ -415,7 +412,7 @@ def augment_breaks_shc(breaks, order):
     step = max(order-1, 1)
 
     times = np.array([], dtype=float)
-    for start, end in zip(breaks[:-1], breaks[1:]):
+    for start, end in pairwise(breaks):
         delta = (end - start) / step
         times = np.append(times, start + delta*np.arange(step))
 
@@ -482,29 +479,36 @@ datetime.datetime(2002, 3, 4)])
 
     if (np.issubdtype(year.dtype, np.dtype(dt.datetime).type) or
             np.issubdtype(year.dtype, np.datetime64)):
-        datetime = year.astype('datetime64[ns]')
+
+        year = year.astype('datetime64')  # handles datetime and datetime64
+
+        datetime = year.astype('datetime64[D]')
+        nanoseconds = (year - datetime).astype('timedelta64[ns]')
 
     else:
         # build iso datetime string with str_ (supported in NumPy >= 2.0)
         year = np.asarray(year, dtype=np.str_)
         month = np.char.zfill(np.asarray(month, dtype=np.str_), 2)
         day = np.char.zfill(np.asarray(day, dtype=np.str_), 2)
-
         year_month = np.char.add(np.char.add(year, '-'), month)
-        datetime = np.char.add(np.char.add(year_month, '-'), day)
 
-        datetime = datetime.astype('datetime64[ns]')
+        datetime = np.char.add(np.char.add(year_month, '-'), day)
+        datetime = datetime.astype('datetime64[D]')
 
         # not use iadd here because it doesn't broadcast arrays
-        datetime = (datetime + np.asarray(hour, dtype='timedelta64[h]')
-                    + np.asarray(minute, dtype='timedelta64[m]')
-                    + np.asarray(second, dtype='timedelta64[s]')
-                    + np.asarray(microsecond, dtype='timedelta64[us]')
-                    + np.asarray(nanosecond, dtype='timedelta64[ns]'))
+        nanoseconds = (np.asarray(hour, dtype='timedelta64[h]')
+                       + np.asarray(minute, dtype='timedelta64[m]')
+                       + np.asarray(second, dtype='timedelta64[s]')
+                       + np.asarray(microsecond, dtype='timedelta64[us]')
+                       + np.asarray(nanosecond, dtype='timedelta64[ns]'))
 
-    nanoseconds = datetime - np.datetime64('2000-01-01', 'ns')
+    days = (datetime - np.datetime64('2000-01-01')) / np.timedelta64(1, 'D')
 
-    return nanoseconds / np.timedelta64(1, 'D')  # fraction of days
+    # combine day and fraction: note that this may lead to precision loss due
+    # to the floating point representation
+    time = days + nanoseconds / np.timedelta64(1, 'D')
+
+    return time  # fraction of days
 
 
 def timestamp(time):
@@ -519,24 +523,27 @@ def timestamp(time):
     Returns
     -------
     time : ndarray, shape (...)
-        Array of ``numpy.datetime64[ns]``.
+        Array of ``numpy.datetime64[us]``.
 
     Examples
     --------
     >>> timestamp(0.53245)
-        numpy.datetime64('2000-01-01T12:46:43.680000000')
+        numpy.datetime64('2000-01-01T12:46:43.680000')
 
     >>> timestamp(np.linspace(0., 1.5, 2))
-        array(['2000-01-01T00:00:00.000000000', \
-'2000-01-02T12:00:00.000000000'], dtype='datetime64[ns]')
+        array(['2000-01-01T00:00:00.000000', \
+'2000-01-02T12:00:00.000000'], dtype='datetime64[us]')
 
     """
 
-    # convert mjd2000 to timedelta64[ns]
-    ns = np.asarray(time) * 86400e9 * np.timedelta64(1, 'ns')
+    days = np.asarray(np.floor(time), dtype=int) * np.timedelta64(1, 'D')
+    frac_of_day = np.remainder(time, 1.)
 
-    # add datetime offset with ns precision
-    return ns + np.datetime64('2000-01-01', 'ns')
+    # convert fraction of day to timedelta64[us]
+    us = (frac_of_day * 86400e6) * np.timedelta64(1, 'us')
+
+    # add datetime offset with us precision
+    return np.datetime64('2000-01-01') + days + us
 
 
 def is_leap_year(year):
@@ -699,7 +706,7 @@ def memory_usage(pandas_obj):
     else:  # we assume if not a df it's a series
         usage_b = pandas_obj.memory_usage(deep=True)
     usage_mb = usage_b / 1024 ** 2  # convert bytes to megabytes
-    return "{:03.2f} MB".format(usage_mb)
+    return f"{usage_mb:03.2f} MB"
 
 
 def gauss_units(deriv=None):
@@ -738,6 +745,6 @@ def gauss_units(deriv=None):
     elif deriv == 1:
         units = '$\\mathrm{{nT}}/\\mathrm{{yr}}$'
     else:
-        units = '$\\mathrm{{nT}}/\\mathrm{{yr}}^{{{:}}}$'.format(deriv)
+        units = f'$\\mathrm{{nT}}/\\mathrm{{yr}}^{{{deriv}}}$'
 
     return units
