@@ -1,6 +1,9 @@
 name: Ruff
 
-on: [ push, pull_request ]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   ruff:
@@ -10,5 +13,5 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Run checks
+      - name: Run Ruff
         uses: astral-sh/ruff-action@v3
