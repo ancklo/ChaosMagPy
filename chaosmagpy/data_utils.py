@@ -396,16 +396,21 @@ def augment_breaks_shc(breaks, order):
 
     Parameters
     ----------
-    breaks: ndarray, shape (n,)
+    breaks : ndarray, shape (n,)
         1-D array, containing `n` break points (without endpoint repeats).
-    order: int, positive
+    order : int, positive
         Order `k` of B-spline (4 = cubic).
 
     Returns
     -------
-    times: ndarray, shape ((n-1)*max(k-1, 1) + 1,)
+    times : ndarray, shape ((n-1)*max(k-1, 1) + 1,)
         1-D array with `k-2` equally-spaced timepoints inserted between the
         points in `breaks`. The last break point is omitted if ``order==1``.
+
+    Examples
+    --------
+    >>> augment_breaks_shc([0.0, 10.0], 4)  # cubic B-spline on [0., 10.]
+    array([ 0., 3.33333333, 6.66666667, 10.])
 
     """
 
